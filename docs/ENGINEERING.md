@@ -320,24 +320,28 @@ A red CI blocks merge. CI is never bypassed.
 
 ### 10.1 Required status checks on `main`
 
-Each step above runs as a separately named job, so GitHub shows exactly which one failed. These names are what the owner selects under **Settings → Branches → `main` → Require status checks to pass**.
+Each step above runs as a separately named job in `.github/workflows/ci.yml`, so GitHub shows exactly which one failed. On a pull request they appear as `ci / format (push)` etc.; in **Settings → Branches → `main` → Require status checks to pass** the owner searches for the job name alone (`format`, `lint`, …).
 
 GitHub only lists a check after it has run at least once, so each check is added when the phase that creates it has run CI on a pull request.
 
 | Check name | What it proves | Available from |
 |---|---|---|
-| `ci / format` | Code is formatted (Prettier) | Phase 1 |
-| `ci / lint` | No lint errors or warnings, including accessibility lint | Phase 1 |
-| `ci / typecheck` | TypeScript compiles in strict mode | Phase 1 |
-| `ci / test` | Unit and component tests pass; coverage targets met (ENG-5) | Phase 1 |
-| `ci / build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Phase 1 |
-| `ci / audit` | No high/critical dependency vulnerabilities | Phase 1 |
-| `ci / secrets` | No service-role key or secret pattern in client code | Phase 1 |
+| `format` | Code is formatted (Prettier) | Phase 1 |
+| `lint` | No lint errors or warnings, including accessibility lint | Phase 1 |
+| `typecheck` | TypeScript compiles in strict mode | Phase 1 |
+| `test` | Unit and component tests pass; coverage targets met (ENG-5) | Phase 1 |
+| `build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Phase 1 |
+| `audit` | No high/critical dependency vulnerabilities | Phase 1 |
+| `secrets` | No committed .env files, no service-role key in browser code, no key values in any file | Now (runs on every push already) |
 | `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Phase 1, once the Vercel project is linked |
-| `ci / db-test` | pgTAP: RLS, database functions, triggers | Phase 2 |
-| `ci / e2e` | Playwright workflows + axe accessibility on the preview | Phase 2 |
+| `db-test` | pgTAP: RLS, database functions, triggers | Phase 2 |
+| `e2e` | Playwright workflows + axe accessibility on the preview | Phase 2 |
 
 Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
+
+Until Phase 1 adds `package.json`, the npm jobs (`format` … `audit`) show as **skipped** and only `secrets` runs. A temporary `project` job decides this. Phase 1 removes that job, after which every check always runs. Do not add `project` as a required check.
+
+Scripts the Phase 1 `package.json` must define for CI: `format:check`, `lint`, `typecheck`, `test:coverage`, `build`, `budget`.
 
 ---
 

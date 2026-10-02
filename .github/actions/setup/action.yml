@@ -1,0 +1,32 @@
+# -----------------------------------------------------------------------------
+# Shared setup step for every CI job that needs the project's npm packages.
+#
+# WHY:  Seven jobs need the same Node version and the same installed packages.
+#       Writing the steps once keeps them identical (ENGINEERING §4, DRY).
+# HOW:  Installs the Node version pinned below, restores npm's download cache,
+#       then runs `npm ci`, which installs exactly what package-lock.json lists.
+# WHEN: Called as the second step of each job in .github/workflows/ci.yml,
+#       right after the code is checked out.
+# SECURITY: `npm ci` refuses to run if package.json and package-lock.json
+#       disagree, so CI never installs an unreviewed package version (DEP-2).
+# -----------------------------------------------------------------------------
+name: Setup Node and install packages
+description: Installs Node and the exact locked npm packages.
+
+runs:
+  using: composite
+  steps:
+    # Install Node 24 (current LTS line) and cache npm downloads between runs,
+    # keyed on package-lock.json so a dependency change gets a fresh cache.
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 24
+        cache: npm
+
+    # SECURITY: `npm ci` installs only the versions pinned in the lockfile and
+    # fails if the lockfile is missing or out of date (DEP-2, SEC-8).
+    # `--no-audit --no-fund` keeps output short; auditing has its own job.
+    - name: Install packages
+      shell: bash
+      run: npm ci --no-audit --no-fund

@@ -1,0 +1,213 @@
+# -----------------------------------------------------------------------------
+# Tally-Up continuous integration.
+#
+# WHY:  Every change must prove it is formatted, lint-clean, type-safe, tested,
+#       buildable, free of known-vulnerable packages and free of leaked secrets
+#       before it can merge into `main` (ENGINEERING §10, Definition of Done §9.2).
+# HOW:  One workflow named `ci` with one job per check. Each job shows up in
+#       GitHub as `ci / <job>`, which is the name the owner selects under
+#       Settings → Branches → main → Require status checks (ENGINEERING §10.1).
+# WHEN: On every push to any branch, and on demand from the Actions tab.
+# SECURITY: The workflow token is read-only; no job receives secrets; actions
+#       come only from GitHub's own `actions/` organisation.
+#
+# Jobs added later (ENGINEERING §10.1): `db-test` (pgTAP) and `e2e`
+# (Playwright + axe) arrive in Phase 2 together with the code they test.
+# -----------------------------------------------------------------------------
+name: ci
+
+on:
+  # Runs on every branch so each commit, including pull request branches, is
+  # checked. Required status checks read results from the commit, so push
+  # runs are enough; a separate pull_request trigger would run everything twice.
+  push:
+    branches: ["**"]
+  # Lets the owner re-run CI by hand from the Actions tab.
+  workflow_dispatch:
+
+# SECURITY: least privilege (SEC-2). Jobs can read the code and nothing else:
+# no writing to the repository, issues, packages or deployments.
+permissions:
+  contents: read
+
+# When a newer commit is pushed to the same branch, cancel the older run.
+# Saves CI minutes and keeps only the latest result relevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # WORKAROUND (remove in Phase 1): the repository holds only documents until
+  # the Phase 1 scaffold adds package.json. Without this guard every npm job
+  # would fail on documentation-only commits. This job reports whether the
+  # project exists; npm jobs skip until it does. Phase 1 deletes this job and
+  # the `needs`/`if` lines below, so a missing package.json can never make
+  # checks skip silently once the app exists.
+  # ---------------------------------------------------------------------------
+  project:
+    name: project
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+      # Writes exists=true/false so later jobs can decide whether to run.
+      - id: check
+        run: |
+          if [ -f package.json ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
+
+  # ---------------------------------------------------------------------------
+  # format — code style is uniform (Prettier). No style debates in review.
+  # Requires the package.json script: "format:check" (prettier --check .)
+  # ---------------------------------------------------------------------------
+  format:
+    name: format
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run format:check
+
+  # ---------------------------------------------------------------------------
+  # lint — ESLint with TypeScript, React, Hooks and jsx-a11y rules.
+  # Zero warnings allowed (ENGINEERING §6): a warning fails the job.
+  # Requires the package.json script: "lint" (eslint .)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: lint
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # `--max-warnings=0` turns any warning into a failure.
+      - run: npm run lint -- --max-warnings=0
+
+  # ---------------------------------------------------------------------------
+  # typecheck — TypeScript strict mode compiles with no errors.
+  # Requires the package.json script: "typecheck" (tsc -b --noEmit)
+  # ---------------------------------------------------------------------------
+  typecheck:
+    name: typecheck
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run typecheck
+
+  # ---------------------------------------------------------------------------
+  # test — unit and component tests (Vitest + React Testing Library).
+  # Coverage thresholds (ENG-5: 100 % domain, 90 % services/auth, 80 % rest)
+  # live in the Vitest config, so falling below them fails this job.
+  # Requires the package.json script: "test:coverage" (vitest run --coverage)
+  # ---------------------------------------------------------------------------
+  test:
+    name: test
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run test:coverage
+
+  # ---------------------------------------------------------------------------
+  # build — the production build succeeds and stays inside the JS budget.
+  # RULE PERF-1 / UI-5: initial JavaScript ≤ 250 KB gzipped.
+  # Requires the package.json scripts: "build" (vite build) and
+  # "budget" (fails if the gzipped initial JS exceeds 250 KB).
+  # ---------------------------------------------------------------------------
+  build:
+    name: build
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: npm run build
+      - run: npm run budget
+
+  # ---------------------------------------------------------------------------
+  # audit — no installed package has a known high or critical vulnerability.
+  # RULE SEC-8: high/critical fails the build.
+  # ---------------------------------------------------------------------------
+  audit:
+    name: audit
+    needs: project
+    if: needs.project.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      # SECURITY: checks every installed package (including build tools,
+      # which run on developer machines and in CI) against npm's advisory list.
+      - run: npm audit --audit-level=high
+
+  # ---------------------------------------------------------------------------
+  # secrets — no secret reaches the repository or the browser bundle.
+  # RULES SEC-3, SEC-4, NFR-13. Runs from day one: it needs no npm packages.
+  # Uses only git and grep, so no third-party scanner is added (W-3).
+  # ---------------------------------------------------------------------------
+  secrets:
+    name: secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      # SECURITY: .env files hold real keys and must never be committed (SEC-3).
+      # Only .env.example (names, no values) is allowed.
+      - name: No committed .env files
+        run: |
+          found=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$' || true)
+          if [ -n "$found" ]; then
+            echo "::error::Committed .env file(s) found. Remove them and rotate any keys they contained:"
+            echo "$found"
+            exit 1
+          fi
+
+      # SECURITY: the Supabase service-role key bypasses all row-level security.
+      # It may exist only in Vercel Functions under api/ (SEC-4). Any mention in
+      # browser code (src/, public/, index.html) or any VITE_-prefixed variant
+      # (Vite exposes VITE_* variables to the browser) fails the build.
+      - name: Service-role key not referenced in browser code
+        run: |
+          hits=""
+          for p in src public index.html; do
+            if [ -e "$p" ]; then
+              hits="$hits$(grep -rniE 'service[_-]?role' "$p" || true)"
+            fi
+          done
+          hits="$hits$(git grep -nE 'VITE_[A-Z_]*SERVICE[_-]?ROLE' -- . ':!.github/workflows/ci.yml' || true)"
+          if [ -n "$hits" ]; then
+            echo "::error::Service-role key referenced where the browser can reach it:"
+            echo "$hits"
+            exit 1
+          fi
+
+      # SECURITY: catches pasted key values in any tracked file. Supabase keys
+      # are either JWTs (start with "eyJ", three dot-separated parts) or the
+      # newer "sb_secret_" format. This file is excluded because it contains
+      # the patterns themselves.
+      - name: No key values committed
+        run: |
+          hits=$(git grep -nE 'eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|sb_secret_[A-Za-z0-9_-]{10,}' -- . ':!.github/workflows/ci.yml' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Possible secret key committed. Remove it and rotate the key:"
+            echo "$hits"
+            exit 1
+          fi
