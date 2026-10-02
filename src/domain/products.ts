@@ -104,16 +104,9 @@ function loavesError(value: number | null): ProductFieldError | undefined {
   return value < 1 ? "loaves_min_one" : undefined;
 }
 
-/** Checks the whole form. `input` is present only when there are no errors. */
-export function validateProductForm(values: ProductFormValues): {
-  errors: ProductFormErrors;
-  input?: ProductSaveInput;
-} {
+// Name and code (PRD-02, Q-57h). Description is optional (Q-57j).
+function textErrors(name: string, code: string): ProductFormErrors {
   const errors: ProductFormErrors = {};
-  const name = values.name.trim();
-  const code = values.code.trim();
-  const description = values.description.trim();
-
   if (name === "") {
     errors.name = "name_required";
   }
@@ -122,25 +115,48 @@ export function validateProductForm(values: ProductFormValues): {
   } else if (!CODE_PATTERN.test(code)) {
     errors.code = "code_invalid";
   }
+  return errors;
+}
 
-  // RULE PRD-03 / Q-57d: Loaf is always on; Pack is optional.
+// Loaves per counted item: 1 when the Caisse is typed in loaves, the Pack size
+// when typed in packs, or null when Packs are not set up (PRD-05).
+function caisseMultiplier(values: ProductFormValues): number | null {
+  if (values.caisse.mode === "loaves") {
+    return 1;
+  }
+  return values.pack.on ? values.pack.loaves : null;
+}
+
+// RULE PRD-04 / PRD-05: the Caisse amount, when Caisse is on.
+function caisseError(values: ProductFormValues): ProductFieldError | undefined {
+  const { count } = values.caisse;
+  if (count === null || count < 1) {
+    return loavesError(count);
+  }
+  const multiplier = caisseMultiplier(values);
+  if (multiplier === null) {
+    return "caisse_needs_pack";
+  }
+  return count * multiplier > MAX_STORABLE ? "too_large" : undefined;
+}
+
+/** Checks the whole form. `input` is present only when there are no errors. */
+export function validateProductForm(values: ProductFormValues): {
+  errors: ProductFormErrors;
+  input?: ProductSaveInput;
+} {
+  const name = values.name.trim();
+  const code = values.code.trim();
+  const errors = textErrors(name, code);
+
+  // RULE PRD-03 / Q-57d: Loaf is always on; Pack and Caisse are optional.
   const packError = values.pack.on ? loavesError(values.pack.loaves) : undefined;
   if (packError) {
     errors.packLoaves = packError;
   }
-
-  // RULE PRD-05: Caisse in loaves, or in packs (which needs Pack set up).
-  if (values.caisse.on) {
-    const { mode, count } = values.caisse;
-    // Loaves per counted item: 1 when typed in loaves, the Pack size when typed in packs.
-    const multiplier = mode === "loaves" ? 1 : values.pack.on ? values.pack.loaves : null;
-    if (count === null || count < 1) {
-      errors.caisseCount = loavesError(count);
-    } else if (multiplier === null) {
-      errors.caisseCount = "caisse_needs_pack";
-    } else if (count * multiplier > MAX_STORABLE) {
-      errors.caisseCount = "too_large";
-    }
+  const caisseCountError = values.caisse.on ? caisseError(values) : undefined;
+  if (caisseCountError) {
+    errors.caisseCount = caisseCountError;
   }
 
   if (Object.keys(errors).length > 0) {
@@ -151,7 +167,7 @@ export function validateProductForm(values: ProductFormValues): {
     input: {
       name,
       code,
-      description,
+      description: values.description.trim(),
       status: values.active ? "active" : "inactive",
       packLoaves: values.pack.on ? values.pack.loaves : null,
       caisseLoaves: caisseLoaves(values),

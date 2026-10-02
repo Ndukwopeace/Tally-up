@@ -86,6 +86,10 @@ as $$
 declare
   saved_id uuid;
   old_status public.record_status;
+  -- One wanted unit while saving units (see the loop below).
+  unit_row record;
+  -- record_type of every audit entry written here.
+  record_kind constant text := 'product';
 begin
   -- SECURITY: only an active admin may change products (PRD-01, AUTH-10).
   if not public.is_admin() then
@@ -104,7 +108,7 @@ begin
       returning id into saved_id;
       -- RULE AUD-03: product created.
       insert into public.audit_log (user_id, action, record_type, record_id, details)
-      values (auth.uid(), 'product.created', 'product', saved_id::text, jsonb_build_object('code', btrim(product_code)));
+      values (auth.uid(), 'product.created', record_kind, saved_id::text, jsonb_build_object('code', btrim(product_code)));
     else
       select p.status into old_status from public.products p where p.id = product_id for update;
       if not found then
@@ -119,11 +123,11 @@ begin
       saved_id := product_id;
       -- RULE AUD-03: product edited, and (de)activated when the status changed.
       insert into public.audit_log (user_id, action, record_type, record_id)
-      values (auth.uid(), 'product.edited', 'product', saved_id::text);
+      values (auth.uid(), 'product.edited', record_kind, saved_id::text);
       if old_status <> product_status then
         insert into public.audit_log (user_id, action, record_type, record_id)
-        values (auth.uid(), 'product.' || case when product_status = 'active' then 'activated' else 'deactivated' end,
-                'product', saved_id::text);
+        values (auth.uid(), 'product.' || case when product_status = 'inactive' then 'deactivated' else 'activated' end,
+                record_kind, saved_id::text);
       end if;
     end if;
   exception
@@ -135,28 +139,23 @@ begin
       raise exception 'INVALID_PRODUCT';
   end;
 
-  -- RULE Q-57d: every product has the Loaf unit, always 1.
-  insert into public.product_units (product_id, unit, loaves_per_unit)
-  values (saved_id, 'Loaf', 1)
-  on conflict (product_id, unit) do nothing;
-
-  -- Pack and Caisse: set, change or remove. Past records keep their own
-  -- snapshot of loaves-per-unit, so changing these affects only new records (PRD-06).
-  if pack_loaves is null then
-    delete from public.product_units u where u.product_id = saved_id and u.unit = 'Pack';
-  else
-    insert into public.product_units (product_id, unit, loaves_per_unit)
-    values (saved_id, 'Pack', pack_loaves)
-    on conflict (product_id, unit) do update set loaves_per_unit = excluded.loaves_per_unit;
-  end if;
-
-  if caisse_loaves is null then
-    delete from public.product_units u where u.product_id = saved_id and u.unit = 'Caisse';
-  else
-    insert into public.product_units (product_id, unit, loaves_per_unit)
-    values (saved_id, 'Caisse', caisse_loaves)
-    on conflict (product_id, unit) do update set loaves_per_unit = excluded.loaves_per_unit;
-  end if;
+  -- RULE Q-57d: every product has the Loaf unit, always 1. Pack and Caisse:
+  -- set, change or remove (null = not used). Past records keep their own
+  -- snapshot of loaves-per-unit, so changes affect only new records (PRD-06).
+  -- Loaf is the enum's first value; it is never null here, so it is always kept.
+  for unit_row in
+    select wanted.unit, wanted.loaves
+    from unnest(enum_range(null::public.product_unit), array[1, pack_loaves, caisse_loaves])
+      as wanted (unit, loaves)
+  loop
+    if unit_row.loaves is null then
+      delete from public.product_units u where u.product_id = saved_id and u.unit = unit_row.unit;
+    else
+      insert into public.product_units (product_id, unit, loaves_per_unit)
+      values (saved_id, unit_row.unit, unit_row.loaves)
+      on conflict (product_id, unit) do update set loaves_per_unit = excluded.loaves_per_unit;
+    end if;
+  end loop;
 
   return saved_id;
 end

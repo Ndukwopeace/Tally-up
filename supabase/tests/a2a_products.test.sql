@@ -50,6 +50,28 @@ create function pg_temp.units_of(product_id uuid) returns text language sql as $
   from public.product_units where product_units.product_id = units_of.product_id
 $$;
 
+-- The statement is refused for lack of privilege (SQLSTATE 42501).
+create function pg_temp.refused(statement text, description text) returns text language sql as $$
+  select throws_ok(statement, '42501', null, description)
+$$;
+
+-- The statement is refused by a business rule with the given message.
+create function pg_temp.rule_refused(statement text, message text, description text) returns text language sql as $$
+  select throws_ok(statement, 'P0001', message, description)
+$$;
+
+-- The statement is refused as an invalid product.
+create function pg_temp.invalid(statement text, description text) returns text language sql as $$
+  select pg_temp.rule_refused(statement, 'INVALID_PRODUCT', description)
+$$;
+
+-- Ids of the products created below, by label.
+create temp table saved (label text primary key, id uuid);
+grant all on saved to authenticated;
+create function pg_temp.big() returns uuid language sql as $$ select id from saved where label = 'big' $$;
+create function pg_temp.loaf_only() returns uuid language sql as $$ select id from saved where label = 'loaf_only' $$;
+create function pg_temp.caisse_only() returns uuid language sql as $$ select id from saved where label = 'caisse_only' $$;
+
 -- ---------------------------------------------------------------------------
 -- Fixtures
 -- ---------------------------------------------------------------------------
@@ -74,52 +96,49 @@ select ok((select relrowsecurity from pg_class where oid = 'public.product_units
 -- ---------------------------------------------------------------------------
 select pg_temp.sign_in_as(pg_temp.admin_user());
 
-create temp table saved (label text primary key, id uuid);
-grant all on saved to authenticated;
-insert into saved values ('big', pg_temp.save(null, 'BB-01', 10, 50, true));
-
-select is(pg_temp.units_of((select id from saved where label = 'big')), 'Caisse=50,Loaf=1,Pack=10',
+insert into saved values ('big', pg_temp.save(null, 'Bb-01', 10, 50, true));
+select is(pg_temp.units_of(pg_temp.big()), 'Caisse=50,Loaf=1,Pack=10',
   'PRD-04: Loaf (always 1), Pack and Caisse are stored in loaves');
 
 insert into saved values ('loaf_only', pg_temp.save(null, 'LO-1', null, null, true));
-select is(pg_temp.units_of((select id from saved where label = 'loaf_only')), 'Loaf=1',
+select is(pg_temp.units_of(pg_temp.loaf_only()), 'Loaf=1',
   'Q-57d: every product has the Loaf unit, even with no Pack or Caisse');
 
 insert into saved values ('caisse_only', pg_temp.save(null, 'CO-1', null, 24, true));
-select is(pg_temp.units_of((select id from saved where label = 'caisse_only')), 'Caisse=24,Loaf=1',
+select is(pg_temp.units_of(pg_temp.caisse_only()), 'Caisse=24,Loaf=1',
   'PRD-03: Pack is optional; Caisse can be set in loaves');
 
-select throws_ok($$select pg_temp.save(null, 'bb-01', null, null, true)$$, 'P0001', 'CODE_TAKEN',
+select pg_temp.rule_refused($$select pg_temp.save(null, 'BB-01', null, null, true)$$, 'CODE_TAKEN',
   'PRD-02 / Q-57h: product codes are unique ignoring letter case');
-select throws_ok($$select pg_temp.save(null, 'BAD CODE', null, null, true)$$, 'P0001', 'INVALID_PRODUCT',
+select pg_temp.invalid($$select pg_temp.save(null, 'BAD CODE', null, null, true)$$,
   'Q-57h: code allows letters, numbers and dashes only');
-select throws_ok($$select pg_temp.save(null, 'ABCDEFGHIJKLMNOPQRSTU', null, null, true)$$, 'P0001', 'INVALID_PRODUCT',
+select pg_temp.invalid($$select pg_temp.save(null, 'ABCDEFGHIJKLMNOPQRSTU', null, null, true)$$,
   'Q-57h: code is at most 20 characters');
-select throws_ok($$select pg_temp.save(null, 'P0', 0, null, true)$$, 'P0001', 'INVALID_PRODUCT',
+select pg_temp.invalid($$select pg_temp.save(null, 'P0', 0, null, true)$$,
   'PRD-04: loaves per Pack must be at least 1');
-select throws_ok($$select pg_temp.save(null, 'C0', null, -5, true)$$, 'P0001', 'INVALID_PRODUCT',
+select pg_temp.invalid($$select pg_temp.save(null, 'C0', null, -5, true)$$,
   'PRD-04: loaves per Caisse must be at least 1');
-select throws_ok(
-  $$select public.admin_save_product(null, '  ', 'NB-1', 'x', 'active', null, null)$$, 'P0001', 'INVALID_PRODUCT',
+select pg_temp.invalid($$select public.admin_save_product(null, '  ', 'NB-1', null, 'active', null, null)$$,
   'PRD-02: name is required');
+
 -- Q-57j: description is optional; a blank one is stored as empty (null).
 select lives_ok(
-  $$select public.admin_save_product((select id from saved where label = 'caisse_only'), 'Bread CO-1', 'CO-1', '  ',
-    'active', null, 24)$$,
+  $$select public.admin_save_product(pg_temp.caisse_only(), 'Bread CO-1', 'CO-1', '  ', 'active', null, 24)$$,
   'Q-57j: a product can be saved without a description');
-select is((select description from public.products where id = (select id from saved where label = 'caisse_only')),
-  null, 'Q-57j: a blank description is stored as empty');
+select is((select description from public.products where id = pg_temp.caisse_only()), null,
+  'Q-57j: a blank description is stored as empty');
 
--- Edit: drop Caisse, change Pack, deactivate.
-select lives_ok($$select pg_temp.save((select id from saved where label = 'big'), 'BB-01', 12, null, false)$$,
+-- Edit: drop Caisse, change Pack, deactivate (the code is re-sent unchanged).
+select lives_ok(
+  $$select pg_temp.save(pg_temp.big(), (select code from public.products where id = pg_temp.big()), 12, null, false)$$,
   'an admin edits a product');
-select is(pg_temp.units_of((select id from saved where label = 'big')), 'Loaf=1,Pack=12',
+select is(pg_temp.units_of(pg_temp.big()), 'Loaf=1,Pack=12',
   'PRD-06: units can change; a removed unit disappears, Loaf stays');
-select is((select status::text from public.products where id = (select id from saved where label = 'big')),
-  'inactive', 'PRD-01: deactivated, not deleted');
-select is((select code from public.products where id = (select id from saved where label = 'big')), 'BB-01',
+select is((select status::text from public.products where id = pg_temp.big()), 'inactive',
+  'PRD-01: deactivated, not deleted');
+select is((select code from public.products where id = pg_temp.big()), 'Bb-01',
   'the code keeps the letters as typed');
-select throws_ok($$select pg_temp.save(gen_random_uuid(), 'ZZ-1', null, null, true)$$, 'P0001', 'NOT_FOUND',
+select pg_temp.rule_refused($$select pg_temp.save(gen_random_uuid(), 'ZZ-1', null, null, true)$$, 'NOT_FOUND',
   'editing a product that does not exist is refused');
 
 -- ---------------------------------------------------------------------------
@@ -127,8 +146,7 @@ select throws_ok($$select pg_temp.save(gen_random_uuid(), 'ZZ-1', null, null, tr
 -- ---------------------------------------------------------------------------
 reset role;
 select results_eq(
-  format($$select action from public.audit_log where record_id = %L order by created_at, action$$,
-         (select id from saved where label = 'big')::text),
+  format($$select action from public.audit_log where record_id = %L order by created_at, action$$, pg_temp.big()::text),
   $$values ('product.created'), ('product.deactivated'), ('product.edited')$$,
   'AUD-03: product created, edited and deactivated are logged');
 select is((select user_id from public.audit_log where action = 'product.created' limit 1), pg_temp.admin_user(),
@@ -142,24 +160,24 @@ select is((select count(*)::int from public.products), 2,
   'distributors see active products only (one of three is inactive)');
 select is((select count(*)::int from public.product_units), 3,
   'distributors see units of active products only');
-select throws_ok($$select pg_temp.save(null, 'DX-1', null, null, true)$$, 'P0001', 'NOT_ADMIN',
+select pg_temp.rule_refused($$select pg_temp.save(null, 'DX-1', null, null, true)$$, 'NOT_ADMIN',
   'SECURITY: a distributor cannot save products');
-select throws_ok($$insert into public.products (name, code, description) values ('x', 'X-1', 'x')$$, '42501', null,
+select pg_temp.refused($$insert into public.products (name, code, description) values ('Direct insert', 'X-1', null)$$,
   'SECURITY: nobody writes products directly');
-select throws_ok($$update public.product_units set loaves_per_unit = 99$$, '42501', null,
+select pg_temp.refused('update public.product_units set loaves_per_unit = 99',
   'SECURITY: nobody changes loaves-per-unit directly');
 
 select pg_temp.sign_in_as(pg_temp.manager_user());
 select is((select count(*)::int from public.products), 3, 'depot managers see every product (past receipts)');
 
 select pg_temp.sign_in_as(null);
-select throws_ok('select count(*) from public.products', '42501', null, 'signed-out visitors see no products');
-select throws_ok($$select pg_temp.save(null, 'AN-1', null, null, true)$$, '42501', null,
+select pg_temp.refused('select count(*) from public.products', 'signed-out visitors see no products');
+select pg_temp.refused($$select pg_temp.save(null, 'AN-1', null, null, true)$$,
   'signed-out visitors cannot call the save function');
 
 select pg_temp.sign_in_as(pg_temp.admin_user());
 select is((select count(*)::int from public.products), 3, 'an admin sees every product');
-select throws_ok($$delete from public.products$$, '42501', null, 'PRD-01: no hard delete');
+select pg_temp.refused('delete from public.products', 'PRD-01: no hard delete');
 
 select * from finish();
 rollback;

@@ -57,7 +57,7 @@ export class MockProductService implements ProductService {
   async save(input: ProductSaveInput, id?: string): Promise<string> {
     await this.beforeCall();
     // RULE Q-57h: codes are unique ignoring letter case.
-    const clash = this.products.find(
+    const clash = this.products.some(
       (product) => product.code.toLowerCase() === input.code.toLowerCase() && product.id !== id,
     );
     if (clash) {
