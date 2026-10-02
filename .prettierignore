@@ -1,0 +1,7 @@
+# Generated output
+dist
+dev-dist
+coverage
+package-lock.json
+# Approved documents are edited by decision only (CLAUDE.md rule 4); the formatter must not rewrite them.
+*.md

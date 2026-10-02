@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules
+dist
+dev-dist
+coverage
+*.tsbuildinfo
+# SECURITY: real environment files hold keys and must never be committed (SEC-3).
+.env
+.env.*
+!.env.example
+# Editor and OS files
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+# Vercel CLI link data
+.vercel

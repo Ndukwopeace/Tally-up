@@ -339,7 +339,7 @@ GitHub only lists a check after it has run at least once, so each check is added
 
 Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
 
-Until Milestone 1 adds `package.json`, the npm jobs (`format` … `audit`) show as **skipped** and only `secrets` runs. A temporary `project` job decides this. Milestone 1 removes that job, after which every check always runs. Do not add `project` as a required check.
+Milestone 1 removed the temporary `project` job, so every check always runs.
 
 Scripts the Milestone 1 `package.json` must define for CI: `format:check`, `lint`, `typecheck`, `test:coverage`, `build`, `budget`.
 

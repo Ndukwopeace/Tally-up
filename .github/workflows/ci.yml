@@ -38,34 +38,11 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # WORKAROUND (remove in Milestone 1): the repository holds only documents until
-  # the Milestone 1 scaffold adds package.json. Without this guard every npm job
-  # would fail on documentation-only commits. This job reports whether the
-  # project exists; npm jobs skip until it does. Milestone 1 deletes this job and
-  # the `needs`/`if` lines below, so a missing package.json can never make
-  # checks skip silently once the app exists.
-  # ---------------------------------------------------------------------------
-  project:
-    name: project
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    outputs:
-      exists: ${{ steps.check.outputs.exists }}
-    steps:
-      - uses: actions/checkout@v4
-      # Writes exists=true/false so later jobs can decide whether to run.
-      - id: check
-        run: |
-          if [ -f package.json ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; else echo "exists=false" >> "$GITHUB_OUTPUT"; fi
-
-  # ---------------------------------------------------------------------------
   # format — code style is uniform (Prettier). No style debates in review.
   # Requires the package.json script: "format:check" (prettier --check .)
   # ---------------------------------------------------------------------------
   format:
     name: format
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -80,8 +57,6 @@ jobs:
   # ---------------------------------------------------------------------------
   lint:
     name: lint
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -96,8 +71,6 @@ jobs:
   # ---------------------------------------------------------------------------
   typecheck:
     name: typecheck
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -113,8 +86,6 @@ jobs:
   # ---------------------------------------------------------------------------
   test:
     name: test
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -130,8 +101,6 @@ jobs:
   # ---------------------------------------------------------------------------
   build:
     name: build
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -146,8 +115,6 @@ jobs:
   # ---------------------------------------------------------------------------
   audit:
     name: audit
-    needs: project
-    if: needs.project.outputs.exists == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
