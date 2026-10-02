@@ -10,6 +10,6 @@ describe("App", () => {
   it("renders the start page at /", async () => {
     window.history.pushState({}, "", "/");
     render(<App />);
-    expect(await screen.findByRole("heading", { level: 1, name: "Tally-Up preview" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Choose a portal" })).toBeInTheDocument();
   });
 });

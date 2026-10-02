@@ -7,8 +7,9 @@
  * HOW:  Chrome/Android fire `beforeinstallprompt` when the app is installable.
  *       We keep that event, show our own card, and call `prompt()` when the user
  *       taps Install. The card hides after install, after "Not now", or when
- *       `appinstalled` fires. Browsers without the event (e.g. iPhone Safari)
- *       show nothing; there users use Share → Add to Home Screen.
+ *       `appinstalled` fires. iPhone Safari has no such event and no install
+ *       button, so there the card explains Share → "Add to Home Screen" instead
+ *       (UI review #22). Nothing is shown when the app is already installed.
  * WHEN: Shown on the start page (Milestone 1) and later on the login page.
  * SECURITY: The browser controls the actual install dialog; this component
  *       only asks it to appear after a user tap.
@@ -25,9 +26,25 @@ export interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+// True on iPhone/iPad browsers, which install only through Share → Add to Home Screen.
+function isIos(): boolean {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent);
+}
+
+// True when the app was opened from the home screen (already installed).
+function isInstalled(): boolean {
+  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  // Some browsers (and the test environment) have no matchMedia; treat that as "not installed".
+  const standaloneQuery =
+    typeof window.matchMedia === "function" && window.matchMedia("(display-mode: standalone)").matches;
+  return iosStandalone || standaloneQuery;
+}
+
 export function InstallPrompt() {
   // The saved event; null means "nothing to offer".
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  // iPhone instructions are shown once per visit until dismissed.
+  const [showIosHelp, setShowIosHelp] = useState(() => isIos() && !isInstalled());
 
   useEffect(() => {
     // Stop the browser's own mini-banner and keep the event for our button.
@@ -47,7 +64,7 @@ export function InstallPrompt() {
     };
   }, []);
 
-  if (!installEvent) {
+  if (!installEvent && !showIosHelp) {
     return null;
   }
 
@@ -69,15 +86,16 @@ export function InstallPrompt() {
           <h2 id="install-title" className="text-lg font-semibold text-ink">
             {en.pwa.installTitle}
           </h2>
-          <p className="text-base text-ink-muted">{en.pwa.installBody}</p>
+          <p className="text-base text-ink-muted">{installEvent ? en.pwa.installBody : en.pwa.installIos}</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-3">
-        <Button onClick={handleInstall}>{en.actions.install}</Button>
+        {installEvent ? <Button onClick={handleInstall}>{en.actions.install}</Button> : null}
         <Button
           variant="ghost"
           onClick={() => {
             setInstallEvent(null);
+            setShowIosHelp(false);
           }}
         >
           {en.actions.notNow}

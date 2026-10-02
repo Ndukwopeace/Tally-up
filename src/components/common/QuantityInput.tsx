@@ -45,7 +45,7 @@ export function QuantityInput({
   error,
   hint,
   disabled,
-}: QuantityInputProps) {
+}: Readonly<QuantityInputProps>) {
   // Raw text is kept so "1,500" stays as typed instead of jumping to "1500" mid-entry.
   const [text, setText] = useState(value === null ? "" : String(value));
   // Message for text that could not be read; null when the text is valid or empty.

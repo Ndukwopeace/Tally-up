@@ -8,7 +8,9 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 |---|---|---|---|
 | Q-20, P-1, P-3 | Whole-number quantities; accept `1,500` / `1 500`; refuse decimal commas, negatives, exponents | `src/domain/quantity.test.ts` | `src/domain/quantity.ts` |
 | REQUIREMENTS §11 (Q-6, Q-39, COL-11, PRD-04) | Business-rule values | `src/config/business-rules.test.ts` | `src/config/business-rules.ts` |
-| REQUIREMENTS §7, H-2, Q-40, NAV-1 | Portal tabs; max 5 / 7 / 4; admin lists empty until NAV-1 | `src/app/navigation.test.ts`, `src/app/router.test.tsx`, `src/layouts/AdminLayout.test.tsx` | `src/app/navigation.ts`, `src/layouts/*` |
+| REQUIREMENTS §7, H-2, Q-46, Q-47 | Portal tabs; admin Home · Collections · Distributions · More; More page; account menu | `src/app/navigation.test.ts`, `src/app/router.test.tsx` | `src/app/navigation.ts`, `src/layouts/*`, `src/pages/AdminMorePage.tsx` |
+| Q-50, WCAG 1.4.1 | Back arrow on sub-pages; logo → home; tabs replace history; no sideways swipe navigation; active tab marked by more than colour | `src/app/router.test.tsx` | `BackButton.tsx`, `BottomNav.tsx`, `PortalHeader.tsx`, `src/styles/index.css` |
+| NFR-10, Q-6 | Today's date in Douala time on each home tab | `src/lib/format.test.ts`, `src/app/router.test.tsx` | `src/lib/format.ts`, `src/pages/HomePage.tsx` |
 | ARCHITECTURE §4 | Routes for /admin, /distributor, /depot; Not Found | `src/app/router.test.tsx`, `src/app/App.test.tsx` | `src/app/router.tsx`, `src/pages/*` |
 | NFR-11, WCAG 1.4.1, W-A3 | One status badge; text + icon + colour; five labels only; red only for discrepancy | `src/components/common/StatusBadge.test.tsx` | `src/components/common/StatusBadge.tsx` |
 | MB-4, F-4, C-3, WCAG 3.3.1/3.3.2 | Large numeric quantity field with unit, linked errors | `src/components/common/QuantityInput.test.tsx` | `src/components/common/QuantityInput.tsx` |

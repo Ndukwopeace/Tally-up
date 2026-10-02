@@ -11,7 +11,7 @@
  */
 import { en } from "@/i18n/en";
 
-export function PageSkeleton({ rows = 3 }: { rows?: number }) {
+export function PageSkeleton({ rows = 3 }: Readonly<{ rows?: number }>) {
   return (
     <div role="status" aria-live="polite" className="flex flex-col gap-3">
       <span className="sr-only">{en.states.loading}</span>

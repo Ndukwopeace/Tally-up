@@ -15,7 +15,7 @@ import type { ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
 
-const buttonVariants = cva(
+export const buttonVariants = cva(
   // Shared: 48px minimum height (F-1), centred icon + text, disabled look, focus ring from index.css.
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
   {
@@ -40,6 +40,6 @@ const buttonVariants = cva(
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>;
 
-export function Button({ className, variant, size, type = "button", ...props }: ButtonProps) {
+export function Button({ className, variant, size, type = "button", ...props }: Readonly<ButtonProps>) {
   return <button type={type} className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 }

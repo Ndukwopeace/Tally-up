@@ -1,50 +1,75 @@
 /**
- * Bottom tab bar for phone-sized screens.
+ * Bottom tab bar.
  *
- * WHY:  REQUIREMENTS §7 and J-1: mobile portals use bottom tabs, which sit in
- *       the thumb zone (MB-2, F-2). Max 5 tabs (H-2).
- * HOW:  A <nav> landmark with one NavLink per item. NavLink sets
- *       aria-current="page" on the active tab, which also drives its styling.
- *       Each tab is icon + text (UI_GUIDELINES §8) and at least 64px tall.
- *       Tabs share the width equally; a label too long for a narrow phone
- *       (e.g. "Distributions" at 320px) wraps instead of pushing other tabs
- *       below the 48px minimum or off screen (F-1, WCAG 1.4.10 reflow).
- * WHEN: Distributor and Depot Manager layouts; Admin phone layout once NAV-1 is decided.
+ * WHY:  Q-46 / Q-47 / REQUIREMENTS §7: every portal uses bottom tabs in the
+ *       thumb zone (MB-2, F-2). Max 5 tabs (H-2).
+ * HOW:  One link per tab, sharing the width equally.
+ *       - Active tab: blue pill behind the icon + bold blue label, so it is not
+ *         shown by colour alone (WCAG 1.4.1), and aria-current="page".
+ *       - A tab is active on its own path, on paths below it, and on any path
+ *         listed in `activeFor` (More stays active on Depots, Products, …).
+ *       - Tabs REPLACE the current history entry instead of adding one, so the
+ *         phone's back-swipe does not walk through previously tapped tabs (Q-50).
+ *       - Padding includes the phone's safe areas (home indicator, rounded corners).
+ * WHEN: Every portal layout.
  * SECURITY: Navigation only. Access is enforced by route guards and RLS (AUTH-08, AUTH-10).
  */
-import { NavLink } from "react-router";
+import { Link, useLocation } from "react-router";
 
 import type { NavItem } from "@/app/navigation";
 import { en } from "@/i18n/en";
 import { cn } from "@/lib/cn";
 
-export function BottomNav({ items, className }: { items: readonly NavItem[]; className?: string }) {
+// True when `pathname` is `path` itself or a page below it.
+function isUnder(pathname: string, path: string): boolean {
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function isActive(pathname: string, item: NavItem): boolean {
+  if (item.activeFor?.some((path) => isUnder(pathname, path))) {
+    return true;
+  }
+  return item.end ? pathname === item.to : isUnder(pathname, item.to);
+}
+
+export function BottomNav({ items }: Readonly<{ items: readonly NavItem[] }>) {
+  const { pathname } = useLocation();
+
   return (
     <nav
       aria-label={en.nav.mainLabel}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]",
-        className,
-      )}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]"
     >
       <ul className="mx-auto flex max-w-xl">
-        {items.map(({ label, to, icon: Icon, end }) => (
-          <li key={to} className="min-w-0 flex-1 basis-0">
-            <NavLink
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                cn(
-                  "flex min-h-16 flex-col items-center justify-center gap-1 px-1 text-center text-xs leading-tight font-semibold",
-                  isActive ? "text-brand" : "text-ink-muted hover:text-ink",
-                )
-              }
-            >
-              <Icon aria-hidden="true" className="size-6 shrink-0" />
-              <span className="max-w-full hyphens-auto [overflow-wrap:anywhere]">{label}</span>
-            </NavLink>
-          </li>
-        ))}
+        {items.map((item) => {
+          const active = isActive(pathname, item);
+          const Icon = item.icon;
+          return (
+            <li key={item.to} className="min-w-0 flex-1 basis-0">
+              <Link
+                to={item.to}
+                replace
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-h-16 flex-col items-center justify-center gap-1 text-xs leading-tight whitespace-nowrap max-[359px]:text-[11px]",
+                  active ? "font-bold text-brand" : "font-medium text-ink-muted hover:text-ink",
+                )}
+              >
+                <span className="relative flex h-8 w-14 items-center justify-center">
+                  {active ? (
+                    <span
+                      data-active-marker
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full bg-brand-soft"
+                    />
+                  ) : null}
+                  <Icon aria-hidden="true" className="relative size-6" />
+                </span>
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

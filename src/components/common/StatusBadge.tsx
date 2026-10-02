@@ -43,7 +43,7 @@ const TONE_CLASSES: Readonly<Record<StatusTone, string>> = {
   danger: "bg-danger-soft text-danger ring-danger/30",
 };
 
-export function StatusBadge({ status, className }: { status: Status; className?: string }) {
+export function StatusBadge({ status, className }: Readonly<{ status: Status; className?: string }>) {
   const Icon = STATUS_ICON[status];
   return (
     <span

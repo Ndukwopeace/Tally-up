@@ -10,9 +10,15 @@
 import { MobilePortalLayout } from "./MobilePortalLayout";
 
 import { DEPOT_NAV } from "@/app/navigation";
+import { en } from "@/i18n/en";
 
 export default function DepotLayout() {
   return (
-    <MobilePortalLayout homeHref="/depot" notificationsHref="/depot/notifications" navItems={DEPOT_NAV} />
+    <MobilePortalLayout
+      homeHref="/depot"
+      homeLabel={en.nav.dashboard}
+      notificationsHref="/depot/notifications"
+      navItems={DEPOT_NAV}
+    />
   );
 }

@@ -249,13 +249,28 @@ IDs are stable. Later commits and tests will reference them.
 
 ## 7. Navigation
 
-| Portal | Desktop | Phone (PWA) |
-|---|---|---|
-| Admin | Left sidebar, **at most 7 items** | **4 bottom tabs** |
-| Distributor | — (mobile-first) | 5 bottom tabs: Dashboard · Collections · Distributions · History · Profile |
-| Depot Manager | — (mobile-first) | 4 bottom tabs: Dashboard · Receipts · History · Profile |
+All three portals are built **phone-first** (Q-48). An admin desktop layout comes later.
 
-**Admin navigation contents are not decided yet (NAV-1).** The admin pages that must be reachable are: Dashboard, Collections, Distributions, Discrepancies, Depots, Products, Users, Reports, Notifications, Audit, Settings. The owner will decide which go in the 7 sidebar items and the 4 phone tabs, and how the rest are reached. Until then, nothing is built for admin navigation beyond the layout shell.
+| Portal | Bottom tabs | Top bar |
+|---|---|---|
+| Admin (Q-47) | 🏠 Home · 📦 Collections · 🚚 Distributions · ☰ More | Logo (→ Home), 🔔 Notifications, 👤 Account menu |
+| Distributor (Q-46) | Dashboard · Collections · Distributions · Profile | Logo (→ Dashboard), 🔔 Notifications |
+| Depot Manager | Dashboard · Receipts · History · Profile | Logo (→ Dashboard), 🔔 Notifications |
+
+**Admin tabs (Q-47):**
+
+| Tab | What it holds |
+|---|---|
+| Home | Dashboard, alerts, pending confirmations, discrepancies, open collections |
+| Collections | All distributor collections and their remaining quantities |
+| Distributions | Depot distributions, confirmation status and discrepancies |
+| More | Depots · Products · Users · Reports |
+
+**Admin account menu (Q-47):** Profile / My Account · Sign Out.
+
+**Distributor history (Q-46):** past records live inside Collections and Distributions (with a date filter); there is no separate History tab.
+
+**Back navigation (Q-50):** every page below a portal's top level shows a Back arrow (to the previous page, or to its parent page when opened directly). The logo always returns to the portal's home. Switching tabs does not add browser history, so a back-swipe does not walk through tabs, and sideways swipes do not trigger page navigation where the browser allows turning it off.
 
 **Profile (all roles):** name, email, role, assigned depot (managers), change password, sign out. No App Settings, Help & Support, or About.
 
@@ -371,6 +386,11 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
 | Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
+| Q-46 | Distributor tab labels too long for 5 tabs | **Option B:** Dashboard · Collections · Distributions · Profile. History moves inside Collections and Distributions. (§7) |
+| Q-47 | Admin navigation (resolves NAV-1 for phones) | Bottom: Home · Collections · Distributions · More. More: Depots, Products, Users, Reports. Top: bell + profile icon → Profile / My Account, Sign Out. (§7) |
+| Q-48 | Admin desktop | Not now. Admin is built phone-first; desktop layout later. Supersedes the desktop-first part of NFR-09 and the 7-item sidebar of Q-40 until revisited. |
+| Q-49 | Build order | **By role:** finish all Admin functionality, then Distributor, then Depot Manager. Milestone plan to be re-cut accordingly (§13). |
+| Q-50 | Swipe and back navigation | Sideways swipes must not switch tabs; there must be a way back to the previous page; the logo must do something. (§7) |
 | Q-45 | Logo | **The wireframe logo**: blue delivery truck with bread and rising bars on an orange cargo box; wordmark "Tally-" in brand blue (white on dark) and "Up" in orange. The truck is branding only; truck features stay out of scope (§2). |
 | Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
@@ -378,7 +398,8 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 
 | # | Item | When |
 |---|---|---|
-| NAV-1 | Which admin pages go in the 7 sidebar items and 4 phone tabs, and how the others are reached | Before Milestone 3 (first admin screens) |
+| NAV-1 | ~~Admin navigation~~ — resolved for phones by Q-47. Still open: where **Audit log**, **Settings** and the **Discrepancies** list live (spec §21, §35; REQUIREMENTS §11) | Before those screens are built |
+| PLAN-1 | Re-cut the milestone plan (§13) for the role-by-role order (Q-49) | Before the next milestone starts |
 
 ## 13. Delivery Plan
 

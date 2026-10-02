@@ -19,8 +19,9 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 
-// Brand colour used for the browser/phone status bar; matches --color-brand in src/styles/index.css.
-const THEME_COLOR = "#1d4ed8";
+// Colour of the phone's status bar for the installed app: white, matching the white
+// header (--color-surface), so the bar and header read as one strip.
+const THEME_COLOR = "#ffffff";
 // Page background shown on the PWA splash screen; matches --color-canvas.
 const BACKGROUND_COLOR = "#f1f5f9";
 

@@ -1,150 +1,232 @@
 /**
- * Tests for the routes and the three portal frames (Milestone 1).
+ * Tests for the routes, portal frames and navigation behaviour.
  *
  * Rules under test:
- *  - ARCHITECTURE §4: portal routes under /admin, /distributor, /depot.
- *  - REQUIREMENTS §7: bottom tabs per role; admin navigation pending NAV-1.
- *  - J-1: notifications bell top-right. WCAG 2.4.1: skip link. WCAG 2.4.2: page titles.
- *  - Placeholder screens say which milestone builds them (no blank screens, §49).
+ *  - Q-47: admin phone tabs, More page, bell + account menu at the top.
+ *  - Q-46: distributor tabs without History.
+ *  - Q-50: tabs do not add browser history; pages below the top level show Back;
+ *          the logo goes to the portal's home.
+ *  - WCAG 1.4.1: the active tab is not shown by colour alone.
+ *  - WCAG 2.4.1 skip link, 2.4.2 page titles; no developer wording on screen.
  */
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
 
 import { routes } from "./router";
 
-function renderAt(path: string) {
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
+function renderAt(path: string, history: string[] = []) {
+  const router = createMemoryRouter(routes, { initialEntries: [...history, path] });
   render(<RouterProvider router={router} />);
   return router;
 }
 
-describe("temporary start page (Milestone 1 only)", () => {
-  it("links to the three portals", async () => {
+const mainNav = () => screen.getByRole("navigation", { name: "Main navigation" });
+
+describe("temporary start page", () => {
+  it("offers the three portals with a short description each", async () => {
     renderAt("/");
-    expect(await screen.findByRole("heading", { level: 1, name: "Tally-Up preview" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open the Admin portal" })).toHaveAttribute("href", "/admin");
-    expect(screen.getByRole("link", { name: "Open the Distributor portal" })).toHaveAttribute(
-      "href",
-      "/distributor",
-    );
-    expect(screen.getByRole("link", { name: "Open the Depot Manager portal" })).toHaveAttribute(
-      "href",
-      "/depot",
-    );
+    expect(await screen.findByRole("heading", { level: 1, name: "Choose a portal" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Admin/ })).toHaveAttribute("href", "/admin");
+    expect(screen.getByRole("link", { name: /^Distributor/ })).toHaveAttribute("href", "/distributor");
+    expect(screen.getByRole("link", { name: /^Depot Manager/ })).toHaveAttribute("href", "/depot");
   });
 });
 
-describe("Distributor portal", () => {
-  it("shows the dashboard placeholder with five bottom tabs, Dashboard active", async () => {
-    renderAt("/distributor");
-    expect(
-      await screen.findByRole("heading", { level: 1, name: "Distributor Dashboard" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("This screen is built in Milestone 4.")).toBeInTheDocument();
-
-    const nav = screen.getByRole("navigation", { name: "Main navigation" });
-    const links = within(nav).getAllByRole("link");
-    expect(links.map((link) => link.textContent)).toEqual([
-      "Dashboard",
-      "Collections",
-      "Distributions",
-      "History",
-      "Profile",
-    ]);
-    expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
+describe("Admin portal (Q-47)", () => {
+  it("opens on Home with today's date and four bottom tabs, Home active", async () => {
+    renderAt("/admin");
+    expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
+    expect(screen.getByTestId("today")).toHaveTextContent(/\d{4}/);
+    const links = within(mainNav()).getAllByRole("link");
+    expect(links.map((link) => link.textContent)).toEqual(["Home", "Collections", "Distributions", "More"]);
+    expect(within(mainNav()).getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
   });
 
-  it("highlights only the tab of the current page", async () => {
-    renderAt("/distributor/collections");
-    expect(await screen.findByRole("heading", { level: 1, name: "Collections" })).toBeInTheDocument();
-    const nav = screen.getByRole("navigation", { name: "Main navigation" });
-    expect(within(nav).getByRole("link", { name: "Collections" })).toHaveAttribute("aria-current", "page");
-    expect(within(nav).getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
+  it("shows the active tab with a visible marker, not colour alone (WCAG 1.4.1)", async () => {
+    renderAt("/admin/collections");
+    await screen.findByRole("heading", { level: 1, name: "Collections" });
+    const active = within(mainNav()).getByRole("link", { name: "Collections" });
+    expect(active.querySelector("[data-active-marker]")).not.toBeNull();
+    const inactive = within(mainNav()).getByRole("link", { name: "Home" });
+    expect(inactive.querySelector("[data-active-marker]")).toBeNull();
   });
 
-  it.each([
-    ["/distributor/distributions", "Distributions", 4],
-    ["/distributor/history", "History", 4],
-    ["/distributor/profile", "Profile", 2],
-    ["/distributor/notifications", "Notifications", 6],
-  ])("%s shows the %s placeholder (Milestone %d)", async (path, title, milestone) => {
-    renderAt(path);
-    expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-    expect(screen.getByText(`This screen is built in Milestone ${milestone}.`)).toBeInTheDocument();
+  it("lists Depots, Products, Users and Reports on the More page", async () => {
+    renderAt("/admin/more");
+    expect(await screen.findByRole("heading", { level: 1, name: "More" })).toBeInTheDocument();
+    for (const [name, href] of [
+      ["Depots", "/admin/depots"],
+      ["Products", "/admin/products"],
+      ["Users", "/admin/users"],
+      ["Reports", "/admin/reports"],
+    ]) {
+      expect(screen.getByRole("link", { name: new RegExp(`^${name}`) })).toHaveAttribute("href", href);
+    }
   });
 
-  it("has a notifications bell linking to the distributor's notifications (J-1)", async () => {
-    renderAt("/distributor");
-    expect(await screen.findByRole("link", { name: "Notifications" })).toHaveAttribute(
+  it.each(["Depots", "Products", "Users", "Reports"])(
+    "%s keeps the More tab active and shows Back instead of the logo",
+    async (name) => {
+      renderAt(`/admin/${name.toLowerCase()}`);
+      expect(await screen.findByRole("heading", { level: 1, name })).toBeInTheDocument();
+      expect(within(mainNav()).getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
+      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+    },
+  );
+
+  it("Back returns to the previous page when there is one", async () => {
+    const router = renderAt("/admin/depots", ["/admin/more"]);
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/admin/more");
+  });
+
+  it("Back goes up to the parent page when the page was opened directly", async () => {
+    const router = renderAt("/admin/depots");
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/admin/more");
+  });
+
+  it("switching tabs does not add browser history, so a back-swipe does not walk through tabs (Q-50)", async () => {
+    const router = renderAt("/admin");
+    await userEvent.click(
+      await within(await screen.findByRole("navigation", { name: "Main navigation" })).findByRole("link", {
+        name: "Collections",
+      }),
+    );
+    expect(router.state.location.pathname).toBe("/admin/collections");
+    expect(router.state.historyAction).toBe("REPLACE");
+  });
+
+  it("the logo takes you to Home", async () => {
+    renderAt("/admin/collections");
+    expect(await screen.findByRole("link", { name: "Tally-Up, go to Home" })).toHaveAttribute(
       "href",
-      "/distributor/notifications",
+      "/admin",
     );
   });
 
-  it("offers a skip link to the main content (WCAG 2.4.1)", async () => {
-    renderAt("/distributor");
-    const skip = await screen.findByRole("link", { name: "Skip to main content" });
-    expect(skip).toHaveAttribute("href", "#main");
-    expect(screen.getByRole("main")).toHaveAttribute("id", "main");
+  it("has the bell and an account menu with Profile / My Account and Sign Out", async () => {
+    const router = renderAt("/admin");
+    expect(await screen.findByRole("link", { name: "Notifications" })).toHaveAttribute(
+      "href",
+      "/admin/notifications",
+    );
+    const account = screen.getByRole("button", { name: "Account" });
+    expect(account).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(account);
+    expect(account).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Profile / My Account" })).toHaveAttribute(
+      "href",
+      "/admin/profile",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Sign Out" }));
+    expect(router.state.location.pathname).toBe("/");
   });
 
-  it("names the browser tab after the page (WCAG 2.4.2)", async () => {
+  it("closes the account menu with Escape and returns focus to the button", async () => {
+    renderAt("/admin");
+    const account = await screen.findByRole("button", { name: "Account" });
+    await userEvent.click(account);
+    await userEvent.keyboard("{Escape}");
+    expect(account).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("link", { name: "Profile / My Account" })).not.toBeInTheDocument();
+    expect(account).toHaveFocus();
+  });
+
+  it("closes the account menu when tapping outside it", async () => {
+    renderAt("/admin");
+    const account = await screen.findByRole("button", { name: "Account" });
+    await userEvent.click(account);
+    await userEvent.click(screen.getByRole("heading", { level: 1, name: "Home" }));
+    expect(account).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it.each([
+    ["/admin/profile", "Profile / My Account"],
+    ["/admin/notifications", "Notifications"],
+  ])("%s opens from the header and offers Back", async (path, title) => {
+    renderAt(path);
+    expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+  });
+
+  it("shows plain 'Coming soon' wording, not developer notes, on unbuilt screens", async () => {
+    renderAt("/admin/collections");
+    await screen.findByRole("heading", { level: 1, name: "Collections" });
+    expect(screen.getByText("Coming soon")).toBeInTheDocument();
+    expect(screen.queryByText(/Milestone|NAV-1/)).not.toBeInTheDocument();
+  });
+});
+
+describe("Distributor portal (Q-46)", () => {
+  it("shows Dashboard with four tabs and no History tab", async () => {
+    renderAt("/distributor");
+    expect(await screen.findByRole("heading", { level: 1, name: "Dashboard" })).toBeInTheDocument();
+    expect(
+      within(mainNav())
+        .getAllByRole("link")
+        .map((link) => link.textContent),
+    ).toEqual(["Dashboard", "Collections", "Distributions", "Profile"]);
+  });
+
+  it("no longer has a separate History page", async () => {
     renderAt("/distributor/history");
-    await screen.findByRole("heading", { level: 1, name: "History" });
-    expect(document.title).toBe("History · Tally-Up");
+    expect(await screen.findByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
+  });
+
+  it("opens notifications from the bell, with Back", async () => {
+    renderAt("/distributor/notifications");
+    expect(await screen.findByRole("heading", { level: 1, name: "Notifications" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
   });
 });
 
 describe("Depot Manager portal", () => {
-  it("shows four bottom tabs with Receipts active on the receipts page", async () => {
+  it("shows four tabs with Receipts active on the receipts page", async () => {
     renderAt("/depot/receipts");
     expect(await screen.findByRole("heading", { level: 1, name: "Receipts" })).toBeInTheDocument();
-    expect(screen.getByText("This screen is built in Milestone 5.")).toBeInTheDocument();
-    const nav = screen.getByRole("navigation", { name: "Main navigation" });
     expect(
-      within(nav)
+      within(mainNav())
         .getAllByRole("link")
         .map((link) => link.textContent),
     ).toEqual(["Dashboard", "Receipts", "History", "Profile"]);
-    expect(within(nav).getByRole("link", { name: "Receipts" })).toHaveAttribute("aria-current", "page");
+    expect(within(mainNav()).getByRole("link", { name: "Receipts" })).toHaveAttribute("aria-current", "page");
   });
 
   it.each([
-    ["/depot", "Depot Dashboard", 5],
-    ["/depot/history", "History", 5],
-    ["/depot/profile", "Profile", 2],
-    ["/depot/notifications", "Notifications", 6],
-  ])("%s shows the %s placeholder (Milestone %d)", async (path, title, milestone) => {
+    ["/depot", "Dashboard"],
+    ["/depot/history", "History"],
+    ["/depot/profile", "Profile"],
+  ])("%s shows the %s screen", async (path, title) => {
     renderAt(path);
     expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-    expect(screen.getByText(`This screen is built in Milestone ${milestone}.`)).toBeInTheDocument();
   });
 });
 
-describe("Admin portal", () => {
-  it("shows the dashboard placeholder and says navigation waits for NAV-1", async () => {
-    renderAt("/admin");
-    expect(await screen.findByRole("heading", { level: 1, name: "Admin Dashboard" })).toBeInTheDocument();
-    expect(screen.getByText("This screen is built in Milestone 6.")).toBeInTheDocument();
-    expect(screen.getByText("Admin navigation is decided before Milestone 3 (NAV-1).")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Notifications" })).toHaveAttribute(
+describe("every portal", () => {
+  it("offers a skip link to the main content (WCAG 2.4.1)", async () => {
+    renderAt("/depot");
+    expect(await screen.findByRole("link", { name: "Skip to main content" })).toHaveAttribute(
       "href",
-      "/admin/notifications",
+      "#main",
     );
+    expect(screen.getByRole("main")).toHaveAttribute("id", "main");
   });
 
-  it("has no bottom tabs yet, because their contents are not decided (NAV-1)", async () => {
-    renderAt("/admin");
-    await screen.findByRole("heading", { level: 1, name: "Admin Dashboard" });
-    expect(screen.queryByRole("navigation", { name: "Main navigation" })).not.toBeInTheDocument();
+  it("names the browser tab after the page (WCAG 2.4.2)", async () => {
+    renderAt("/admin/reports");
+    await screen.findByRole("heading", { level: 1, name: "Reports" });
+    expect(document.title).toBe("Reports · Tally-Up");
   });
 });
 
 describe("unknown addresses", () => {
-  it("shows Page not found with a way back", async () => {
-    renderAt("/distributor/does-not-exist");
+  it("shows Page not found with the logo and a way back", async () => {
+    renderAt("/nowhere");
     expect(await screen.findByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
+    expect(screen.getByText("Tally-")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go to the start page" })).toHaveAttribute("href", "/");
   });
 });

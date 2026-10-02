@@ -35,7 +35,7 @@ export function SubmitButton({
   pendingLabel,
   disabled,
   disabledReason,
-}: SubmitButtonProps) {
+}: Readonly<SubmitButtonProps>) {
   const reasonId = useId();
   const showReason = Boolean(disabled && disabledReason && !pending);
 
