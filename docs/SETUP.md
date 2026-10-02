@@ -38,14 +38,14 @@ Supabase → **Authentication → URL Configuration**.
 
 | Field | Value |
 |---|---|
-| Site URL | Your main preview address, for example `https://tally-up-git-main-ndukwopeaces-projects.vercel.app` |
+| Site URL | Your main preview address, for example `https://tallyup-git-main-ndukwopeaces-projects.vercel.app` |
 | Redirect URLs | `https://*-ndukwopeaces-projects.vercel.app/**` and `http://localhost:5173/**` |
 
 **Production project (tallyup-production), after merge:**
 
 | Field | Value |
 |---|---|
-| Site URL | Your production address (for example `https://tally-up.vercel.app`) |
+| Site URL | Your production address (Vercel → tallyup → Overview → Domains, for example `https://tallyup.vercel.app`) |
 | Redirect URLs | `https://<your production address>/**` |
 
 Why this matters: the "forgot password" email links back to `/reset-password` on the same address. If that address is not in the list, Supabase sends people to the Site URL instead, and they land in the app without being asked for a new password.
