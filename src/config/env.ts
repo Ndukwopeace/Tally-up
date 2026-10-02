@@ -18,7 +18,7 @@ import { z } from "zod/mini";
 
 export type AppConfig =
   | { ok: true; dataSource: "supabase"; supabase: { url: string; publicKey: string } }
-  | { ok: true; dataSource: "mock" }
+  | { ok: true; dataSource: "mock"; mockPassword: string }
   | { ok: false };
 
 const supabaseSchema = z.object({
@@ -31,9 +31,13 @@ export function readAppConfig(
   raw: Readonly<Record<string, unknown>>,
   { dev }: Readonly<{ dev: boolean }>,
 ): AppConfig {
-  // RULE NFR-03: the mock is a development tool, never deployed.
+  // RULE NFR-03: the mock is a development tool, never deployed. Its users'
+  // password is chosen by the developer in .env.local, so none is written in code.
   if (dev && raw.VITE_DATA_SOURCE === "mock") {
-    return { ok: true, dataSource: "mock" };
+    const mockPassword = raw.VITE_MOCK_PASSWORD;
+    return typeof mockPassword === "string" && mockPassword !== ""
+      ? { ok: true, dataSource: "mock", mockPassword }
+      : { ok: false };
   }
   const parsed = supabaseSchema.safeParse(raw);
   if (!parsed.success) {

@@ -8,13 +8,14 @@
  *  - Q-53: Back arrow on these screens.
  *  - NFR-06: no sending while offline.
  */
+import { MOCK_PASSWORD } from "../../../tests/helpers/mockPassword";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderRoutes } from "../../../tests/helpers/renderRoutes";
 
-import { MOCK_PASSWORD, MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
 
 const { admin, distributor } = MOCK_USERS;
 
@@ -53,7 +54,7 @@ describe("forgot password", () => {
   });
 
   it("explains a refusal, e.g. too many requests", async () => {
-    const service = new MockAuthService();
+    const service = new MockAuthService({ password: MOCK_PASSWORD });
     renderRoutes("/forgot-password", { service });
     await userEvent.type(await screen.findByLabelText("Email"), "a@tallyup.test");
     service.failNextCallWith("rate_limited");
@@ -122,7 +123,7 @@ describe("reset password (link from the email)", () => {
   });
 
   it("offers Try again if the link could not be checked", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     service.failNextCallWith("unavailable");
     renderRoutes("/reset-password", { service });
     expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();

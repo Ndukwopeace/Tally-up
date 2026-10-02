@@ -31,10 +31,10 @@ npm run dev        # http://localhost:5173
 **Database settings.** Without Supabase settings the app shows "Tally-Up is not connected". Either copy `.env.example` to `.env.local` and fill in the **staging** URL and public key, or work offline with the mock:
 
 ```bash
-VITE_DATA_SOURCE=mock npm run dev
+VITE_DATA_SOURCE=mock VITE_MOCK_PASSWORD=<any password you choose> npm run dev
 ```
 
-The mock (development only, never deployed) has these fictional accounts, all with the password `tally-demo-1`:
+The mock (development only, never deployed) has these fictional accounts, all with the password you set in `VITE_MOCK_PASSWORD` (no password is stored in the code):
 
 | Email | Account |
 |---|---|

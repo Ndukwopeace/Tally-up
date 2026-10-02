@@ -10,13 +10,14 @@
  *  - NFR-06: no sign-in while offline. WCAG 3.3.1: field errors, focus moves.
  *  - Q-54: layout A (logo top, form at the bottom).
  */
+import { MOCK_PASSWORD } from "../../../tests/helpers/mockPassword";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { renderRoutes } from "../../../tests/helpers/renderRoutes";
 
-import { MOCK_PASSWORD, MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
 
 const { admin, inactiveAdmin } = MOCK_USERS;
 
@@ -97,7 +98,7 @@ describe("login page", () => {
   });
 
   it("shows Signing in… while waiting", async () => {
-    const service = new MockAuthService();
+    const service = new MockAuthService({ password: MOCK_PASSWORD });
     renderRoutes("/login", { service });
     await screen.findByLabelText("Email");
     const release = service.holdNextCall();
@@ -133,7 +134,7 @@ describe("login page", () => {
   });
 
   it("says when Tally-Up cannot be reached", async () => {
-    const service = new MockAuthService();
+    const service = new MockAuthService({ password: MOCK_PASSWORD });
     renderRoutes("/login", { service });
     await screen.findByLabelText("Email");
     service.failNextCallWith("unavailable");
@@ -147,7 +148,7 @@ describe("login page", () => {
   });
 
   it("shows the start-up check failure above the form", async () => {
-    const service = new MockAuthService();
+    const service = new MockAuthService({ password: MOCK_PASSWORD });
     service.failNextCallWith("unavailable");
     renderRoutes("/login", { service });
     expect(await screen.findByRole("alert")).toHaveTextContent("We could not check your sign-in.");

@@ -8,8 +8,8 @@
  * WHEN: Called once by App.tsx at start-up.
  * SECURITY: The mock branch is guarded by `import.meta.env.DEV`, which is the
  *       constant `false` in production builds, so the bundler drops the mock and
- *       its demo password from deployed code entirely (checked in CI by the
- *       build: the demo password must not appear in dist/). The Supabase client
+ *       its fictional users from deployed code entirely (checked: the mock's
+ *       test emails do not appear in dist/). The Supabase client
  *       gets only the public key.
  */
 import { createClient } from "@supabase/supabase-js";
@@ -23,7 +23,7 @@ import { SupabaseAuthService } from "@/services/supabase/SupabaseAuthService";
 export function createAuthService(config: Extract<AppConfig, { ok: true }>): AuthService {
   // RULE NFR-03: the mock exists only in development builds.
   if (import.meta.env.DEV && config.dataSource === "mock") {
-    return new MockAuthService({ storage: window.localStorage });
+    return new MockAuthService({ password: config.mockPassword, storage: window.localStorage });
   }
   if (config.dataSource !== "supabase") {
     throw new Error("The mock backend is not available in this build.");

@@ -35,10 +35,18 @@ describe("readAppConfig", () => {
     expect(readAppConfig({ ...GOOD, VITE_SUPABASE_URL: "not a url" }, { dev: false })).toEqual({ ok: false });
   });
 
-  it("uses the mock only in local development when asked", () => {
-    expect(readAppConfig({ VITE_DATA_SOURCE: "mock" }, { dev: true })).toEqual({
+  it("uses the mock only in local development when asked, with the developer's chosen password", () => {
+    expect(readAppConfig({ VITE_DATA_SOURCE: "mock", VITE_MOCK_PASSWORD: "chosen" }, { dev: true })).toEqual({
       ok: true,
       dataSource: "mock",
+      mockPassword: "chosen",
+    });
+  });
+
+  it("reports missing settings when the mock has no password set", () => {
+    expect(readAppConfig({ VITE_DATA_SOURCE: "mock" }, { dev: true })).toEqual({ ok: false });
+    expect(readAppConfig({ VITE_DATA_SOURCE: "mock", VITE_MOCK_PASSWORD: "" }, { dev: true })).toEqual({
+      ok: false,
     });
   });
 
@@ -47,6 +55,10 @@ describe("readAppConfig", () => {
       ok: true,
       dataSource: "supabase",
     });
-    expect(readAppConfig({ VITE_DATA_SOURCE: "mock" }, { dev: false })).toEqual({ ok: false });
+    expect(readAppConfig({ VITE_DATA_SOURCE: "mock", VITE_MOCK_PASSWORD: "chosen" }, { dev: false })).toEqual(
+      {
+        ok: false,
+      },
+    );
   });
 });

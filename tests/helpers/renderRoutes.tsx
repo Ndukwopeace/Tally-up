@@ -11,6 +11,7 @@
  * WHEN: Imported by *.test.tsx files.
  * SECURITY: Test-only; uses fictional mock users.
  */
+import { MOCK_PASSWORD } from "./mockPassword";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 
@@ -34,7 +35,8 @@ export interface RenderRoutesOptions {
 }
 
 export function renderRoutes(path: string, options: RenderRoutesOptions = {}) {
-  const service = options.service ?? new MockAuthService({ signedInAs: options.signedInAs });
+  const service =
+    options.service ?? new MockAuthService({ password: MOCK_PASSWORD, signedInAs: options.signedInAs });
   const store = new AuthStore(service, options.openPortals ?? ROLES);
   if (options.start !== false) {
     void store.start();

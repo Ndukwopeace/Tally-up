@@ -1,6 +1,7 @@
 /**
  * Tests for choosing the backend (NFR-03: mock only in development builds).
  */
+import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { describe, expect, it, vi } from "vitest";
 
 import { createAuthService } from "./index";
@@ -18,13 +19,17 @@ describe("createAuthService", () => {
   });
 
   it("uses the mock in development builds when asked", () => {
-    expect(createAuthService({ ok: true, dataSource: "mock" })).toBeInstanceOf(MockAuthService);
+    expect(createAuthService({ ok: true, dataSource: "mock", mockPassword: MOCK_PASSWORD })).toBeInstanceOf(
+      MockAuthService,
+    );
   });
 
   it("SECURITY: refuses the mock in a production build", () => {
     vi.stubEnv("DEV", false);
     try {
-      expect(() => createAuthService({ ok: true, dataSource: "mock" })).toThrow(/not available/);
+      expect(() => createAuthService({ ok: true, dataSource: "mock", mockPassword: MOCK_PASSWORD })).toThrow(
+        /not available/,
+      );
     } finally {
       vi.unstubAllEnvs();
     }

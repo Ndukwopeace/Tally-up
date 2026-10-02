@@ -8,15 +8,19 @@
  *  - AUD-03: each accepted login is recorded; if recording fails, no login.
  *  - ARCHITECTURE §4.5: a session for a refused account is ended at start-up.
  */
+import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { describe, expect, it, vi } from "vitest";
 
 import { AuthStore } from "./AuthStore";
 
-import { MOCK_PASSWORD, MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
 
 const { admin, inactiveAdmin, distributor } = MOCK_USERS;
 
-async function started(service = new MockAuthService(), openPortals?: readonly ("admin" | "distributor")[]) {
+async function started(
+  service = new MockAuthService({ password: MOCK_PASSWORD }),
+  openPortals?: readonly ("admin" | "distributor")[],
+) {
   const store = new AuthStore(service, openPortals);
   await store.start();
   return { store, service };
@@ -24,7 +28,9 @@ async function started(service = new MockAuthService(), openPortals?: readonly (
 
 describe("AuthStore start-up", () => {
   it("is loading until the session has been checked", () => {
-    expect(new AuthStore(new MockAuthService()).getState()).toEqual({ status: "loading" });
+    expect(new AuthStore(new MockAuthService({ password: MOCK_PASSWORD })).getState()).toEqual({
+      status: "loading",
+    });
   });
 
   it("is signed out with no session", async () => {
@@ -33,28 +39,34 @@ describe("AuthStore start-up", () => {
   });
 
   it("restores an admin's session", async () => {
-    const { store } = await started(new MockAuthService({ signedInAs: admin.id }));
+    const { store } = await started(new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id }));
     expect(store.getState()).toEqual({ status: "signed_in", account: admin });
   });
 
   it("AUTH-09: ends an inactive account's session and says why", async () => {
-    const { store, service } = await started(new MockAuthService({ signedInAs: inactiveAdmin.id }));
+    const { store, service } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: inactiveAdmin.id }),
+    );
     expect(store.getState()).toEqual({ status: "signed_out", notice: "inactive" });
     expect(await service.getAccount()).toBeNull();
   });
 
   it("Q-55: ends the session of a role whose portal is not open", async () => {
-    const { store } = await started(new MockAuthService({ signedInAs: distributor.id }));
+    const { store } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: distributor.id }),
+    );
     expect(store.getState()).toEqual({ status: "signed_out", notice: "portal_not_open" });
   });
 
   it("AUTH-04: ends a session that has no Tally-Up account", async () => {
-    const { store } = await started(new MockAuthService({ signedInAs: "mock-orphan" }));
+    const { store } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: "mock-orphan" }),
+    );
     expect(store.getState()).toEqual({ status: "signed_out", notice: "no_account" });
   });
 
   it("shows an error, not the login page, when the check itself fails; retry recovers", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     service.failNextCallWith("unavailable");
     const { store } = await started(service);
     expect(store.getState()).toEqual({ status: "error" });
@@ -63,7 +75,7 @@ describe("AuthStore start-up", () => {
   });
 
   it("notifies subscribers on every change, until they unsubscribe", async () => {
-    const store = new AuthStore(new MockAuthService());
+    const store = new AuthStore(new MockAuthService({ password: MOCK_PASSWORD }));
     const listener = vi.fn();
     const stop = store.subscribe(listener);
     await store.start();
@@ -75,13 +87,17 @@ describe("AuthStore start-up", () => {
   });
 
   it("signs out when the session ends elsewhere (expired, other tab)", async () => {
-    const { store, service } = await started(new MockAuthService({ signedInAs: admin.id }));
+    const { store, service } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id }),
+    );
     service.endSessionElsewhere();
     expect(store.getState()).toEqual({ status: "signed_out", notice: null });
   });
 
   it("stops listening to the service when disposed", async () => {
-    const { store, service } = await started(new MockAuthService({ signedInAs: admin.id }));
+    const { store, service } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id }),
+    );
     store.dispose();
     service.endSessionElsewhere();
     expect(store.getState().status).toBe("signed_in");
@@ -114,7 +130,10 @@ describe("AuthStore.signIn", () => {
   });
 
   it("opens other portals when they are listed as open", async () => {
-    const { store } = await started(new MockAuthService(), ["admin", "distributor"]);
+    const { store } = await started(new MockAuthService({ password: MOCK_PASSWORD }), [
+      "admin",
+      "distributor",
+    ]);
     expect(await store.signIn(distributor.email, MOCK_PASSWORD)).toBeNull();
   });
 
@@ -130,14 +149,16 @@ describe("AuthStore.signIn", () => {
 
 describe("AuthStore other actions", () => {
   it("signs out", async () => {
-    const { store, service } = await started(new MockAuthService({ signedInAs: admin.id }));
+    const { store, service } = await started(
+      new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id }),
+    );
     await store.signOut();
     expect(store.getState()).toEqual({ status: "signed_out", notice: null });
     expect(await service.getAccount()).toBeNull();
   });
 
   it("is signed out locally even if the backend call fails", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     const { store } = await started(service);
     service.failNextCallWith("unavailable");
     await store.signOut();

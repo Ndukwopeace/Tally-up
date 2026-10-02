@@ -8,13 +8,14 @@
  *    the page they asked for after signing in.
  *  - Q-55: in A1 only admins can sign in.
  */
+import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { renderRoutes } from "../../tests/helpers/renderRoutes";
 
-import { MOCK_PASSWORD, MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
 
 const { admin, distributor, manager } = MOCK_USERS;
 
@@ -80,7 +81,7 @@ describe("portal guards (AUTH-08)", () => {
   });
 
   it("offers Try again when the check fails, and recovers", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     service.failNextCallWith("unavailable");
     renderRoutes("/admin", { service });
     expect(await screen.findByText(/could not check your sign-in/)).toBeInTheDocument();
@@ -89,7 +90,7 @@ describe("portal guards (AUTH-08)", () => {
   });
 
   it("the start address also offers Try again when the check fails", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     service.failNextCallWith("unavailable");
     renderRoutes("/", { service });
     expect(await screen.findByRole("button", { name: "Try again" })).toBeInTheDocument();

@@ -5,15 +5,16 @@
  *       developer may work offline. The mock implements the same AuthService
  *       interface so code written against it works unchanged with Supabase.
  * HOW:  A fixed list of fictional users (one per role, plus an inactive admin
- *       and a login with no profile) and one shared demo password. The session
+ *       and a login with no profile) sharing one password chosen by the caller:
+ *       a random one per test run, or VITE_MOCK_PASSWORD in local development. The session
  *       is the signed-in user id, kept in memory or in the given storage
  *       (localStorage in local development). Helpers let tests fail or hold
  *       the next call, so error and loading states can be exercised.
  * WHEN: Tests, and `npm run dev` with VITE_DATA_SOURCE=mock.
  * SECURITY: Never deployed: config/env.ts only selects it in development
  *       builds, and services/index.ts imports it only behind that check, so it
- *       is left out of production bundles. The demo password is public on
- *       purpose and protects nothing real.
+ *       is left out of production bundles. No password is written in the code
+ *       (SonarCloud hard-coded credential rule); the mock protects nothing real.
  */
 import type { Account } from "@/types/entities";
 import {
@@ -22,9 +23,6 @@ import {
   type AuthService,
   type LoginMethod,
 } from "@/services/interfaces/AuthService";
-
-/** The one password every mock user has (listed in README for local development). */
-export const MOCK_PASSWORD = "tally-demo-1";
 
 /** Fictional accounts, one per case the app must handle. */
 export const MOCK_USERS = {
@@ -72,6 +70,8 @@ export interface SessionStorageLike {
 }
 
 export interface MockAuthOptions {
+  /** The password every mock user starts with. */
+  password: string;
   /** Start signed in as this user id. */
   signedInAs?: string;
   /** Keep the session here so it survives a page refresh. */
@@ -85,15 +85,16 @@ export class MockAuthService implements AuthService {
   readonly resetRequests: { email: string; redirectTo: string }[] = [];
 
   private readonly accounts: Account[] = Object.values(MOCK_USERS).map((user) => ({ ...user }));
-  private readonly passwords = new Map<string, string>(
-    [...Object.values(MOCK_USERS), ORPHAN_LOGIN].map((user) => [user.id, MOCK_PASSWORD]),
-  );
+  private readonly passwords: Map<string, string>;
   private readonly listeners = new Set<() => void>();
   private memorySession: string | null;
   private nextFailure: AuthErrorCode | null = null;
   private nextHold: Promise<void> | null = null;
 
-  constructor(private readonly options: MockAuthOptions = {}) {
+  constructor(private readonly options: MockAuthOptions) {
+    this.passwords = new Map(
+      [...Object.values(MOCK_USERS), ORPHAN_LOGIN].map((user) => [user.id, options.password]),
+    );
     this.memorySession = options.signedInAs ?? null;
     if (options.signedInAs) {
       options.storage?.setItem(SESSION_KEY, options.signedInAs);

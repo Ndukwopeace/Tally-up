@@ -6,6 +6,7 @@
  *  - Q-47: Sign Out from the account menu ends the session.
  *  - Q-53: Back on Home leads to "Sign out?"; "Stay signed in" returns.
  */
+import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
@@ -63,7 +64,7 @@ describe("Sign out?", () => {
   });
 
   it("shows Signing out… while it works", async () => {
-    const service = new MockAuthService({ signedInAs: admin.id });
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
     renderRoutes("/admin/sign-out", { service });
     const button = await screen.findByRole("button", { name: "Sign Out" });
     const release = service.holdNextCall();
@@ -89,7 +90,7 @@ describe("Sign out?", () => {
     const { router } = renderRoutes("/admin/sign-out");
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText("Email"), admin.email);
-    await userEvent.type(screen.getByLabelText("Password"), "tally-demo-1");
+    await userEvent.type(screen.getByLabelText("Password"), MOCK_PASSWORD);
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/admin");
