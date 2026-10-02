@@ -16,8 +16,9 @@ import type { ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
 
 export const buttonVariants = cva(
-  // Shared: 48px minimum height (F-1), centred icon + text, disabled look, focus ring from index.css.
-  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+  // Shared: 48px minimum height (F-1), centred icon + text, disabled look, focus ring from index.css,
+  // and a slight press-down when tapped so every tap visibly registers (Q-56, N1).
+  "inline-flex min-h-12 items-center justify-center gap-2 rounded-control px-5 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98] disabled:active:scale-100",
   {
     variants: {
       variant: {

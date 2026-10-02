@@ -8,7 +8,7 @@
  *       portal home (active only on its own page) and `activeFor` for a tab that
  *       stays active on the pages it opens (More → Depots, …).
  * WHEN: Read by the portal layouts (src/layouts/) and the admin More page.
- * SECURITY: Hiding a link is not access control. Route guards (Milestone 2)
+ * SECURITY: Hiding a link is not access control. Route guards (RequireRole)
  *       and Row Level Security enforce who can open what (AUTH-08, AUTH-10).
  */
 import {

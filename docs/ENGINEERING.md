@@ -335,8 +335,8 @@ GitHub only lists a check after it has run at least once, so each check is added
 | `audit` | No high/critical dependency vulnerabilities | Milestone 1 |
 | `secrets` | No committed .env files, no service-role key in browser code, no key values in any file | Now (runs on every push already) |
 | `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Milestone 1, once the Vercel project is linked |
-| `db-test` | pgTAP: RLS, database functions, triggers | Milestone 2 |
-| `e2e` | Playwright workflows + axe accessibility on the preview | Milestone 2 |
+| `db-test` | pgTAP: RLS, database functions, triggers | A1 (Q-55) |
+| `e2e` | Playwright workflows + axe accessibility on the preview | Not yet: needs owner approval for the Playwright and axe packages, and a way for CI to reach protected Vercel previews (ADR 0002) |
 
 Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
 

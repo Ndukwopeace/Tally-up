@@ -5,7 +5,7 @@
  *       (Home · Collections · Distributions · More), bell and account menu at the
  *       top. A desktop layout comes later, once the phone experience is complete.
  * WHEN: Loaded on demand the first time an admin page opens (PERF-2).
- * SECURITY: Layout only; the admin role guard is added in Milestone 2 (AUTH-08).
+ * SECURITY: Layout only; RequireRole("admin") in router.tsx guards it (AUTH-08).
  */
 import { MobilePortalLayout } from "./MobilePortalLayout";
 
@@ -19,8 +19,7 @@ export default function AdminLayout() {
       homeLabel={en.nav.home}
       notificationsHref="/admin/notifications"
       navItems={ADMIN_NAV}
-      // WORKAROUND (until Milestone 2): Sign Out returns to the start page; real sign-out needs login.
-      account={{ profileHref: "/admin/profile", signOutHref: "/" }}
+      account={{ profileHref: "/admin/profile" }}
     />
   );
 }

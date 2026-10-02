@@ -7,7 +7,7 @@
  * HOW:  A list of large rows (icon, name, one-line description, chevron), each
  *       at least 64px tall (F-1). Opened pages show Back to return here.
  * WHEN: /admin/more.
- * SECURITY: Links only. Admin-only access is enforced in Milestone 2 (AUTH-08).
+ * SECURITY: Links only. RequireRole("admin") guards the page (AUTH-08); RLS guards the data.
  */
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router";

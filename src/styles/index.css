@@ -56,6 +56,18 @@
   /* One radius for cards, one for controls (§8). */
   --radius-card: 0.75rem;
   --radius-control: 0.5rem;
+
+  /* Navigation progress bar (Q-56: every action shows an indicator): a short bar
+     sliding across the top while a screen loads. Reduced-motion users get a still bar. */
+  --animate-progress: progress 1.2s ease-in-out infinite;
+  @keyframes progress {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(250%);
+    }
+  }
 }
 
 @layer base {

@@ -10,7 +10,8 @@
  * WHEN: Imported by every component that shows text.
  * SECURITY: Static strings only. Never build HTML from these; React escapes them.
  */
-import type { Status } from "@/types/enums";
+import type { AuthErrorCode } from "@/services/interfaces/AuthService";
+import type { Role, Status } from "@/types/enums";
 
 export const en = {
   app: {
@@ -104,15 +105,83 @@ export const en = {
     notFoundAction: "Go to the start page",
   },
 
-  // Temporary start page until login exists (Milestone 2).
-  preview: {
-    title: "Choose a portal",
-    intro: "Preview build. Login comes next; for now, open any portal to look around.",
+  // REQUIREMENTS §4: the three roles, as shown to people.
+  roles: {
     admin: "Admin",
-    adminHint: "Owner and management",
     distributor: "Distributor",
-    distributorHint: "Collections and hand-overs to depots",
-    depot: "Depot Manager",
-    depotHint: "Receipts and physical counts",
+    depot_manager: "Depot Manager",
+  } satisfies Record<Role, string>,
+
+  // Login, forgot password, reset password (AUTH-01 to AUTH-09).
+  auth: {
+    signInTitle: "Sign in",
+    signInIntro: "Use the email and password your administrator gave you.",
+    email: "Email",
+    password: "Password",
+    signIn: "Sign in",
+    signingIn: "Signing in…",
+    forgotLink: "Forgot password?",
+    or: "or",
+    // AUTH-04 / AUTH-05: shown disabled until the owner adds the Google OAuth client.
+    google: "Continue with Google",
+    googleNotYet: "Not available yet",
+    // One message per form check in domain/validation.ts.
+    fieldErrors: {
+      email_required: "Enter your email address.",
+      email_invalid: "Enter an email address like name@example.com.",
+      password_required: "Enter your password.",
+      new_password_required: "Enter a new password.",
+      passwords_differ: "The two passwords do not match.",
+    },
+    offline: "No connection.",
+    startError: "We could not check your sign-in. Check your connection and try again.",
+    forgotTitle: "Reset your password",
+    forgotIntro: "Enter the email you sign in with. We will email you a link to choose a new password.",
+    sendLink: "Send reset link",
+    sending: "Sending…",
+    // Same answer whether or not the account exists, so nobody can test which emails have accounts.
+    linkSent: (email: string) =>
+      `If ${email} has a Tally-Up account, a reset link is on its way. Check your inbox and spam folder.`,
+    backToSignIn: "Back to sign in",
+    resetTitle: "Choose a new password",
+    newPassword: "New password",
+    repeatPassword: "Repeat new password",
+    savePassword: "Save new password",
+    passwordSaved: "Your password has been changed.",
+    continue: "Continue",
+    linkExpiredTitle: "This link no longer works",
+    linkExpiredBody: "Reset links work once and expire after a while. Ask for a new one.",
+    askNewLink: "Ask for a new link",
+    // One message per AuthErrorCode (ARCHITECTURE §13: codes become plain words here).
+    errors: {
+      invalid_credentials: "Wrong email or password.",
+      no_account: "No Tally-Up account exists for this email. Contact your administrator.",
+      inactive: "Your account is inactive. Contact your administrator.",
+      portal_not_open: "Sign-in for your role is not open yet. Only admins can sign in for now.",
+      rate_limited: "Too many attempts. Wait a few minutes and try again.",
+      weak_password: "This password is too weak. Choose a longer one that is harder to guess.",
+      same_password: "The new password must be different from your current one.",
+      session_missing: "Your session has ended. Sign in again.",
+      unavailable: "Tally-Up could not be reached. Check your connection and try again.",
+    } satisfies Record<AuthErrorCode, string>,
+  },
+
+  // Shown on Sign Out while the session ends (Q-56: every action shows progress).
+  signOut: {
+    signingOut: "Signing out…",
+  },
+
+  // Profile / My Account (§7: name, email, role, change password, sign out).
+  profile: {
+    name: "Name",
+    email: "Email",
+    role: "Role",
+    changePassword: "Change password",
+  },
+
+  // Shown when a build has no database settings (config/env.ts).
+  config: {
+    title: "Tally-Up is not connected",
+    body: "This copy of the app has no database settings. Tell the person who manages Tally-Up.",
   },
 } as const;

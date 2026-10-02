@@ -5,51 +5,58 @@
  *       and keeps /admin/*, /distributor/* and /depot/* separate (spec §38).
  * HOW:  React Router route objects. Each portal layout is loaded on demand
  *       (`lazy`), so a distributor's phone never downloads admin code (PERF-2).
- *       Every portal screen sets `handle.backTo`, so the header always shows a
- *       Back arrow (Q-50, Q-53). Unbuilt screens show
- *       "Coming soon" under their real title.
+ *       Pages inside a tab set `handle.backTo`, so they start with a Back link;
+ *       Home and tab screens have none (Q-56). Unbuilt screens show
+ *       "Coming soon" under their real title. Public pages (login, forgot and
+ *       reset password) sit outside the portals (ARCHITECTURE §4.1).
  * WHEN: Used by App.tsx (browser router) and router.test.tsx (memory router).
- * SECURITY: Milestone 2 wraps each portal in a role guard (AUTH-08). Guards are
- *       convenience only; the database enforces access (AUTH-10, ARCHITECTURE §4.5).
+ * SECURITY: Each portal is wrapped in RequireRole (AUTH-08): signed-out visitors
+ *       go to /login and other roles to their own portal. Guards are convenience
+ *       only; the database enforces access (AUTH-10, ARCHITECTURE §4.5).
  */
 import type { ReactElement } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router";
 
 import { RootLayout } from "./RootLayout";
 
+import { RequireRole, StartRedirect } from "@/auth/RequireRole";
 import { PageSkeleton } from "@/components/common/PageSkeleton";
 import { en } from "@/i18n/en";
 import type { RouteHandle } from "@/layouts/MobilePortalLayout";
 import { AdminMorePage } from "@/pages/AdminMorePage";
+import { ForgotPasswordPage } from "@/pages/auth/ForgotPasswordPage";
+import { LoginPage } from "@/pages/auth/LoginPage";
+import { ResetPasswordPage } from "@/pages/auth/ResetPasswordPage";
 import { HomePage } from "@/pages/HomePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
-import { PreviewStartPage } from "@/pages/PreviewStartPage";
+import { ProfilePage } from "@/pages/ProfilePage";
 
-// WORKAROUND (until Milestone 2): the start page; becomes the login page.
-const START_PAGE = "/";
+// RULE Q-56: Back only moves back inside a tab, sits below the header (away from
+// the logo) and never signs out. Four kinds of screen:
 
-// RULE Q-53: every portal screen has a Back arrow. Three kinds of screen:
-
-// A portal's home tab. Back goes to the previous page (the start page for now),
-// or to START_PAGE when the app was opened straight onto home.
+// A portal's home tab: no Back (nothing earlier inside the tab).
 function homeRoute(title: string): RouteObject {
-  const handle: RouteHandle = { backTo: START_PAGE };
-  return { index: true, element: <HomePage title={title} />, handle };
+  return { index: true, element: <HomePage title={title} /> };
 }
 
-// Any other bottom tab. Back always goes to the portal's home, because tabs do not
-// add history (Q-50) and "one step back" would skip the home screen.
-function tabRoute(path: string, home: string, element: ReactElement): RouteObject {
-  const handle: RouteHandle = { backTo: home, backToParentOnly: true };
-  return { path, element, handle };
+// Any other bottom tab: no Back. Moving between tabs is done with the tabs themselves.
+function tabRoute(path: string, element: ReactElement): RouteObject {
+  return { path, element };
 }
 
-// A page inside a tab (from More, the bell or the account menu): "Coming soon" for now.
-// Back goes to the previous page, or to `parent` when opened directly.
-function subPage(path: string, title: string, parent: string): RouteObject {
-  const handle: RouteHandle = { backTo: parent };
-  return { path, element: <PlaceholderPage title={title} />, handle };
+// A page inside a tab (More → Depots, …); "Coming soon" unless `element` is given.
+// Back always returns to `parent` in the same tab, never to another tab.
+function subPage(path: string, title: string, parent: string, element?: ReactElement): RouteObject {
+  const handle: RouteHandle = { backTo: parent, backToParentOnly: true };
+  return { path, element: element ?? <PlaceholderPage title={title} />, handle };
+}
+
+// A page opened from the header (bell, account menu). Back returns to the page it was
+// opened from; opened directly (link, refresh) it goes to the portal home.
+function headerPage(path: string, title: string, home: string, element?: ReactElement): RouteObject {
+  const handle: RouteHandle = { backTo: home };
+  return { path, element: element ?? <PlaceholderPage title={title} />, handle };
 }
 
 export const routes: RouteObject[] = [
@@ -58,48 +65,70 @@ export const routes: RouteObject[] = [
     // Shown while a portal's code is downloading for the first time (D-2).
     hydrateFallbackElement: <PageSkeleton />,
     children: [
-      { path: START_PAGE, element: <PreviewStartPage /> },
+      // RULE AUTH-07: "/" sends a signed-in user to their portal, everyone else to /login.
+      { path: "/", element: <StartRedirect /> },
+      // RULE AUTH-01: public pages. No signup page exists (AUTH-02).
+      { path: "/login", element: <LoginPage /> },
+      { path: "/forgot-password", element: <ForgotPasswordPage /> },
+      { path: "/reset-password", element: <ResetPasswordPage /> },
       {
         // RULE Q-47: Home · Collections · Distributions · More; bell + account menu.
         path: "/admin",
-        lazy: async () => ({ Component: (await import("@/layouts/AdminLayout")).default }),
+        element: <RequireRole allow="admin" />,
         children: [
-          homeRoute(en.nav.home),
-          tabRoute("collections", "/admin", <PlaceholderPage title={en.nav.collections} />),
-          tabRoute("distributions", "/admin", <PlaceholderPage title={en.nav.distributions} />),
-          tabRoute("more", "/admin", <AdminMorePage />),
-          subPage("depots", en.nav.depots, "/admin/more"),
-          subPage("products", en.nav.products, "/admin/more"),
-          subPage("users", en.nav.users, "/admin/more"),
-          subPage("reports", en.nav.reports, "/admin/more"),
-          subPage("audit", en.nav.audit, "/admin/more"),
-          subPage("settings", en.nav.settings, "/admin/more"),
-          subPage("profile", en.nav.profileAccount, "/admin"),
-          subPage("notifications", en.nav.notifications, "/admin"),
+          {
+            lazy: async () => ({ Component: (await import("@/layouts/AdminLayout")).default }),
+            children: [
+              homeRoute(en.nav.home),
+              tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
+              tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
+              tabRoute("more", <AdminMorePage />),
+              subPage("depots", en.nav.depots, "/admin/more"),
+              subPage("products", en.nav.products, "/admin/more"),
+              subPage("users", en.nav.users, "/admin/more"),
+              subPage("reports", en.nav.reports, "/admin/more"),
+              subPage("audit", en.nav.audit, "/admin/more"),
+              subPage("settings", en.nav.settings, "/admin/more"),
+              headerPage("profile", en.nav.profileAccount, "/admin", <ProfilePage />),
+              headerPage("notifications", en.nav.notifications, "/admin"),
+            ],
+          },
         ],
       },
       {
         // RULE Q-46: Dashboard · Collections · Distributions · Profile.
+        // Q-55: built and guarded, but no distributor can sign in until milestone D1.
         path: "/distributor",
-        lazy: async () => ({ Component: (await import("@/layouts/DistributorLayout")).default }),
+        element: <RequireRole allow="distributor" />,
         children: [
-          homeRoute(en.nav.dashboard),
-          tabRoute("collections", "/distributor", <PlaceholderPage title={en.nav.collections} />),
-          tabRoute("distributions", "/distributor", <PlaceholderPage title={en.nav.distributions} />),
-          tabRoute("profile", "/distributor", <PlaceholderPage title={en.nav.profile} />),
-          subPage("notifications", en.nav.notifications, "/distributor"),
+          {
+            lazy: async () => ({ Component: (await import("@/layouts/DistributorLayout")).default }),
+            children: [
+              homeRoute(en.nav.dashboard),
+              tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
+              tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
+              tabRoute("profile", <PlaceholderPage title={en.nav.profile} />),
+              headerPage("notifications", en.nav.notifications, "/distributor"),
+            ],
+          },
         ],
       },
       {
         // RULE REQUIREMENTS §7: Dashboard · Receipts · History · Profile.
+        // Q-55: built and guarded, but no depot manager can sign in until milestone DM1.
         path: "/depot",
-        lazy: async () => ({ Component: (await import("@/layouts/DepotLayout")).default }),
+        element: <RequireRole allow="depot_manager" />,
         children: [
-          homeRoute(en.nav.dashboard),
-          tabRoute("receipts", "/depot", <PlaceholderPage title={en.nav.receipts} />),
-          tabRoute("history", "/depot", <PlaceholderPage title={en.nav.history} />),
-          tabRoute("profile", "/depot", <PlaceholderPage title={en.nav.profile} />),
-          subPage("notifications", en.nav.notifications, "/depot"),
+          {
+            lazy: async () => ({ Component: (await import("@/layouts/DepotLayout")).default }),
+            children: [
+              homeRoute(en.nav.dashboard),
+              tabRoute("receipts", <PlaceholderPage title={en.nav.receipts} />),
+              tabRoute("history", <PlaceholderPage title={en.nav.history} />),
+              tabRoute("profile", <PlaceholderPage title={en.nav.profile} />),
+              headerPage("notifications", en.nav.notifications, "/depot"),
+            ],
+          },
         ],
       },
       { path: "*", element: <NotFoundPage /> },

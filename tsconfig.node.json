@@ -13,8 +13,10 @@
     "noUnusedParameters": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    // vite.config.ts imports tooling/*.ts with its extension, as Vite's native config loader expects.
+    "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "tooling/**/*.ts"]
 }

@@ -4,7 +4,7 @@
  * WHY:  Q-46: Dashboard · Collections · Distributions · Profile (History lives inside
  *       Collections and Distributions).
  * WHEN: Loaded on demand the first time a distributor page opens (PERF-2).
- * SECURITY: Layout only; the distributor role guard is added in Milestone 2.
+ * SECURITY: Layout only; RequireRole("distributor") in router.tsx guards it (AUTH-08).
  */
 import { MobilePortalLayout } from "./MobilePortalLayout";
 
