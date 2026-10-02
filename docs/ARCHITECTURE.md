@@ -1,6 +1,6 @@
 # Tally-Up — System Architecture
 
-**Status:** DRAFT v0.1 — awaiting owner review
+**Status:** v0.1 — APPROVED by owner 2026-10-02 (including T-1 to T-10)
 **Date:** 2026-10-02
 **Depends on:** `docs/REQUIREMENTS.md` v0.3. Requirement IDs (e.g. `DIS-06`) refer to that document.
 
