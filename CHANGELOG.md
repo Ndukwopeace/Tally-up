@@ -6,6 +6,8 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ### Changed
 - Admin is phone-first (Q-48) with bottom tabs Home · Collections · Distributions · More, a More page (Depots, Products, Users, Reports), and an account menu (Profile / My Account, Sign Out) next to the bell (Q-47).
+- Back arrow on every screen (Q-53): tab screens go back to their portal home, home goes back to the start page, Page not found has Back too.
+- Start page layout A (Q-54): logo at the top, heading and portal choices at the bottom, within thumb reach.
 - More page also holds Audit log and Settings (Q-51). Milestone plan re-cut role by role (Q-52).
 - Distributor tabs: Dashboard · Collections · Distributions · Profile; History tab removed (Q-46).
 - Navigation (Q-50): Back arrow on every sub-page; logo returns home; tabs no longer add browser history; sideways swipe-navigation turned off where the browser allows.

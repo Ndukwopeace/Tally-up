@@ -270,7 +270,11 @@ All three portals are built **phone-first** (Q-48). An admin desktop layout come
 
 **Distributor history (Q-46):** past records live inside Collections and Distributions (with a date filter); there is no separate History tab.
 
-**Back navigation (Q-50):** every page below a portal's top level shows a Back arrow (to the previous page, or to its parent page when opened directly). The logo always returns to the portal's home. Switching tabs does not add browser history, so a back-swipe does not walk through tabs, and sideways swipes do not trigger page navigation where the browser allows turning it off.
+**Back navigation (Q-50, Q-53):** **every screen** shows a Back arrow, because an installed app on iPhone has no browser or system Back button.
+- Pages inside a tab (Depots, Profile, Notifications, …): back to the previous page, or to their parent page when opened directly.
+- Tab screens (Collections, Distributions, More, Receipts, …): back to the portal's home (tabs do not add history, so "one step back" would skip home).
+- Home / Dashboard: back to the start page until login exists; Milestone 2 sets its target and shows the owner.
+- Page not found: back to the previous page or the start page. The logo always returns to the portal's home. Switching tabs does not add browser history, so a back-swipe does not walk through tabs, and sideways swipes do not trigger page navigation where the browser allows turning it off.
 
 **Profile (all roles):** name, email, role, assigned depot (managers), change password, sign out. No App Settings, Help & Support, or About.
 
@@ -386,6 +390,8 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
 | Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
+| Q-53 | Back arrow on screens | **Every screen** in the PWA has a Back arrow. (§7) |
+| Q-54 | Installed start page left the top half empty | **Option A:** logo at the top, heading and choices at the bottom in thumb reach. |
 | Q-51 | Where Audit log and Settings live | **Inside More**, after Reports. (§7) |
 | Q-52 | Role-by-role milestone plan (PLAN-1) | **Approved.** (§13) |
 | Q-46 | Distributor tab labels too long for 5 tabs | **Option B:** Dashboard · Collections · Distributions · Profile. History moves inside Collections and Distributions. (§7) |

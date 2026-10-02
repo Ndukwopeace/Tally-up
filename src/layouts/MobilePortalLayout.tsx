@@ -23,8 +23,10 @@ import { ConnectionBanner } from "@/components/common/ConnectionBanner";
 
 /** Optional data a route can attach (React Router `handle`) to shape the frame. */
 export interface RouteHandle {
-  /** Parent page; when set, the header shows a Back arrow. */
+  /** Parent page; when set, the header shows a Back arrow (every portal screen sets it, Q-53). */
   backTo?: string;
+  /** Tab screens: Back always goes to `backTo` rather than one step back in history. */
+  backToParentOnly?: boolean;
 }
 
 export interface MobilePortalLayoutProps {
@@ -54,6 +56,7 @@ export function MobilePortalLayout({
         homeLabel={homeLabel}
         notificationsHref={notificationsHref}
         backTo={handle?.backTo}
+        backToParentOnly={handle?.backToParentOnly}
         account={account}
       />
       <ConnectionBanner />
