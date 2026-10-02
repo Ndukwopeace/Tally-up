@@ -8,31 +8,21 @@
  *          the logo goes to the portal's home.
  *  - WCAG 1.4.1: the active tab is not shown by colour alone.
  *  - WCAG 2.4.1 skip link, 2.4.2 page titles; no developer wording on screen.
+ * Each portal is rendered signed in as its own role (guards are tested in
+ * src/auth/RequireRole.test.tsx).
  */
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router";
 import { describe, expect, it } from "vitest";
 
-import { routes } from "./router";
+import { ownerOf, renderRoutes } from "../../tests/helpers/renderRoutes";
 
+// Renders `path` signed in as the user whose portal it is (admin for anything else).
 function renderAt(path: string, history: string[] = []) {
-  const router = createMemoryRouter(routes, { initialEntries: [...history, path] });
-  render(<RouterProvider router={router} />);
-  return router;
+  return renderRoutes(path, { history, signedInAs: ownerOf(path) }).router;
 }
 
 const mainNav = () => screen.getByRole("navigation", { name: "Main navigation" });
-
-describe("temporary start page", () => {
-  it("offers the three portals with a short description each", async () => {
-    renderAt("/");
-    expect(await screen.findByRole("heading", { level: 1, name: "Choose a portal" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /^Admin/ })).toHaveAttribute("href", "/admin");
-    expect(screen.getByRole("link", { name: /^Distributor/ })).toHaveAttribute("href", "/distributor");
-    expect(screen.getByRole("link", { name: /^Depot Manager/ })).toHaveAttribute("href", "/depot");
-  });
-});
 
 describe("Admin portal (Q-47)", () => {
   it("opens on Home with today's date and four bottom tabs, Home active", async () => {
@@ -116,10 +106,11 @@ describe("Admin portal (Q-47)", () => {
     expect(router.state.location.pathname).toBe("/admin");
   });
 
-  it("Home has Back, which returns to the start page", async () => {
+  it("Home has Back, which asks 'Sign out?' (Q-53: nothing earlier to go back to)", async () => {
     const router = renderAt("/admin");
     await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/");
+    expect(router.state.location.pathname).toBe("/admin/sign-out");
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign out?" })).toBeInTheDocument();
   });
 
   it("the logo takes you to Home", async () => {
@@ -145,7 +136,7 @@ describe("Admin portal (Q-47)", () => {
       "/admin/profile",
     );
     await userEvent.click(screen.getByRole("button", { name: "Sign Out" }));
-    expect(router.state.location.pathname).toBe("/");
+    expect(router.state.location.pathname).toBe("/admin/sign-out");
   });
 
   it("closes the account menu with Escape and returns focus to the button", async () => {
@@ -246,10 +237,11 @@ describe("every portal", () => {
 });
 
 describe("unknown addresses", () => {
-  it("has a Back arrow, like every other screen", async () => {
+  it("has a Back arrow, like every other screen; opened directly it leads to the user's portal", async () => {
     const router = renderAt("/nowhere");
     await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/");
+    // "/" sends a signed-in admin on to their portal (AUTH-07).
+    expect(router.state.location.pathname).toBe("/admin");
   });
 
   it("shows Page not found with the logo and a way back", async () => {
@@ -279,17 +271,5 @@ describe("Back on every portal screen", () => {
     const router = renderAt("/distributor/profile");
     await userEvent.click(await screen.findByRole("button", { name: "Back" }));
     expect(router.state.location.pathname).toBe("/distributor");
-  });
-});
-
-describe("start page layout (option A)", () => {
-  it("puts the logo first and the portal choices after the heading", async () => {
-    renderAt("/");
-    const heading = await screen.findByRole("heading", { level: 1, name: "Choose a portal" });
-    const logo = screen.getByText("Tally-");
-    // DOCUMENT_POSITION_FOLLOWING (4): the heading comes after the logo.
-    expect(logo.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(screen.getByTestId("start-top")).toContainElement(logo);
-    expect(screen.getByTestId("start-actions")).toContainElement(heading);
   });
 });

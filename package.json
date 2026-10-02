@@ -19,9 +19,11 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "budget": "node scripts/check-budget.mjs",
+    "db:test": "bash scripts/db-test.sh",
     "prepare": "husky"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.117.2",
     "@tanstack/react-query": "5.104.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -29,7 +31,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0",
-    "tailwind-merge": "3.7.0"
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

@@ -6,7 +6,7 @@
  * HOW:  Back arrow (Q-53, like every screen), logo, heading, short explanation,
  *       button to the start page.
  * WHEN: React Router's catch-all route ("*").
- * SECURITY: From Milestone 2, records a user may not see also show "Not found",
+ * SECURITY: Record pages (A3 onward) also show "Not found" for records a user may not see,
  *       so the app never confirms that a forbidden record exists (ARCHITECTURE §4.5).
  */
 import { Link } from "react-router";

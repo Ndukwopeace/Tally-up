@@ -9,8 +9,8 @@
  *       A disclosure is used instead of an ARIA "menu" because it needs no
  *       arrow-key handling and screen readers read it as plain links/buttons.
  * WHEN: Admin header (all admin pages).
- * SECURITY: Until login exists (Milestone 2), Sign Out only returns to the start
- *       page. Milestone 2 makes it end the Supabase session before leaving.
+ * SECURITY: Sign Out opens the portal's "Sign out?" page (pages/SignOutPage.tsx),
+ *       which ends the Supabase session on this device.
  */
 import { CircleUser, LogOut, UserRound } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";

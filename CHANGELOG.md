@@ -4,7 +4,19 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A1 Admin login
+- Supabase connected: `profiles` and `audit_log` tables with Row Level Security, role helpers, and `record_login()` (migration `20261002120000_a1_profiles_and_audit.sql`), with 35 pgTAP database tests and a `db-test` CI job.
+- Login page (email + password; Google shown as "Not available yet"), forgot password, reset password from the email link.
+- Route guards on all portals: signed-out visitors go to `/login`; each role is kept in its own portal; `/` sends you to your portal.
+- Only admins can sign in for now (Q-55); other roles and inactive accounts are refused with a plain reason.
+- Profile / My Account: name, email, role, change password, Sign Out.
+- "Sign out?" page: reached from Back on Home and from Sign Out in the account menu (BACK-1, for owner review).
+- Owner setup guide `docs/SETUP.md`; ADR 0002; `.env.example`.
+
 ### Changed
+- The temporary "Choose a portal" start page is gone; the login page replaces it (install card included).
+- Content-Security-Policy allows data connections to Supabase only.
+- Milestones re-cut per role (Q-55): A1–A4 for Admin, then Distributor, Depot Manager, go-live.
 - Admin is phone-first (Q-48) with bottom tabs Home · Collections · Distributions · More, a More page (Depots, Products, Users, Reports), and an account menu (Profile / My Account, Sign Out) next to the bell (Q-47).
 - Back arrow on every screen (Q-53): tab screens go back to their portal home, home goes back to the start page, Page not found has Back too.
 - Start page layout A (Q-54): logo at the top, heading and portal choices at the bottom, within thumb reach.

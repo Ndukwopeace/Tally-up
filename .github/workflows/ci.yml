@@ -11,8 +11,9 @@
 # SECURITY: The workflow token is read-only; no job receives secrets; actions
 #       come only from GitHub's own `actions/` organisation.
 #
-# Jobs added later (ENGINEERING §10.1): `db-test` (pgTAP) and `e2e`
-# (Playwright + axe) arrive in Milestone 2 together with the code they test.
+# `db-test` (pgTAP) arrived with A1, the first database code. `e2e`
+# (Playwright + axe) is still to come: it needs a new npm package (owner
+# approval) and a way to reach the Vercel preview (ENGINEERING §10.1).
 # -----------------------------------------------------------------------------
 name: ci
 
@@ -108,6 +109,26 @@ jobs:
       - uses: ./.github/actions/setup
       - run: npm run build
       - run: npm run budget
+
+  # ---------------------------------------------------------------------------
+  # db-test — the database refuses what each role must not do.
+  # RULES SEC-12, AUTH-10: every RLS policy and database function is tested
+  # (pgTAP) against a throwaway Postgres 16, never a real Supabase project.
+  # Requires the package.json script: "db:test" (scripts/db-test.sh).
+  # ---------------------------------------------------------------------------
+  db-test:
+    name: db-test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      # Postgres 16, pgTAP and pg_prove (the test runner) come
+      # from Ubuntu's own package archive. No npm packages are needed.
+      - name: Install pgTAP
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-16 postgresql-16-pgtap libtap-parser-sourcehandler-pgtap-perl
+      - run: bash scripts/db-test.sh
 
   # ---------------------------------------------------------------------------
   # audit — no installed package has a known high or critical vulnerability.

@@ -9,7 +9,7 @@
  *       Content gets bottom padding so the fixed tabs never cover the last field
  *       or a focused input (WCAG 2.4.11).
  * WHEN: Wraps every /admin/*, /distributor/* and /depot/* page.
- * SECURITY: Layout only. Role checks are added around it in Milestone 2 (AUTH-08).
+ * SECURITY: Layout only. RequireRole wraps it in router.tsx (AUTH-08).
  */
 import { Outlet, useMatches } from "react-router";
 

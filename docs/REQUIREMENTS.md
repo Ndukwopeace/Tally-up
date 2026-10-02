@@ -1,6 +1,6 @@
 # Tally-Up — Requirements Document
 
-**Status:** v0.4 — v0.3 approved; v0.4 records owner decisions Q-37 to Q-42 (early deploy, navigation, IDs, profile)
+**Status:** v0.5 — v0.4 approved; v0.5 records owner decision Q-55 (milestones per role) and A1 open items BACK-1, SMTP-1
 **Date:** 2026-10-02
 **Source:** "TALLY-UP — Bakery Distribution Tracking System" specification (58 sections), plus owner answers recorded in Section 12
 
@@ -273,7 +273,7 @@ All three portals are built **phone-first** (Q-48). An admin desktop layout come
 **Back navigation (Q-50, Q-53):** **every screen** shows a Back arrow, because an installed app on iPhone has no browser or system Back button.
 - Pages inside a tab (Depots, Profile, Notifications, …): back to the previous page, or to their parent page when opened directly.
 - Tab screens (Collections, Distributions, More, Receipts, …): back to the portal's home (tabs do not add history, so "one step back" would skip home).
-- Home / Dashboard: back to the start page until login exists; Milestone 2 sets its target and shows the owner.
+- Home / Dashboard: there is nothing earlier in the app, so Back opens **"Sign out?"** (Sign Out / Stay signed in). Set in A1; the account menu's Sign Out opens the same page. Awaiting owner review on the preview (BACK-1).
 - Page not found: back to the previous page or the start page. The logo always returns to the portal's home. Switching tabs does not add browser history, so a back-swipe does not walk through tabs, and sideways swipes do not trigger page navigation where the browser allows turning it off.
 
 **Profile (all roles):** name, email, role, assigned depot (managers), change password, sign out. No App Settings, Help & Support, or About.
@@ -393,39 +393,42 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-53 | Back arrow on screens | **Every screen** in the PWA has a Back arrow. (§7) |
 | Q-54 | Installed start page left the top half empty | **Option A:** logo at the top, heading and choices at the bottom in thumb reach. |
 | Q-51 | Where Audit log and Settings live | **Inside More**, after Reports. (§7) |
-| Q-52 | Role-by-role milestone plan (PLAN-1) | **Approved.** (§13) |
+| Q-52 | Role-by-role milestone plan (PLAN-1) | **Approved**; numbering replaced by Q-55. (§13) |
 | Q-46 | Distributor tab labels too long for 5 tabs | **Option B:** Dashboard · Collections · Distributions · Profile. History moves inside Collections and Distributions. (§7) |
 | Q-47 | Admin navigation (resolves NAV-1 for phones) | Bottom: Home · Collections · Distributions · More. More: Depots, Products, Users, Reports. Top: bell + profile icon → Profile / My Account, Sign Out. (§7) |
 | Q-48 | Admin desktop | Not now. Admin is built phone-first; desktop layout later. Supersedes the desktop-first part of NFR-09 and the 7-item sidebar of Q-40 until revisited. |
 | Q-49 | Build order | **By role:** finish all Admin functionality, then Distributor, then Depot Manager. Milestone plan to be re-cut accordingly (§13). |
 | Q-50 | Swipe and back navigation | Sideways swipes must not switch tabs; there must be a way back to the previous page; the logo must do something. (§7) |
 | Q-45 | Logo | **The wireframe logo**: blue delivery truck with bread and rising bars on an orange cargo box; wordmark "Tally-" in brand blue (white on dark) and "Up" in orange. The truck is branding only; truck features stay out of scope (§2). |
+| Q-55 | Milestones per role | **Approved:** separate milestones per role, Admin first. A1 Admin login · A2 Admin data · A3 Admin monitoring · A4 Admin reports; then Distributor (D1…) and Depot Manager (DM1…), planned later; then Go-live. Versions: A1 = v0.2.0, A2 = v0.3.0, and so on; v1.0.0 at go-live. Until a role's milestone, its accounts exist but cannot sign in. Replaces the numbered plan of Q-52. Supabase connected by the owner: staging database for Preview + Development, production database for Production. (§13) |
 | Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
 ### Open items
 
 | # | Item | When |
 |---|---|---|
-| NAV-1 | ~~Admin navigation~~ — resolved by Q-47 and Q-51. Still open: whether the **Discrepancies** list is its own page or shown on Home and inside Distributions (spec §21) | Before Milestone 4 |
-| ACC-1 | Should Distributor and Depot Manager move Profile from a bottom tab to the header profile icon, like Admin? | Before Milestone 6 |
+| NAV-1 | ~~Admin navigation~~ — resolved by Q-47 and Q-51. Still open: whether the **Discrepancies** list is its own page or shown on Home and inside Distributions (spec §21) | Before A3 |
+| ACC-1 | Should Distributor and Depot Manager move Profile from a bottom tab to the header profile icon, like Admin? | Before D1 |
+| BACK-1 | Back on Home opens "Sign out?" (§7), and the account menu's Sign Out asks for the same confirmation. Owner to confirm or change after trying it on the A1 preview. | A1 sign-off |
+| SMTP-1 | Supabase's built-in email only reaches the project's team members, with a low hourly limit. Forgot-password emails for other users need an email provider (custom SMTP) set up in Supabase. Which provider, and when? | Before D1 (distributors are the first non-team users) |
 
 ## 13. Delivery Plan
 
-Each milestone ends with a pull request into `main`, a Vercel preview to test on, and owner sign-off before the next one starts. Version tag `v0.<milestone>.0` is set when the milestone merges (ENG-8).
+Each milestone ends with a pull request into `main`, a Vercel preview to test on, and owner sign-off before the next one starts. The version tag is set when the milestone merges (ENG-8).
 
-Order: **role by role** (Q-49) — Admin first, then Distributor, then Depot Manager (approved plan, Q-52).
+Order: **separate milestones per role, Admin first** (Q-49, Q-55). Distributor and Depot Manager milestones are planned in detail when Admin is complete. Older entries that say "Milestone 2" (login and Supabase) mean what is now A1.
 
-| Milestone | Content | Done when |
-|---|---|---|
-| 0 | Requirements, architecture, UI rules. **Done.** | Owner approves them. |
-| 1 | Project scaffold, design tokens, shared components, business-rules config, PWA, portal frames, deployed to Vercel. **Done** (plus logo Q-45, admin phone navigation Q-47). | Owner installs the app from the Vercel link. |
-| 2 | **Login and roles.** Supabase via Vercel: schema, RLS, database functions, admin user API. Email/password login, forgot password, real Sign Out, route guards. Google sign-in once the owner adds the OAuth client. | Owner logs in as each role on a real phone and cannot reach other portals. |
-| 3 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, assign depot, reset password). | Master data can be created, edited and deactivated from the phone. |
-| 4 | **Admin monitoring.** Home (KPIs per unit, alerts, pending confirmations, discrepancies, open collections), Collections, Distributions, discrepancies, corrections, notifications, audit log, settings. Shown with realistic **test data** in the staging database, because distributor and depot screens come later. | Owner can answer the core question from the screen using the test data. |
-| 5 | **Admin reports.** Filters, PDF export (CSV later). | Filtered PDF matches the screen. |
-| 6 | **Distributor**, complete: collections, distributions, mixed units, balances in loaves, over-distribution block, history inside Collections/Distributions. | Spec §3 example (800 → 250/300/250) works, plus a Caisse-collected / Pack-distributed case. |
-| 7 | **Depot Manager**, complete: pending receipts, mixed-unit count, review, lock, history. | Spec §57 workflow works end to end **across two phones**. |
-| 8 | **Together and live.** All three roles on real data, real-user test, image upload, fixes, production go-live (`v1.0.0`). | Real users complete §57 on their own phones without help. |
+| Milestone | Version | Content | Done when |
+|---|---|---|---|
+| 0 | — | Requirements, architecture, UI rules. **Done.** | Owner approves them. |
+| 1 | v0.1.0 | Project scaffold, design tokens, shared components, business-rules config, PWA, portal frames, deployed to Vercel. **Done** (plus logo Q-45, admin phone navigation Q-47). | Owner installs the app from the Vercel link. |
+| **A1** | v0.2.0 | **Admin login.** Supabase connected; database tables and security rules (profiles, audit log, RLS); admin sign-in; forgot password; real Sign Out; admin-only access. **In review.** | Owner signs in as admin on a phone, and non-admin accounts are refused. |
+| A2 | v0.3.0 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, reset password). Distributor and manager accounts can be created but cannot sign in yet. | Master data can be created, edited and deactivated from the phone. |
+| A3 | v0.4.0 | **Admin monitoring.** Home, Collections, Distributions, discrepancies, corrections, notifications, audit log, settings, shown with realistic **test data** in the staging database. | Owner can answer the core question from the screen using the test data. |
+| A4 | v0.5.0 | **Admin reports.** Filters, PDF export (CSV later). | Filtered PDF matches the screen. |
+| D1… | — | **Distributor**, planned when Admin is complete. | — |
+| DM1… | — | **Depot Manager**, planned after Distributor. | — |
+| Go-live | v1.0.0 | All three roles on real data, real-user test, production go-live. | Real users complete §57 on their own phones without help. |
 
 ## 14. Working Rules for the Build
 

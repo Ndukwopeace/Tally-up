@@ -13,6 +13,19 @@
 | A-3 | The app is deployed to Vercel and installable as a PWA from **Milestone 1**. | Q-37 |
 | A-4 | Google sign-in works as soon as the owner adds the Google OAuth client in Supabase. No "Not available yet" period beyond that. | Follows A-1 |
 
+### Proposed in A1 (v0.3 draft — accepted when the owner approves the A1 pull request)
+
+Technical details the A1 build needed that this document did not spell out. None change business behaviour. Details and reasons: `docs/adr/0002-a1-admin-login.md`.
+
+| # | Change | Section |
+|---|---|---|
+| A-5 | The build reads the Supabase URL and **public** key under the names the Vercel integration creates (`SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, … as well as `VITE_*`), and **stops** if the key found is a secret key. | §15 |
+| A-6 | Supabase Auth uses the **implicit** flow, so a reset link works even when the email opens in a different browser from the installed app. | §5.2 |
+| A-7 | The login audit entry (AUD-03) is written by the database function `record_login(method)`, called by the app right after sign-in; it records only the caller's own login. A login that cannot be recorded is refused. Other audit entries still come from triggers (§6.1). | §6.4 |
+| A-8 | Each portal has a `…/sign-out` page ("Sign out?"). Back on Home and Sign Out in the account menu lead there (REQUIREMENTS §7, BACK-1). Sign-out ends this device's session only (scope "local"). | §4 |
+| A-9 | Portals whose milestone has not arrived refuse sign-in with a plain message (`OPEN_PORTALS` in `src/auth/access.ts`, Q-55). | §4.5 |
+| A-10 | Database tests run on a plain Postgres 16 with pgTAP, using a small stand-in for Supabase's `auth` schema (`supabase/tests/stub/`). Migrations follow the Supabase CLI naming (`<timestamp>_<name>.sql`). | §6.7, §16 |
+
 This document describes **how** the system is built. It adds no business rules.
 Technical choices not already fixed by the requirements are marked **[PROPOSED]** and listed in Section 17 for approval.
 
@@ -248,6 +261,7 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/admin/settings` | Business rules display (Section 11 of requirements) |
 | `/admin/more` | More tab: Depots, Products, Users, Reports (Q-47) |
 | `/admin/profile` | Profile / My Account (account menu, Q-47) |
+| `/admin/sign-out` | "Sign out?" confirmation (A-8; also `/distributor/sign-out`, `/depot/sign-out`) |
 
 ### 4.3 Distributor — `/distributor/*` (role: distributor)
 
