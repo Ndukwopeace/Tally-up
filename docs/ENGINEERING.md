@@ -1,6 +1,6 @@
 # Tally-Up — Engineering Practices
 
-**Status:** DRAFT v0.1 — awaiting owner review
+**Status:** v0.1 — APPROVED by owner 2026-10-02 (ENG-1 per-unit standard; ENG-2 to ENG-10 accepted; ENG-11 deferred)
 **Date:** 2026-10-02
 **Depends on:** `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/UI_GUIDELINES.md`
 
@@ -31,7 +31,7 @@ These come first because the project has been lost twice to unrequested changes.
 
 > Every line of code should have a comment explaining the **why**, **how**, **when**, and the **security implications** if applicable.
 
-### 2.2 How the rule is applied [PROPOSED — see ENG-1]
+### 2.2 How the rule is applied (owner decision ENG-1)
 
 A comment on literally every line (e.g. on `}` or `import React from "react"`) repeats the code and goes stale as code changes, which conflicts with the clean-code rule in Section 4. The proposal keeps the intent — nothing is left unexplained — at the level of each meaningful unit:
 
@@ -149,7 +149,7 @@ Given the project's history, these settings protect the work:
 | Default branch | `main` |
 | Branch protection on `main` | Require PR, require CI passing, require 1 approval (owner), block force push, block deletion |
 | Repository | Do not grant AI tools admin rights; they cannot delete the repository |
-| Backup | [PROPOSED] Weekly mirror clone to the owner's Google Drive or a second GitHub account |
+| Backup | Not now (owner decision ENG-11). Revisit before go-live. |
 
 ---
 
@@ -318,6 +318,31 @@ Runs on every push and PR:
 
 A red CI blocks merge. CI is never bypassed.
 
+### 10.1 Required status checks on `main`
+
+Each step above runs as a separately named job in `.github/workflows/ci.yml`, so GitHub shows exactly which one failed. On a pull request they appear as `ci / format (push)` etc.; in **Settings → Branches → `main` → Require status checks to pass** the owner searches for the job name alone (`format`, `lint`, …).
+
+GitHub only lists a check after it has run at least once, so each check is added when the phase that creates it has run CI on a pull request.
+
+| Check name | What it proves | Available from |
+|---|---|---|
+| `format` | Code is formatted (Prettier) | Phase 1 |
+| `lint` | No lint errors or warnings, including accessibility lint | Phase 1 |
+| `typecheck` | TypeScript compiles in strict mode | Phase 1 |
+| `test` | Unit and component tests pass; coverage targets met (ENG-5) | Phase 1 |
+| `build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Phase 1 |
+| `audit` | No high/critical dependency vulnerabilities | Phase 1 |
+| `secrets` | No committed .env files, no service-role key in browser code, no key values in any file | Now (runs on every push already) |
+| `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Phase 1, once the Vercel project is linked |
+| `db-test` | pgTAP: RLS, database functions, triggers | Phase 2 |
+| `e2e` | Playwright workflows + axe accessibility on the preview | Phase 2 |
+
+Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
+
+Until Phase 1 adds `package.json`, the npm jobs (`format` … `audit`) show as **skipped** and only `secrets` runs. A temporary `project` job decides this. Phase 1 removes that job, after which every check always runs. Do not add `project` as a required check.
+
+Scripts the Phase 1 `package.json` must define for CI: `format:check`, `lint`, `typecheck`, `test:coverage`, `build`, `budget`.
+
 ---
 
 ## 11. Versioning and Releases
@@ -380,25 +405,25 @@ Everything is documented in the repository, next to the code.
 |---|---|
 | AI-1 | The AI reads `CLAUDE.md` and the docs before any task. |
 | AI-2 | The AI states the requirement IDs it is working on before writing code. |
-| AI-3 | The AI never assumes a business rule. It asks. |
+| ENG-11 | Weekly repository backup | **Not now.** Revisit before go-live. |
 | AI-4 | The AI works on its assigned branch only and never deletes branches, rewrites history, or touches repository settings. |
 | AI-5 | The AI stops at the end of each phase and waits for owner sign-off. |
 | AI-6 | The AI reports test results honestly, including failures. |
 
 ---
 
-## 16. Decisions Needed
+## 16. Decisions (owner, 2026-10-02)
 
-| # | Question | Proposal |
+| # | Question | Decision |
 |---|---|---|
-| ENG-1 | Comment rule (Section 2): literal comment on **every line**, or the per-unit standard in 2.2 (every file, every function, every logic/security/business line; not on braces and plain imports)? | Per-unit standard (2.2) |
+| ENG-1 | Comment rule | **Per-unit standard (§2.2)**: every file, every function, every logic / security / business-rule line. Not on braces and plain imports. |
 | ENG-2 | Commit message format | Conventional Commits |
 | ENG-3 | Merge method | Squash merge |
-| ENG-4 | Create `main` branch: the repository has only `claude/practical-ritchie-mnkli1`. GitHub Flow needs `main`. | Owner creates `main` from the current branch in GitHub, sets it as default, and adds the protection in §3.5. Future work comes in by PR. |
+| ENG-4 | `main` branch | Owner creates `main` from `claude/practical-ritchie-mnkli1`, sets it as default, and adds the §3.5 protections. Future work comes in by PR. |
 | ENG-5 | Coverage targets | 100 % domain / 90 % services & auth / 80 % rest |
 | ENG-6 | Database tests | pgTAP |
 | ENG-7 | Pre-commit hooks | Husky + lint-staged |
 | ENG-8 | Versioning | SemVer, `0.<phase>.x` until go-live, `1.0.0` at go-live |
 | ENG-9 | ADRs and traceability matrix | Yes, both |
 | ENG-10 | Lighthouse thresholds | Perf ≥ 85, A11y = 100 |
-| ENG-11 | Weekly repository backup | Yes, owner chooses where |
+| ENG-11 | Weekly repository backup | Yes. Location: owner to name (open). |
