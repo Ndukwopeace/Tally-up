@@ -406,9 +406,11 @@ Everything is documented in the repository, next to the code.
 | AI-1 | The AI reads `CLAUDE.md` and the docs before any task. |
 | AI-2 | The AI states the requirement IDs it is working on before writing code. |
 | ENG-11 | Weekly repository backup | **Not now.** Revisit before go-live. |
+| ENG-12 | Pull requests after commits | **Always.** Every pushed commit goes into an open pull request into `main` (AI-7). |
 | AI-4 | The AI works on its assigned branch only and never deletes branches, rewrites history, or touches repository settings. |
 | AI-5 | The AI stops at the end of each milestone and waits for owner sign-off. |
 | AI-6 | The AI reports test results honestly, including failures. |
+| AI-7 | After every commit is pushed, the AI opens a pull request into `main` (or updates the one already open for that branch). The owner reviews and merges; the AI never merges. (Owner decision ENG-12) |
 
 ---
 
