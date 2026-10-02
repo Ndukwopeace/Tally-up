@@ -90,12 +90,12 @@ export function toLoaves(quantity: number, loavesPerUnit: number): number {
 ```mermaid
 gitGraph
   commit id: "main (always deployable)"
-  branch feat/phase-1-scaffold
+  branch feat/milestone-1-scaffold
   commit id: "test: ..."
   commit id: "feat: ..."
   commit id: "refactor: ..."
   checkout main
-  merge feat/phase-1-scaffold id: "PR merged → production deploy"
+  merge feat/milestone-1-scaffold id: "PR merged → production deploy"
   branch fix/login-redirect
   commit id: "test + fix"
   checkout main
@@ -211,7 +211,7 @@ Every requirement ID has at least one test. `docs/TRACEABILITY.md` [PROPOSED] ma
 | Component | React Testing Library | Inputs, review screens, guards, empty/error states | Before or with the component |
 | Service | Vitest | Mock service rules; same suite run against Supabase staging | Before the service |
 | Database | SQL tests (pgTAP) [PROPOSED] | RLS per role, database functions, triggers | Before the migration |
-| End-to-end | Playwright + axe-core | Full workflows per role, accessibility | Per phase, before handover |
+| End-to-end | Playwright + axe-core | Full workflows per role, accessibility | Per milestone, before handover |
 
 ### 5.4 Coverage targets [PROPOSED]
 
@@ -314,7 +314,7 @@ Runs on every push and PR:
 6. Build
 7. `npm audit` (high/critical fail)
 8. Secret-leak check (service-role key pattern)
-9. End-to-end + axe tests against the Vercel preview (from Phase 2)
+9. End-to-end + axe tests against the Vercel preview (from Milestone 2)
 
 A red CI blocks merge. CI is never bypassed.
 
@@ -322,26 +322,26 @@ A red CI blocks merge. CI is never bypassed.
 
 Each step above runs as a separately named job in `.github/workflows/ci.yml`, so GitHub shows exactly which one failed. On a pull request they appear as `ci / format (push)` etc.; in **Settings → Branches → `main` → Require status checks to pass** the owner searches for the job name alone (`format`, `lint`, …).
 
-GitHub only lists a check after it has run at least once, so each check is added when the phase that creates it has run CI on a pull request.
+GitHub only lists a check after it has run at least once, so each check is added when the milestone that creates it has run CI on a pull request.
 
 | Check name | What it proves | Available from |
 |---|---|---|
-| `format` | Code is formatted (Prettier) | Phase 1 |
-| `lint` | No lint errors or warnings, including accessibility lint | Phase 1 |
-| `typecheck` | TypeScript compiles in strict mode | Phase 1 |
-| `test` | Unit and component tests pass; coverage targets met (ENG-5) | Phase 1 |
-| `build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Phase 1 |
-| `audit` | No high/critical dependency vulnerabilities | Phase 1 |
+| `format` | Code is formatted (Prettier) | Milestone 1 |
+| `lint` | No lint errors or warnings, including accessibility lint | Milestone 1 |
+| `typecheck` | TypeScript compiles in strict mode | Milestone 1 |
+| `test` | Unit and component tests pass; coverage targets met (ENG-5) | Milestone 1 |
+| `build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Milestone 1 |
+| `audit` | No high/critical dependency vulnerabilities | Milestone 1 |
 | `secrets` | No committed .env files, no service-role key in browser code, no key values in any file | Now (runs on every push already) |
-| `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Phase 1, once the Vercel project is linked |
-| `db-test` | pgTAP: RLS, database functions, triggers | Phase 2 |
-| `e2e` | Playwright workflows + axe accessibility on the preview | Phase 2 |
+| `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Milestone 1, once the Vercel project is linked |
+| `db-test` | pgTAP: RLS, database functions, triggers | Milestone 2 |
+| `e2e` | Playwright workflows + axe accessibility on the preview | Milestone 2 |
 
 Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
 
-Until Phase 1 adds `package.json`, the npm jobs (`format` … `audit`) show as **skipped** and only `secrets` runs. A temporary `project` job decides this. Phase 1 removes that job, after which every check always runs. Do not add `project` as a required check.
+Until Milestone 1 adds `package.json`, the npm jobs (`format` … `audit`) show as **skipped** and only `secrets` runs. A temporary `project` job decides this. Milestone 1 removes that job, after which every check always runs. Do not add `project` as a required check.
 
-Scripts the Phase 1 `package.json` must define for CI: `format:check`, `lint`, `typecheck`, `test:coverage`, `build`, `budget`.
+Scripts the Milestone 1 `package.json` must define for CI: `format:check`, `lint`, `typecheck`, `test:coverage`, `build`, `budget`.
 
 ---
 
@@ -350,7 +350,7 @@ Scripts the Phase 1 `package.json` must define for CI: `format:check`, `lint`, `
 | Item | Rule [PROPOSED] |
 |---|---|
 | Scheme | Semantic Versioning `MAJOR.MINOR.PATCH`. |
-| Before go-live | `0.<phase>.<patch>` — e.g. `0.1.0` at end of Phase 1, `0.2.0` at end of Phase 2. |
+| Before go-live | `0.<milestone>.<patch>` — e.g. `0.1.0` at end of Milestone 1, `0.2.0` at end of Milestone 2. |
 | Go-live | `1.0.0`. |
 | Tags | Git tag `v0.1.0` etc. on `main` at each release. |
 | Changelog | `CHANGELOG.md` (Keep a Changelog format), updated in each PR under "Unreleased". |
@@ -393,7 +393,7 @@ Everything is documented in the repository, next to the code.
 
 | # | Rule |
 |---|---|
-| PERF-1 | Initial JS ≤ 250 KB gzipped (UI-5); measured in CI from Phase 1. |
+| PERF-1 | Initial JS ≤ 250 KB gzipped (UI-5); measured in CI from Milestone 1. |
 | PERF-2 | Each route's code loaded on demand (route-level code splitting). |
 | PERF-3 | Lighthouse on a mobile profile: Performance ≥ 85, Accessibility = 100, PWA installable [PROPOSED]. |
 
@@ -407,7 +407,7 @@ Everything is documented in the repository, next to the code.
 | AI-2 | The AI states the requirement IDs it is working on before writing code. |
 | ENG-11 | Weekly repository backup | **Not now.** Revisit before go-live. |
 | AI-4 | The AI works on its assigned branch only and never deletes branches, rewrites history, or touches repository settings. |
-| AI-5 | The AI stops at the end of each phase and waits for owner sign-off. |
+| AI-5 | The AI stops at the end of each milestone and waits for owner sign-off. |
 | AI-6 | The AI reports test results honestly, including failures. |
 
 ---
@@ -423,7 +423,7 @@ Everything is documented in the repository, next to the code.
 | ENG-5 | Coverage targets | 100 % domain / 90 % services & auth / 80 % rest |
 | ENG-6 | Database tests | pgTAP |
 | ENG-7 | Pre-commit hooks | Husky + lint-staged |
-| ENG-8 | Versioning | SemVer, `0.<phase>.x` until go-live, `1.0.0` at go-live |
+| ENG-8 | Versioning | SemVer, `0.<milestone>.x` until go-live, `1.0.0` at go-live |
 | ENG-9 | ADRs and traceability matrix | Yes, both |
 | ENG-10 | Lighthouse thresholds | Perf ≥ 85, A11y = 100 |
 | ENG-11 | Weekly repository backup | Yes. Location: owner to name (open). |

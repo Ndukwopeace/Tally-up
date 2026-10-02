@@ -12,7 +12,7 @@
 #       come only from GitHub's own `actions/` organisation.
 #
 # Jobs added later (ENGINEERING §10.1): `db-test` (pgTAP) and `e2e`
-# (Playwright + axe) arrive in Phase 2 together with the code they test.
+# (Playwright + axe) arrive in Milestone 2 together with the code they test.
 # -----------------------------------------------------------------------------
 name: ci
 
@@ -38,10 +38,10 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # WORKAROUND (remove in Phase 1): the repository holds only documents until
-  # the Phase 1 scaffold adds package.json. Without this guard every npm job
+  # WORKAROUND (remove in Milestone 1): the repository holds only documents until
+  # the Milestone 1 scaffold adds package.json. Without this guard every npm job
   # would fail on documentation-only commits. This job reports whether the
-  # project exists; npm jobs skip until it does. Phase 1 deletes this job and
+  # project exists; npm jobs skip until it does. Milestone 1 deletes this job and
   # the `needs`/`if` lines below, so a missing package.json can never make
   # checks skip silently once the app exists.
   # ---------------------------------------------------------------------------
