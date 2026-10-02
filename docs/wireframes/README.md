@@ -77,4 +77,4 @@ Each item names the screen, what the wireframe shows, the requirement it touches
 | WD-2 | Hand-over number prefix (W-A2) | **DIS-** (e.g. DIS-00018), everywhere. |
 | WD-3 | Admin navigation (W-B1, W-B2) | Desktop: side tabs, **max 7**. Phone: **4 bottom tabs**. Which pages go where: decided later (NAV-1 in requirements). |
 | WD-4 | Profile extras (W-A4) | **Remove** App Settings, Help & Support, About. |
-| WD-5 | Missing screens (W-B7) | Designed together with the owner when their phase comes. |
+| WD-5 | Missing screens (W-B7) | Designed together with the owner when their milestone comes. |

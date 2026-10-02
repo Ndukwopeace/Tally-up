@@ -73,11 +73,11 @@ IDs are stable. Later commits and tests will reference them.
 | AUTH-03 | Login with **email + password**. |
 | AUTH-04 | "Continue with Google" on the login screen. Google sign-in succeeds only if the Google email matches an active account an Admin already created. Otherwise: "No Tally-Up account exists for this email. Contact your administrator." |
 | AUTH-05 | The owner creates the Google OAuth client manually and adds it in Supabase. Until that is done, the Google button shows "Not available yet". |
-| AUTH-06 | `/forgot-password` sends a reset email (Supabase, from Phase 2). Admin can always reset a password (USR-04). |
+| AUTH-06 | `/forgot-password` sends a reset email (Supabase, from Milestone 2). Admin can always reset a password (USR-04). |
 | AUTH-07 | After login, route by role: Admin → `/admin`, Distributor → `/distributor`, Depot Manager → `/depot`. |
 | AUTH-08 | Route guards block a role from another portal's URLs, including typed URLs. Redirect to own portal. |
 | AUTH-09 | Deactivated users cannot log in, by password or by Google. |
-| AUTH-10 | Every data request is filtered by role and ownership in the data layer, not only in the UI, using Supabase Row Level Security policies from Phase 2. |
+| AUTH-10 | Every data request is filtered by role and ownership in the data layer, not only in the UI, using Supabase Row Level Security policies from Milestone 2. |
 
 ### 5.2 Products (Admin)
 
@@ -234,8 +234,8 @@ IDs are stable. Later commits and tests will reference them.
 |---|---|
 | NFR-01 | Stack: React, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Router, Lucide, TanStack Query. |
 | NFR-02 | Hosting: **Vercel**. Database and auth: **Supabase, added through the Vercel Marketplace integration** (Postgres, Auth with Google provider, Row Level Security, Storage). |
-| NFR-03 | All data access goes through service interfaces. From Phase 2 the deployed app uses Supabase, so testers on different phones share one database. A mock implementation of the same interfaces is used only for automated tests and offline local development. |
-| NFR-03a | The app is deployed to Vercel and installable as a PWA from Phase 1, so it can be tested on real phones as each phase lands. Every push to the working branch gets a Vercel preview URL. |
+| NFR-03 | All data access goes through service interfaces. From Milestone 2 the deployed app uses Supabase, so testers on different phones share one database. A mock implementation of the same interfaces is used only for automated tests and offline local development. |
+| NFR-03a | The app is deployed to Vercel and installable as a PWA from Milestone 1, so it can be tested on real phones as each milestone lands. Every push to the working branch gets a Vercel preview URL. |
 | NFR-04 | Folder separation: `pages`, `components`, `layouts`, `services`, `hooks`, `types`, `auth`, `config`, `lib`. No single-file app. |
 | NFR-05 | PWA: installable manifest and service worker for the app shell. |
 | NFR-06 | Online only in v1. With no connection, screens show "No connection" and block submits. No fake sync: a write is never shown as saved until the data layer confirms it. |
@@ -350,7 +350,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-20 | Whole numbers only? | **Yes.** |
 | Q-21 | Same product in two units on one collection | **Allowed**; same unit twice blocked. (COL-04) |
 | Q-22 | Offline in v1? | **No.** (NFR-06) |
-| Q-23 | Mock data first? | ~~Yes, Supabase in Phase 7~~ — **replaced by Q-37**: Supabase from Phase 2. |
+| Q-23 | Mock data first? | ~~Yes, Supabase in Milestone 7~~ — **replaced by Q-37**: Supabase from Milestone 2. |
 | Q-24 | Export format | **PDF first.** (RPT-04) |
 | Q-25 | Product images | URL field; upload with Supabase Storage. |
 | Q-26 | Admin notified of every distribution? | **No**, only discrepancies. (NOT-05) |
@@ -359,30 +359,31 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-29 | Hand-over small → large unit? | **Yes**, either direction. (DIS-04) |
 | Q-30 | Unit with no conversion | Superseded: loaves-per-unit is now required. (PRD-04) |
 | Q-31 | Google login for unregistered email | **Refused.** (AUTH-04) |
-| Q-32 | Google before backend | ~~Not available until Phase 7~~ — **replaced by Q-37**: works once the owner adds the OAuth client. (AUTH-05) |
+| Q-32 | Google before backend | ~~Not available until Milestone 7~~ — **replaced by Q-37**: works once the owner adds the OAuth client. (AUTH-05) |
 | Q-33 | Reset email | After backend connected. (AUTH-06) |
 | Q-34 | Which database | **Supabase via Vercel Marketplace.** (NFR-02) |
 | Q-35 | Loaves-per-unit required? | **Yes.** (PRD-04) |
 | Q-36 | Manager mixes units on one line? | **Yes**, e.g. 19 Packs + 5 Loaves. (RCP-06) |
-| Q-37 | Deploy and test early? | **Yes.** Vercel + PWA from Phase 1; Supabase from Phase 2 so all testers share data. Replaces Q-23 and Q-32. (NFR-03, NFR-03a) |
+| Q-37 | Deploy and test early? | **Yes.** Vercel + PWA from Milestone 1; Supabase from Milestone 2 so all testers share data. Replaces Q-23 and Q-32. (NFR-03, NFR-03a) |
 | Q-38 | Wireframes vs requirements | **Requirements win** where they conflict. |
 | Q-39 | Hand-over number prefix | **DIS-** (Section 11) |
 | Q-40 | Admin navigation | Desktop sidebar max 7 items; phone 4 bottom tabs. Contents decided later (NAV-1). (Section 7) |
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
-| Q-42 | Screens with no wireframe | Designed together when their phase comes. |
-| Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Phase 2. |
+| Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
+| Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
+| Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
 ### Open items
 
 | # | Item | When |
 |---|---|---|
-| NAV-1 | Which admin pages go in the 7 sidebar items and 4 phone tabs, and how the others are reached | Before Phase 3 (first admin screens) |
+| NAV-1 | Which admin pages go in the 7 sidebar items and 4 phone tabs, and how the others are reached | Before Milestone 3 (first admin screens) |
 
 ## 13. Delivery Plan
 
-Each phase ends with a commit, a push to the working branch, and owner sign-off before the next starts.
+Each milestone ends with a pull request into `main`, a Vercel preview to test on, and owner sign-off before the next one starts. Version tag `v0.<milestone>.0` is set when the milestone merges (ENG-8).
 
-| Phase | Content | Done when |
+| Milestone | Content | Done when |
 |---|---|---|
 | 0 | Requirements, architecture, UI rules. | Owner approves them. |
 | 1 | Project scaffold, design tokens, shared components, business-rules config, **PWA (manifest, service worker, install prompt)**, three portal layout shells, **deployed to Vercel**. | Owner opens the Vercel link on a phone and installs the app to the home screen. |
@@ -396,6 +397,6 @@ Each phase ends with a commit, a push to the working branch, and owner sign-off 
 ## 14. Working Rules for the Build
 
 - Nothing outside this document gets built.
-- If a phase hits a gap not covered here, work stops on that point and the question comes to the owner.
+- If a milestone hits a gap not covered here, work stops on that point and the question comes to the owner.
 - No repository-level destructive actions (force push, branch deletion, history rewrite).
 - All work goes to branch `claude/practical-ritchie-mnkli1`.

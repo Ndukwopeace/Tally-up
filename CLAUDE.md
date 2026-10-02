@@ -19,10 +19,10 @@ Read this file and the documents below **before any task**. They override your d
 3. No new npm package without owner approval.
 4. Never change an approved document without an owner decision recorded in its decision log.
 5. Never force push, rewrite history, delete branches or repositories, or change repository settings.
-6. Work only on the branch you were assigned. One task per pull request.
+6. Work only on the branch you were assigned. One task per pull request. After every push, open a pull request into `main` (or update the open one). Never merge it yourself.
 7. Tests first (red → green → refactor). Never skip, disable, or delete a test to get green.
 8. Comment code per `docs/ENGINEERING.md` §2: why, how, when, security. `// SECURITY:` and `// RULE <ID>:` lines are mandatory where they apply.
 9. Never put secrets in code or commits. The Supabase service-role key exists only in Vercel Functions.
-10. Stop at the end of each phase and wait for owner sign-off.
+10. Stop at the end of each milestone and wait for owner sign-off.
 11. Report results honestly, including failures and skipped steps.
 12. Write to the owner in plain, direct language. No filler.

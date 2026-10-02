@@ -29,8 +29,8 @@ Context constraints that drive the rules below:
 
 User-centred process for this project:
 1. Requirements and wireframes reviewed by the owner (done / in progress).
-2. Each phase is shown to the owner before the next one starts.
-3. [PROPOSED] Before Phase 7 go-live: one real distributor and one real depot manager complete the spec's Section 57 workflow on their own phones while we watch. Problems found become fixes, not notes.
+2. Each milestone is shown to the owner before the next one starts.
+3. [PROPOSED] Before Milestone 7 go-live: one real distributor and one real depot manager complete the spec's Section 57 workflow on their own phones while we watch. Problems found become fixes, not notes.
 
 ---
 
@@ -222,7 +222,7 @@ Target: **WCAG 2.2 AA** on every screen. The points below are the ones that matt
 ### 5.5 Checking
 
 - Automated: axe-core checks in Playwright tests on every page.
-- Manual per phase: keyboard-only pass on admin; TalkBack pass on one Android phone for distributor and depot flows; contrast check on all status badges.
+- Manual per milestone: keyboard-only pass on admin; TalkBack pass on one Android phone for distributor and depot flows; contrast check on all status badges.
 
 ---
 
@@ -254,7 +254,7 @@ Target: **WCAG 2.2 AA** on every screen. The points below are the ones that matt
 
 ## 8. Visual Language
 
-Taken from the wireframes' direction; exact values set in Phase 1 as design tokens.
+Taken from the wireframes' direction; exact values set in Milestone 1 as design tokens.
 
 | Element | Rule |
 |---|---|
