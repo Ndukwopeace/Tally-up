@@ -78,7 +78,7 @@ export class SupabaseProductService implements ProductService {
 
   async save(input: ProductSaveInput, id?: string): Promise<string> {
     const result = await this.client.rpc("admin_save_product", {
-      product_id: id ?? null,
+      target_product_id: id ?? null,
       product_name: input.name,
       product_code: input.code,
       product_description: input.description,

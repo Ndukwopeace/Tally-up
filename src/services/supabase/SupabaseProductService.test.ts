@@ -105,7 +105,7 @@ describe("SupabaseProductService", () => {
     const { client, service } = fakeClient();
     expect(await service.save(INPUT)).toBe("p9");
     expect(client.rpc).toHaveBeenCalledWith("admin_save_product", {
-      product_id: null,
+      target_product_id: null,
       product_name: "Big Bread",
       product_code: "BB-01",
       product_description: "Large",
@@ -116,7 +116,7 @@ describe("SupabaseProductService", () => {
     await service.save(INPUT, "p1");
     expect(client.rpc).toHaveBeenLastCalledWith(
       "admin_save_product",
-      expect.objectContaining({ product_id: "p1" }),
+      expect.objectContaining({ target_product_id: "p1" }),
     );
   });
 

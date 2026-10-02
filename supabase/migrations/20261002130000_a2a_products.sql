@@ -65,7 +65,7 @@ create table public.product_units (
 alter table public.product_units enable row level security;
 
 -- ---------------------------------------------------------------------------
--- admin_save_product: create (product_id null) or edit a product.
+-- admin_save_product: create (target_product_id null) or edit a product.
 -- pack_loaves / caisse_loaves: loaves in one Pack / Caisse, or null when the
 -- product does not use that unit. The form converts "N Packs" to loaves
 -- before calling (PRD-05), so only loaves reach the database.
@@ -73,7 +73,9 @@ alter table public.product_units enable row level security;
 --   NOT_ADMIN, NOT_FOUND, CODE_TAKEN, INVALID_PRODUCT.
 -- ---------------------------------------------------------------------------
 create function public.admin_save_product(
-  product_id uuid,
+  -- Named target_product_id (not product_id) so it never clashes with the
+  -- product_units.product_id column inside the function.
+  target_product_id uuid,
   product_name text,
   product_code text,
   product_description text,
@@ -87,10 +89,6 @@ volatile
 security definer
 set search_path = ''
 as $$
--- Inside this function, a bare `product_id` in a table context means the
--- column (e.g. ON CONFLICT targets); the parameter is used only where no
--- such column exists.
-#variable_conflict use_column
 declare
   saved_id uuid;
   old_status public.record_status;
@@ -110,7 +108,7 @@ begin
   end if;
 
   begin
-    if product_id is null then
+    if target_product_id is null then
       insert into public.products (name, code, description, status)
       values (btrim(product_name), btrim(product_code), btrim(product_description), product_status)
       returning id into saved_id;
@@ -118,7 +116,7 @@ begin
       insert into public.audit_log (user_id, action, record_type, record_id, details)
       values (auth.uid(), 'product.created', record_kind, saved_id::text, jsonb_build_object('code', btrim(product_code)));
     else
-      select p.status into old_status from public.products p where p.id = product_id for update;
+      select p.status into old_status from public.products p where p.id = target_product_id for update;
       if not found then
         raise exception 'NOT_FOUND';
       end if;
@@ -127,8 +125,8 @@ begin
           code = btrim(product_code),
           description = btrim(product_description),
           status = product_status
-      where id = product_id;
-      saved_id := product_id;
+      where id = target_product_id;
+      saved_id := target_product_id;
       -- RULE AUD-03: product edited, and (de)activated when the status changed.
       insert into public.audit_log (user_id, action, record_type, record_id)
       values (auth.uid(), 'product.edited', record_kind, saved_id::text);
