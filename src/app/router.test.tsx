@@ -105,6 +105,23 @@ describe("Admin portal (Q-47)", () => {
     expect(router.state.historyAction).toBe("REPLACE");
   });
 
+  it.each([
+    ["/admin/collections", "Collections"],
+    ["/admin/distributions", "Distributions"],
+    ["/admin/more", "More"],
+  ])("tab screen %s has Back, which goes to Home (not to the previously tapped tab)", async (path, title) => {
+    const router = renderAt(path, ["/admin", "/admin/distributions"]);
+    expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/admin");
+  });
+
+  it("Home has Back, which returns to the start page", async () => {
+    const router = renderAt("/admin");
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/");
+  });
+
   it("the logo takes you to Home", async () => {
     renderAt("/admin/collections");
     expect(await screen.findByRole("link", { name: "Tally-Up, go to Home" })).toHaveAttribute(
@@ -229,10 +246,50 @@ describe("every portal", () => {
 });
 
 describe("unknown addresses", () => {
+  it("has a Back arrow, like every other screen", async () => {
+    const router = renderAt("/nowhere");
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/");
+  });
+
   it("shows Page not found with the logo and a way back", async () => {
     renderAt("/nowhere");
     expect(await screen.findByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
     expect(screen.getByText("Tally-")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Go to the start page" })).toHaveAttribute("href", "/");
+  });
+});
+
+describe("Back on every portal screen", () => {
+  it.each([
+    "/distributor",
+    "/distributor/collections",
+    "/distributor/distributions",
+    "/distributor/profile",
+    "/depot",
+    "/depot/receipts",
+    "/depot/history",
+    "/depot/profile",
+  ])("%s shows a Back arrow", async (path) => {
+    renderAt(path);
+    expect(await screen.findByRole("button", { name: "Back" })).toBeInTheDocument();
+  });
+
+  it("a distributor tab goes back to the Dashboard", async () => {
+    const router = renderAt("/distributor/profile");
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/distributor");
+  });
+});
+
+describe("start page layout (option A)", () => {
+  it("puts the logo first and the portal choices after the heading", async () => {
+    renderAt("/");
+    const heading = await screen.findByRole("heading", { level: 1, name: "Choose a portal" });
+    const logo = screen.getByText("Tally-");
+    // DOCUMENT_POSITION_FOLLOWING (4): the heading comes after the logo.
+    expect(logo.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByTestId("start-top")).toContainElement(logo);
+    expect(screen.getByTestId("start-actions")).toContainElement(heading);
   });
 });

@@ -28,6 +28,8 @@ export interface PortalHeaderProps {
   notificationsHref: string;
   /** Parent page for the Back arrow; no Back arrow when undefined. */
   backTo?: string;
+  /** Back always goes to `backTo` (tab screens). */
+  backToParentOnly?: boolean;
   /** Account menu (admin only, Q-47). */
   account?: AccountMenuProps;
 }
@@ -37,13 +39,14 @@ export function PortalHeader({
   homeLabel,
   notificationsHref,
   backTo,
+  backToParentOnly,
   account,
 }: Readonly<PortalHeaderProps>) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex min-h-16 w-full max-w-xl items-center justify-between gap-2 pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]">
         <div className="flex min-w-0 items-center gap-1">
-          {backTo ? <BackButton fallback={backTo} /> : null}
+          {backTo ? <BackButton fallback={backTo} parentOnly={backToParentOnly} /> : null}
           <Link to={homeHref} aria-label={en.nav.logoHome(homeLabel)} className="rounded-control">
             <AppLogo />
           </Link>
