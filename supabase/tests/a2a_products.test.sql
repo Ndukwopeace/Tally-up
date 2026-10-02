@@ -12,7 +12,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(30);
+select plan(31);
 
 -- ---------------------------------------------------------------------------
 -- Helpers (pg_temp: exist only for this test session).
@@ -102,9 +102,13 @@ select throws_ok($$select pg_temp.save(null, 'C0', null, -5, true)$$, 'P0001', '
 select throws_ok(
   $$select public.admin_save_product(null, '  ', 'NB-1', 'x', 'active', null, null)$$, 'P0001', 'INVALID_PRODUCT',
   'PRD-02: name is required');
-select throws_ok(
-  $$select public.admin_save_product(null, 'No description', 'ND-1', ' ', 'active', null, null)$$, 'P0001',
-  'INVALID_PRODUCT', 'PRD-02: description is required');
+-- Q-57j: description is optional; a blank one is stored as empty (null).
+select lives_ok(
+  $$select public.admin_save_product((select id from saved where label = 'caisse_only'), 'Bread CO-1', 'CO-1', '  ',
+    'active', null, 24)$$,
+  'Q-57j: a product can be saved without a description');
+select is((select description from public.products where id = (select id from saved where label = 'caisse_only')),
+  null, 'Q-57j: a blank description is stored as empty');
 
 -- Edit: drop Caisse, change Pack, deactivate.
 select lives_ok($$select pg_temp.save((select id from saved where label = 'big'), 'BB-01', 12, null, false)$$,

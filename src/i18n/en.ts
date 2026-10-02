@@ -207,7 +207,8 @@ export const en = {
     name: "Name",
     code: "Code",
     codeHint: "Letters, numbers and dashes, up to 20. For example BB-01.",
-    description: "Description",
+    // RULE Q-57j: optional.
+    description: "Description (optional)",
     unitsLegend: "Units",
     loafAlways: "Loaf: always available, 1 loaf",
     packOn: "Sold in Packs",
@@ -229,7 +230,6 @@ export const en = {
       name_required: "Enter the product name.",
       code_required: "Enter a product code.",
       code_invalid: "Use letters, numbers and dashes only, up to 20 characters.",
-      description_required: "Enter a short description.",
       loaves_required: "Enter how many.",
       loaves_min_one: "Must be at least 1.",
       caisse_needs_pack: "Switch on Packs and set loaves per Pack first, or count the Caisse in loaves.",

@@ -23,7 +23,8 @@ const rowSchema = z.object({
   id: z.string(),
   name: z.string(),
   code: z.string(),
-  description: z.string(),
+  // RULE Q-57j: optional; stored as null when empty.
+  description: z.nullable(z.string()),
   status: z.enum(RECORD_STATUSES),
   product_units: z.array(z.object({ unit: z.enum(UNITS), loaves_per_unit: z.number() })),
 });
@@ -41,7 +42,7 @@ function toProduct(raw: unknown): Product {
     id: row.id,
     name: row.name,
     code: row.code,
-    description: row.description,
+    description: row.description ?? "",
     status: row.status,
     packLoaves: loavesOf("Pack"),
     caisseLoaves: loavesOf("Caisse"),

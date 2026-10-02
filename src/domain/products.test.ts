@@ -2,7 +2,8 @@
  * Tests for the product form rules.
  *
  * Rules under test:
- *  - PRD-02 / Q-57h: name, code (letters, numbers, dashes, ≤ 20) and description required.
+ *  - PRD-02 / Q-57h: name and code (letters, numbers, dashes, ≤ 20) required.
+ *  - Q-57j: description optional.
  *  - PRD-03 / Q-57d: Loaf always; Pack and Caisse optional.
  *  - PRD-04: a Pack or Caisse holds at least one loaf, whole numbers only.
  *  - PRD-05: Caisse entered as N Loaves or N Packs; stored as loaves.
@@ -41,14 +42,14 @@ describe("validateProductForm", () => {
     });
   });
 
-  it("requires name, code and description", () => {
+  it("requires name and code", () => {
     const { errors, input } = validateProductForm(emptyProductForm());
-    expect(errors).toEqual({
-      name: "name_required",
-      code: "code_required",
-      description: "description_required",
-    });
+    expect(errors).toEqual({ name: "name_required", code: "code_required" });
     expect(input).toBeUndefined();
+  });
+
+  it("Q-57j: description is optional", () => {
+    expect(validateProductForm({ ...valid, description: "  " }).input?.description).toBe("");
   });
 
   it.each(["BB 01", "BB_01", "PAIN-É", "ABCDEFGHIJKLMNOPQRSTU"])("Q-57h: refuses the code %j", (code) => {

@@ -60,6 +60,7 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 |---|---|
 | `20261002120000_a1_profiles_and_audit.sql` | A1 (done) |
 | `20261002130000_a2a_products.sql` | A2a Products |
+| `20261002131000_a2a_description_optional.sql` | A2a: description optional |
 
 For each file:
 

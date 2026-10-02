@@ -4,7 +4,8 @@
  * WHY:  PRD-02 to PRD-05 and Q-57d/h decide what the admin may save. Checking
  *       here gives instant, specific messages (N5); the database checks the
  *       same rules again (admin_save_product), so the browser is never trusted.
- * HOW:  Pure functions over plain form values, no React. Errors are codes;
+ * HOW:  Pure functions over plain form values, no React. Description is
+ *       optional (Q-57j). Errors are codes;
  *       pages turn them into words from i18n/en.ts.
  * WHEN: The product form (pages/admin/ProductFormPage.tsx) on every change
  *       and on save; the product list for unit summaries.
@@ -37,14 +38,13 @@ export type ProductFieldError =
   | "name_required"
   | "code_required"
   | "code_invalid"
-  | "description_required"
   | "loaves_required"
   | "loaves_min_one"
   | "caisse_needs_pack"
   | "too_large";
 
 export type ProductFormErrors = Partial<
-  Record<"name" | "code" | "description" | "packLoaves" | "caisseCount", ProductFieldError>
+  Record<"name" | "code" | "packLoaves" | "caisseCount", ProductFieldError>
 >;
 
 /** What is sent to the database once the form is valid. */
@@ -121,9 +121,6 @@ export function validateProductForm(values: ProductFormValues): {
     errors.code = "code_required";
   } else if (!CODE_PATTERN.test(code)) {
     errors.code = "code_invalid";
-  }
-  if (description === "") {
-    errors.description = "description_required";
   }
 
   // RULE PRD-03 / Q-57d: Loaf is always on; Pack is optional.

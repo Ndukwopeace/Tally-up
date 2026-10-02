@@ -4,7 +4,7 @@
  * WHY:  The admin defines each bread once: name, code, description, whether
  *       it is sold in Packs and Caisses and how many loaves each holds, and
  *       whether it is active. Every later quantity depends on these values.
- * HOW:  /admin/products/new shows an empty form; /admin/products/:productId
+ * HOW:  Description is optional (Q-57j). /admin/products/new shows an empty form; /admin/products/:productId
  *       loads the product first (skeleton, error, not found). The form:
  *       - Loaf is always on (Q-57d) and shown as fixed.
  *       - "Sold in Packs" reveals "Loaves in one Pack".
@@ -90,7 +90,6 @@ export function EditProductPage() {
 const FIELD_IDS = {
   name: "product-name",
   code: "product-code",
-  description: "product-description",
   packLoaves: "product-pack-loaves",
   caisseCount: "product-caisse-count",
 } as const;
@@ -170,13 +169,12 @@ function ProductForm({
           error={codeError}
         />
         <TextField
-          id={FIELD_IDS.description}
+          id="product-description"
           label={en.products.description}
           value={values.description}
           onValueChange={(description) => {
             update({ description });
           }}
-          error={fieldError("description")}
         />
 
         {/* min-w-0: a fieldset otherwise refuses to shrink below its content and

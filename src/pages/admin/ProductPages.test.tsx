@@ -3,7 +3,7 @@
  *
  * Rules under test:
  *  - PRD-01: create, edit, activate/deactivate; no delete.
- *  - PRD-02 / Q-57h: name, code, description; code format and uniqueness.
+ *  - PRD-02 / Q-57h: name and code required; code format and uniqueness. Q-57j: description optional.
  *  - PRD-03 / Q-57d: Loaf always; Pack and Caisse optional.
  *  - PRD-04 / PRD-05: loaves per unit required; Caisse in loaves or packs, stored in loaves.
  *  - NFR-07: loading, empty, error states. NFR-06: no saving offline.
@@ -115,7 +115,8 @@ describe("Add product", () => {
     expect(screen.getByLabelText("Code")).toHaveAccessibleDescription(
       "Letters, numbers and dashes, up to 20. For example BB-01. Enter a product code.",
     );
-    expect(screen.getByLabelText("Description")).toHaveAccessibleDescription("Enter a short description.");
+    // Q-57j: description is optional, so it never shows an error.
+    expect(screen.getByLabelText(/Description/)).toHaveAttribute("aria-invalid", "false");
     expect(screen.getByLabelText("Name")).toHaveFocus();
   });
 
@@ -124,7 +125,7 @@ describe("Add product", () => {
     const { router } = await openNew(products);
     await userEvent.type(screen.getByLabelText("Name"), "Small Bread");
     await userEvent.type(screen.getByLabelText("Code"), "SB-1");
-    await userEvent.type(screen.getByLabelText("Description"), "Small loaf");
+    await userEvent.type(screen.getByLabelText(/Description/), "Small loaf");
     await userEvent.click(screen.getByLabelText("Sold in Packs"));
     await userEvent.type(screen.getByLabelText(/Loaves in one Pack/), "10");
     await userEvent.click(screen.getByLabelText("Sold in Caisses"));
@@ -160,7 +161,7 @@ describe("Add product", () => {
     await openNew();
     await userEvent.type(screen.getByLabelText("Name"), "Copy");
     await userEvent.type(screen.getByLabelText("Code"), "bb-01");
-    await userEvent.type(screen.getByLabelText("Description"), "x");
+    await userEvent.type(screen.getByLabelText(/Description/), "x");
     await userEvent.click(screen.getByRole("button", { name: "Save product" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Another product already uses this code.");
     expect(screen.getByLabelText("Code")).toHaveAttribute("aria-invalid", "true");
@@ -171,7 +172,7 @@ describe("Add product", () => {
     await openNew(products);
     await userEvent.type(screen.getByLabelText("Name"), "Bun");
     await userEvent.type(screen.getByLabelText("Code"), "BU-1");
-    await userEvent.type(screen.getByLabelText("Description"), "Bun");
+    await userEvent.type(screen.getByLabelText(/Description/), "Bun");
     const release = products.holdNextCall();
     await userEvent.click(screen.getByRole("button", { name: "Save product" }));
     expect(await screen.findByRole("button", { name: "Saving…" })).toBeDisabled();

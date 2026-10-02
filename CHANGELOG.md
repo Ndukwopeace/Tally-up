@@ -8,7 +8,7 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 - Admin → More → Products: list with search, units in loaves and Active/Inactive; add and edit forms.
 - Loaf is always a unit; Pack and Caisse optional with loaves per unit; a Caisse can be entered as loaves or as packs and is stored in loaves (PRD-05, Q-57d).
 - Database: `products`, `product_units`, `admin_save_product()` (the only write path, audited), RLS by role; 30 new pgTAP checks.
-- Decisions Q-57 (A2 rules) recorded in REQUIREMENTS; product photos dropped (Q-57e).
+- Decisions Q-57 (A2 rules) recorded in REQUIREMENTS; product photos dropped (Q-57e); description optional (Q-57j).
 
 ## [0.2.0] — A1 Admin login
 

@@ -77,6 +77,12 @@ describe("SupabaseProductService", () => {
     expect((await service.list())[0]).toMatchObject({ packLoaves: null, caisseLoaves: null });
   });
 
+  it("Q-57j: shows a product without a description as an empty description", async () => {
+    const { order, service } = fakeClient();
+    order.mockResolvedValue({ data: [{ ...ROW, description: null }], error: null });
+    expect((await service.list())[0]?.description).toBe("");
+  });
+
   it("gets one product, or null", async () => {
     const { eq, maybeSingle, service } = fakeClient();
     expect(await service.get("p1")).toEqual(PRODUCT);
