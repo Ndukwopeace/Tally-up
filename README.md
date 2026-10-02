@@ -9,8 +9,12 @@ Not a sales, delivery, truck or warehouse system. Full scope: [`docs/REQUIREMENT
 | Milestone | Content | State |
 |---|---|---|
 | 0 | Documents | Done |
-| 1 | Foundation: scaffold, design tokens, shared components, PWA, portal frames, Vercel | In review |
-| 2 | Supabase, login, roles | Next |
+| 1 | Foundation: scaffold, design tokens, shared components, PWA, portal frames, Vercel | Done |
+| 2 | Login and roles (Supabase) | Next |
+| 3–5 | Admin: data, monitoring, reports | Planned |
+| 6 | Distributor | Planned |
+| 7 | Depot Manager | Planned |
+| 8 | All roles together, real-user test, go-live | Planned |
 
 Plan: [`docs/REQUIREMENTS.md` §13](docs/REQUIREMENTS.md).
 

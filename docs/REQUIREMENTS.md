@@ -264,7 +264,7 @@ All three portals are built **phone-first** (Q-48). An admin desktop layout come
 | Home | Dashboard, alerts, pending confirmations, discrepancies, open collections |
 | Collections | All distributor collections and their remaining quantities |
 | Distributions | Depot distributions, confirmation status and discrepancies |
-| More | Depots · Products · Users · Reports |
+| More | Depots · Products · Users · Reports · Audit log · Settings (Q-51) |
 
 **Admin account menu (Q-47):** Profile / My Account · Sign Out.
 
@@ -386,6 +386,8 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
 | Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
+| Q-51 | Where Audit log and Settings live | **Inside More**, after Reports. (§7) |
+| Q-52 | Role-by-role milestone plan (PLAN-1) | **Approved.** (§13) |
 | Q-46 | Distributor tab labels too long for 5 tabs | **Option B:** Dashboard · Collections · Distributions · Profile. History moves inside Collections and Distributions. (§7) |
 | Q-47 | Admin navigation (resolves NAV-1 for phones) | Bottom: Home · Collections · Distributions · More. More: Depots, Products, Users, Reports. Top: bell + profile icon → Profile / My Account, Sign Out. (§7) |
 | Q-48 | Admin desktop | Not now. Admin is built phone-first; desktop layout later. Supersedes the desktop-first part of NFR-09 and the 7-item sidebar of Q-40 until revisited. |
@@ -398,23 +400,26 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 
 | # | Item | When |
 |---|---|---|
-| NAV-1 | ~~Admin navigation~~ — resolved for phones by Q-47. Still open: where **Audit log**, **Settings** and the **Discrepancies** list live (spec §21, §35; REQUIREMENTS §11) | Before those screens are built |
-| PLAN-1 | Re-cut the milestone plan (§13) for the role-by-role order (Q-49) | Before the next milestone starts |
+| NAV-1 | ~~Admin navigation~~ — resolved by Q-47 and Q-51. Still open: whether the **Discrepancies** list is its own page or shown on Home and inside Distributions (spec §21) | Before Milestone 4 |
+| ACC-1 | Should Distributor and Depot Manager move Profile from a bottom tab to the header profile icon, like Admin? | Before Milestone 6 |
 
 ## 13. Delivery Plan
 
 Each milestone ends with a pull request into `main`, a Vercel preview to test on, and owner sign-off before the next one starts. Version tag `v0.<milestone>.0` is set when the milestone merges (ENG-8).
 
+Order: **role by role** (Q-49) — Admin first, then Distributor, then Depot Manager (approved plan, Q-52).
+
 | Milestone | Content | Done when |
 |---|---|---|
-| 0 | Requirements, architecture, UI rules. | Owner approves them. |
-| 1 | Project scaffold, design tokens, shared components, business-rules config, **PWA (manifest, service worker, install prompt)**, three portal layout shells, **deployed to Vercel**. | Owner opens the Vercel link on a phone and installs the app to the home screen. |
-| 2 | **Supabase via Vercel**: schema, RLS, database functions, seed data, admin user API. Email/password login, forgot password, route guards. Google sign-in once the owner adds the OAuth client. | Owner logs in as each role on a real phone and cannot reach other portals. |
-| 3 | Admin: Products (with loaves-per-unit), Depots, Users. Admin navigation per NAV-1. | Master data can be created and deactivated. |
-| 4 | Distributor: Collections, Distributions, mixed units, balances in loaves, over-distribution block. | Spec Section 3 example (800 → 250/300/250) works, plus a Caisse-collected / Pack-distributed case. |
-| 5 | Depot Manager: pending receipts, mixed-unit count, review, lock. | Spec Section 57 workflow works end to end **across two phones**. |
-| 6 | Admin: Dashboard, Today, Collection detail, Discrepancies, Corrections, Audit, Notifications. | Owner can answer the core question from the screen. |
-| 7 | Reports, filters, PDF export, image upload, CSV export, real-user test, production go-live. | Filtered PDF matches screen; real users complete Section 57 on their own phones. |
+| 0 | Requirements, architecture, UI rules. **Done.** | Owner approves them. |
+| 1 | Project scaffold, design tokens, shared components, business-rules config, PWA, portal frames, deployed to Vercel. **Done** (plus logo Q-45, admin phone navigation Q-47). | Owner installs the app from the Vercel link. |
+| 2 | **Login and roles.** Supabase via Vercel: schema, RLS, database functions, admin user API. Email/password login, forgot password, real Sign Out, route guards. Google sign-in once the owner adds the OAuth client. | Owner logs in as each role on a real phone and cannot reach other portals. |
+| 3 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, assign depot, reset password). | Master data can be created, edited and deactivated from the phone. |
+| 4 | **Admin monitoring.** Home (KPIs per unit, alerts, pending confirmations, discrepancies, open collections), Collections, Distributions, discrepancies, corrections, notifications, audit log, settings. Shown with realistic **test data** in the staging database, because distributor and depot screens come later. | Owner can answer the core question from the screen using the test data. |
+| 5 | **Admin reports.** Filters, PDF export (CSV later). | Filtered PDF matches the screen. |
+| 6 | **Distributor**, complete: collections, distributions, mixed units, balances in loaves, over-distribution block, history inside Collections/Distributions. | Spec §3 example (800 → 250/300/250) works, plus a Caisse-collected / Pack-distributed case. |
+| 7 | **Depot Manager**, complete: pending receipts, mixed-unit count, review, lock, history. | Spec §57 workflow works end to end **across two phones**. |
+| 8 | **Together and live.** All three roles on real data, real-user test, image upload, fixes, production go-live (`v1.0.0`). | Real users complete §57 on their own phones without help. |
 
 ## 14. Working Rules for the Build
 
