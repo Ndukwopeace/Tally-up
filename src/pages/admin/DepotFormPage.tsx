@@ -15,7 +15,6 @@
  * SECURITY: admin_save_depot checks every rule again and refuses non-admins.
  *       Messages are plain words, never raw server text.
  */
-import { TriangleAlert } from "lucide-react";
 import { useRef, useState, type SubmitEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
@@ -27,6 +26,7 @@ import { PhoneListField } from "@/components/common/PhoneListField";
 import { SelectField, type SelectOption } from "@/components/common/SelectField";
 import { SubmitButton } from "@/components/common/SubmitButton";
 import { TextField } from "@/components/common/TextField";
+import { WarningNote } from "@/components/common/WarningNote";
 import { buttonVariants } from "@/components/ui/button";
 import {
   depotFormFrom,
@@ -41,16 +41,6 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { en } from "@/i18n/en";
 import { PageTitle } from "@/pages/PageTitle";
 import type { Depot, ManagerOption } from "@/types/entities";
-
-// A consequence the admin should read before saving: icon + text, never colour alone (WCAG 1.4.1).
-function Warning({ children }: Readonly<{ children: string }>) {
-  return (
-    <p className="flex items-start gap-3 rounded-card border border-warning/40 bg-warning-soft px-4 py-3 text-base text-ink">
-      <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-warning" />
-      {children}
-    </p>
-  );
-}
 
 /** /admin/depots/new */
 export function NewDepotPage() {
@@ -251,9 +241,9 @@ function DepotForm({
             {/* RULE Q-57c: say who loses access before the admin saves. The live
                 region stays mounted so a new warning is read out when it appears. */}
             <div aria-live="polite" className="flex flex-col gap-2 empty:hidden">
-              {replaced ? <Warning>{en.depots.replaceWarning(replaced.fullName)}</Warning> : null}
+              {replaced ? <WarningNote>{en.depots.replaceWarning(replaced.fullName)}</WarningNote> : null}
               {chosen && leaves !== undefined ? (
-                <Warning>{en.depots.moveWarning(chosen.fullName, leaves)}</Warning>
+                <WarningNote>{en.depots.moveWarning(chosen.fullName, leaves)}</WarningNote>
               ) : null}
             </div>
           </div>

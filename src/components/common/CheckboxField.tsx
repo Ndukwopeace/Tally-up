@@ -16,16 +16,24 @@ export interface CheckboxFieldProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   hint?: string;
+  disabled?: boolean;
 }
 
-export function CheckboxField({ label, checked, onCheckedChange, hint }: Readonly<CheckboxFieldProps>) {
+export function CheckboxField({
+  label,
+  checked,
+  onCheckedChange,
+  hint,
+  disabled,
+}: Readonly<CheckboxFieldProps>) {
   const hintId = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label className="flex min-h-12 cursor-pointer items-center gap-3 text-base font-semibold text-ink">
+      <label className="flex min-h-12 cursor-pointer items-center gap-3 text-base font-semibold text-ink has-disabled:cursor-not-allowed has-disabled:opacity-60">
         <input
           type="checkbox"
           checked={checked}
+          disabled={disabled}
           onChange={(event) => {
             onCheckedChange(event.target.checked);
           }}

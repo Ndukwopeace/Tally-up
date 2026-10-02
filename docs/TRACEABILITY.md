@@ -70,3 +70,19 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | §6.5, DEP-06 | Admins read all depots; distributors active ones only; a manager reads their own; no direct writes | `a2b_depots.test.sql` | migration (RLS) |
 | AUD-03 | Depot created / edited / (de)activated, manager assigned, manager deactivated logged | `a2b_depots.test.sql` | `admin_save_depot`, `assign_depot_manager` |
 | NFR-07, NFR-06, Q-56 | Loading, empty, error; no saving offline; Back stays in the tab | `DepotPages.test.tsx` | `DepotsPage.tsx`, `DepotFormPage.tsx`, `MobilePortalLayout.tsx` |
+
+## A2c — Users
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| USR-01, AUTH-02 | Only an admin creates, edits and (de)activates accounts; no delete | `supabase/tests/a2c_users.test.sql`, `api/_lib/adminUsers.test.ts`, `src/pages/admin/UserPages.test.tsx` | `api/admin/users/*`, `api/_lib/adminUsers.ts`, `admin_save_user()`, `src/pages/admin/User*.tsx` |
+| USR-02 | Name, email (the login, one per account whatever the case), role, status | `src/domain/users.test.ts`, `a2c_users.test.sql`, `UserPages.test.tsx` | `src/domain/users.ts`, `admin_save_user()` |
+| Q-57i | Phones optional, several, Cameroon format | `users.test.ts`, `a2c_users.test.sql`, `UserPages.test.tsx` | `profiles.phones`, `PhoneListField.tsx` |
+| Q-57a | Admin types the temporary password (twice) when creating | `users.test.ts`, `adminUsers.test.ts`, `UserPages.test.tsx` | `createUser()`, `UserFormPage.tsx` |
+| USR-04, Q-57b | Admin sets a new temporary password; the reset is logged | `adminUsers.test.ts`, `a2c_users.test.sql`, `UserPages.test.tsx` | `resetPassword()`, `admin_record_password_reset()`, `ResetPasswordSection` |
+| USR-03, Q-57c | An active depot manager has a depot; others none; a replaced manager is deactivated | `a2c_users.test.sql`, `users.test.ts`, `MockUserService.test.ts`, `UserPages.test.tsx` | `assert_user_change()`, `assign_depot_manager()`, `depotConsequences()` |
+| Q-57g | Email and role can be changed; a manager given another role loses the depot | `a2c_users.test.sql`, `adminUsers.test.ts`, `UserPages.test.tsx` | `updateUser()`, `admin_save_user()` |
+| USR-06, Q-57f | An admin cannot deactivate themselves; the last active admin keeps the role | `a2c_users.test.sql`, `MockUserService.test.ts`, `UserPages.test.tsx` | `assert_user_change()`, `isLastActiveAdmin()` |
+| AUTH-09, SEC-1, SEC-4 | Only an active admin can call the endpoints; the secret key stays on the server | `adminUsers.test.ts`, `routes.test.ts`, `supabaseBackend.test.ts`, `a2c_users.test.sql` (who may execute) | `api/_lib/*`, CI `secrets` check |
+| AUD-03 | User created / edited / (de)activated, password reset logged with the acting admin | `a2c_users.test.sql` | `admin_save_user()`, `admin_record_password_reset()` |
+| NFR-07, NFR-06, Q-56 | Loading, empty, error; no saving offline; Back stays in the tab | `UserPages.test.tsx` | `UsersPage.tsx`, `UserFormPage.tsx` |

@@ -24,7 +24,25 @@ A2 adds the master data the admin manages: products (A2a), depots (A2b) and user
 | 11 | **Phone numbers stored as `+237XXXXXXXXX`** in a `text[]` column, checked by `is_cameroon_phone_list()`. The form accepts spaces and an optional +237, and shows them grouped. | Q-57i. One stored form makes numbers comparable and tap-to-call works. |
 | 12 | **Back may name the page's own parameters** (`/admin/depots/:depotId`), filled from the URL. Edit depot goes back to that depot's page. | Q-56: Back moves one step up inside the tab. |
 
+| 13 | **Account writes run in Vercel Functions** under `api/admin/users*` (create, edit, reset password), as Web `Request`/`Response` handlers. Shared logic is in `api/_lib/`. Relative imports there end in `.js`. The folder is type-checked by `tsconfig.node.json`, linted, tested and measured for coverage like `src/`. | ARCHITECTURE §6.6 and Q-43. Creating a login and setting a password need Supabase's secret server key, which exists only on the server (SEC-4). No new package: the functions use `@supabase/supabase-js` and `zod`. |
+| 14 | **Every function checks the caller first:** it asks Supabase whose login the token is, then confirms an active admin profile, before touching anything. The database functions `admin_save_user()` and `admin_record_password_reset()` run only for the server's key (execute revoked from the API roles) and check "active admin" again. | SEC-1: nothing the browser says about its role is trusted, and a mistake in the function cannot bypass the rules. |
+| 15 | **A new login is created first, then its profile.** If the database refuses the profile, the login is deleted again. A changed email is set in Supabase Auth first; if the database then refuses, the old email is put back. | `profiles.id` must match an existing login. This keeps the login and the profile in step. |
+| 16 | **`profiles.phones text[]`** (same check as depots) replaces the unused `phone` column. The old column is kept, unused: dropping it needs the owner's approval (DB-4). | Q-57i: one or more phone numbers. |
+| 17 | **The audit log names the admin who acted.** `assign_depot_manager()` has a version that takes the admin as an argument; the A2b two-argument version now calls it with `auth.uid()`. | The server key has no signed-in user, so `auth.uid()` is empty there (AUD-02). |
+| 18 | **Passwords: the app adds no rule.** The admin types the temporary password twice. Supabase's password policy decides what is too weak, and its refusal is shown in words. The longest accepted is 72 characters. | `domain/validation.ts`: strength is left to Supabase. Nothing is emailed (Q-57a, Q-57b). |
+| 19 | **Users have no detail page.** A card opens the edit page (`/admin/users/:userId/edit`), which ends with the "Reset password" form. | ARCHITECTURE §4.2 lists only the list, new and edit routes. |
+
+### Choices for the owner to confirm (A2c)
+
+| # | Choice | Reason |
+|---|---|---|
+| 20 | **Only an active depot manager has a depot.** Deactivating a manager, or giving them another role, takes them off the depot, and the form says which depot is left without a manager. Reactivating a manager needs a depot. | Q-57c already deactivates a *replaced* manager and requires a depot on reactivation; USR-03 says an account has a depot only if it is a manager. This applies the same rule to every deactivation. |
+| 21 | **The "last active admin" rule only blocks an admin from changing their own role.** The person asking is always an active admin, so for anyone else another active admin exists. Deactivating yourself is always refused. | USR-06 / Q-57f. |
+| 22 | **A deactivated account's existing sign-in is not cut off in Supabase Auth.** It gets no data (the database treats an inactive account as having no role, AUTH-09) and the app refuses it when it checks the account. | Keeps deactivation to one switch. Banning the login in Auth as well can be added if you want it. |
+| 23 | **The depot list in the user form shows every depot, active or not.** | DEP-06 lets a manager keep working at an inactive depot, so no rule forbids it. |
+
 ## Consequences
 
+- Run the A2c migrations (`…150000`, `…150100`, `…150200`, `…150300`) the same way, and check the Vercel environment has `SUPABASE_SERVICE_ROLE_KEY` for Preview and Production (docs/SETUP.md §4a).
 - Run the A2b migrations (`…140000`, `…140100`, `…140200`) the same way.
 - Run the A2a migrations in name order (`…130000`, `…130100`, `…130200`, `…131000`) on **staging** to try the A2a preview, and on **production** after the pull request merges (docs/SETUP.md §4, DB-3).

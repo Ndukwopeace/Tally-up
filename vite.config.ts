@@ -93,7 +93,12 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: "jsdom",
       setupFiles: ["./tests/setup.ts"],
-      include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}", "tooling/**/*.test.ts"],
+      include: [
+        "src/**/*.test.{ts,tsx}",
+        "tests/**/*.test.{ts,tsx}",
+        "tooling/**/*.test.ts",
+        "api/**/*.test.ts",
+      ],
       // The PWA plugin's virtual module only exists inside a Vite build; tests use a stand-in.
       alias: {
         "virtual:pwa-register/react": fileURLToPath(
@@ -102,9 +107,10 @@ export default defineConfig(({ mode }) => {
       },
       coverage: {
         provider: "v8",
-        include: ["src/**/*.{ts,tsx}"],
+        // api/: the Vercel Functions (A2c) carry the service-role key paths, so they are measured too.
+        include: ["src/**/*.{ts,tsx}", "api/**/*.ts"],
         // main.tsx only mounts <App /> into the page; it is exercised by the build, not unit tests.
-        exclude: ["src/main.tsx", "src/**/*.test.{ts,tsx}"],
+        exclude: ["src/main.tsx", "src/**/*.test.{ts,tsx}", "api/**/*.test.ts"],
         reporter: ["text", "html"],
         // RULE ENG-5: coverage floors. A drop below any of these fails `npm run test:coverage` and CI.
         thresholds: {

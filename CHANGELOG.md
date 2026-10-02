@@ -4,6 +4,15 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A2c Users
+- Admin → More → Users: list with search by name or email; add and edit forms; reset password.
+- Create an account (name, email, phones, role, depot for a manager, Active) with a temporary password the admin types and passes on (Q-57a). Edit email and role later (Q-57g). Deactivate, never delete.
+- Reset a password by setting a new temporary password (Q-57b).
+- A depot manager needs a depot while active; choosing a depot that has a manager deactivates that manager, and the form says so before saving (Q-57c).
+- An admin cannot deactivate themselves, and the only active admin cannot change role (Q-57f, USR-06).
+- Vercel Functions `/api/admin/users` (create), `/api/admin/users/:id` (edit) and `/api/admin/users/:id/reset-password`. They verify the caller is an active admin before acting. The secret server key exists only there.
+- Database: `profiles.phones`, `admin_save_user()`, `admin_record_password_reset()` (server key only), audit entries for each change; 49 new pgTAP checks.
+
 ### Added — A2b Depots
 - Admin → More → Depots: list with search, manager and Active/Inactive; depot page with tap-to-call phones and a history section; add and edit forms.
 - Phone numbers: optional, several per depot, Cameroon format, stored as +237… (Q-57i). Address required (Q-57k).

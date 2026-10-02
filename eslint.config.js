@@ -38,7 +38,7 @@ export default tseslint.config(
   // Plain JavaScript files (this config, Node scripts) are not part of a TypeScript project.
   { files: ["**/*.js", "**/*.mjs"], ...tseslint.configs.disableTypeChecked },
   {
-    files: ["scripts/**", "eslint.config.js", ".lintstagedrc.js"],
+    files: ["scripts/**", "api/**", "eslint.config.js", ".lintstagedrc.js"],
     languageOptions: { globals: globals.node },
   },
 );
