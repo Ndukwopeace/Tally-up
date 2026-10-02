@@ -1,6 +1,6 @@
 # Tally-Up — Engineering Practices
 
-**Status:** DRAFT v0.1 — awaiting owner review
+**Status:** v0.1 — APPROVED by owner 2026-10-02 (ENG-1 per-unit standard; ENG-2 to ENG-11 accepted)
 **Date:** 2026-10-02
 **Depends on:** `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/UI_GUIDELINES.md`
 
@@ -31,7 +31,7 @@ These come first because the project has been lost twice to unrequested changes.
 
 > Every line of code should have a comment explaining the **why**, **how**, **when**, and the **security implications** if applicable.
 
-### 2.2 How the rule is applied [PROPOSED — see ENG-1]
+### 2.2 How the rule is applied (owner decision ENG-1)
 
 A comment on literally every line (e.g. on `}` or `import React from "react"`) repeats the code and goes stale as code changes, which conflicts with the clean-code rule in Section 4. The proposal keeps the intent — nothing is left unexplained — at the level of each meaningful unit:
 
@@ -387,18 +387,18 @@ Everything is documented in the repository, next to the code.
 
 ---
 
-## 16. Decisions Needed
+## 16. Decisions (owner, 2026-10-02)
 
-| # | Question | Proposal |
+| # | Question | Decision |
 |---|---|---|
-| ENG-1 | Comment rule (Section 2): literal comment on **every line**, or the per-unit standard in 2.2 (every file, every function, every logic/security/business line; not on braces and plain imports)? | Per-unit standard (2.2) |
+| ENG-1 | Comment rule | **Per-unit standard (§2.2)**: every file, every function, every logic / security / business-rule line. Not on braces and plain imports. |
 | ENG-2 | Commit message format | Conventional Commits |
 | ENG-3 | Merge method | Squash merge |
-| ENG-4 | Create `main` branch: the repository has only `claude/practical-ritchie-mnkli1`. GitHub Flow needs `main`. | Owner creates `main` from the current branch in GitHub, sets it as default, and adds the protection in §3.5. Future work comes in by PR. |
+| ENG-4 | `main` branch | Owner creates `main` from `claude/practical-ritchie-mnkli1`, sets it as default, and adds the §3.5 protections. Future work comes in by PR. |
 | ENG-5 | Coverage targets | 100 % domain / 90 % services & auth / 80 % rest |
 | ENG-6 | Database tests | pgTAP |
 | ENG-7 | Pre-commit hooks | Husky + lint-staged |
 | ENG-8 | Versioning | SemVer, `0.<phase>.x` until go-live, `1.0.0` at go-live |
 | ENG-9 | ADRs and traceability matrix | Yes, both |
 | ENG-10 | Lighthouse thresholds | Perf ≥ 85, A11y = 100 |
-| ENG-11 | Weekly repository backup | Yes, owner chooses where |
+| ENG-11 | Weekly repository backup | Yes. Location: owner to name (open). |
