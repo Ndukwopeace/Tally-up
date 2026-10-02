@@ -1,0 +1,7 @@
+{
+  // Solution file: points TypeScript and editors at the two real configs.
+  // WHY: browser code and Node build tooling need different type libraries,
+  // so they are checked separately (`tsc -b` builds both).
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }]
+}

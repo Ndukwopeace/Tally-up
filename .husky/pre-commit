@@ -1,0 +1,2 @@
+# Runs the staged-file checks in .lintstagedrc.js before every commit (ENG-7).
+npx lint-staged

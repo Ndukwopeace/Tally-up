@@ -1,0 +1,29 @@
+{
+  // Type-checking rules for everything that runs in the browser (src/) and its tests.
+  // ENGINEERING §6: strict mode, no unchecked index access, no `any`.
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    // Only these global type packages are visible to browser code.
+    // SECURITY: Node types are deliberately excluded so browser code cannot
+    // reference `process` or other server-only globals by accident.
+    "types": ["vite/client", "vite-plugin-pwa/react", "@testing-library/jest-dom"],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    // `@/` points at src/ (ENGINEERING §6: absolute imports).
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["src", "tests"]
+}
