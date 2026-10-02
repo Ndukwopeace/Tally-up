@@ -2,7 +2,12 @@
 
 All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Semantic Versioning](https://semver.org/), `0.<milestone>.<patch>` until go-live (ENG-8).
 
-## [0.1.0] — Milestone 1 (unreleased, in review)
+## [Unreleased]
+
+### Changed
+- Logo replaced with the wireframe truck logo (Q-45): header, sidebar, favicon and all app icons now share one shape file (`src/assets/logo-shapes.json`).
+
+## [0.1.0] — Milestone 1
 
 ### Added
 - Project scaffold: React 19, TypeScript 6 (strict), Vite 8, Tailwind CSS 4, React Router 8, TanStack Query 5, Lucide icons.

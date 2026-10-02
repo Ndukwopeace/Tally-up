@@ -20,6 +20,8 @@
     "noImplicitOverride": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+    // Lets code import shared data files such as src/assets/logo-shapes.json.
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
     // `@/` points at src/ (ENGINEERING §6: absolute imports).
