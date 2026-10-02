@@ -40,3 +40,33 @@ export interface ProductUnitLoaves {
   unit: Unit;
   loaves: number;
 }
+
+/** The manager running a depot, as shown with the depot. */
+export interface DepotManagerRef {
+  id: string;
+  fullName: string;
+}
+
+/** A depot (REQUIREMENTS §9 Depot, DEP-02). */
+export interface Depot {
+  id: string;
+  name: string;
+  location: string;
+  /** "Address/Description" (DEP-02). */
+  address: string;
+  /** Stored as +237XXXXXXXXX (Q-57i); may be empty. */
+  phones: string[];
+  status: RecordStatus;
+  /** The active manager, or null when the depot has none (DEP-03). */
+  manager: DepotManagerRef | null;
+}
+
+/** A depot manager account, as offered in the depot form's manager list. */
+export interface ManagerOption {
+  id: string;
+  fullName: string;
+  email: string;
+  status: RecordStatus;
+  /** The depot they run now, or null. */
+  depotId: string | null;
+}

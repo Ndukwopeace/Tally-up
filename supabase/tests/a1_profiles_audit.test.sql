@@ -73,8 +73,12 @@ from unnest(array[pg_temp.active_admin(), pg_temp.inactive_admin(), pg_temp.dist
 
 -- Each role's name is taken from the enum itself (position 1 = admin, 2 = distributor,
 -- 3 = depot_manager), so the fixtures follow the schema.
-insert into public.profiles (id, full_name, email, role)
-select id, full_name, pg_temp.email_of(id), (enum_range(null::public.app_role))[role_position]
+-- A depot for the test manager: an active depot manager always has one (USR-03, A2b).
+insert into public.depots (name, location, address) values ('Test depot', 'Douala', 'Test address');
+
+insert into public.profiles (id, full_name, email, role, depot_id)
+select id, full_name, pg_temp.email_of(id), (enum_range(null::public.app_role))[role_position],
+  case when role_position = 3 then (select id from public.depots limit 1) end
 from (values
   (pg_temp.active_admin(), 'Active Admin', 1),
   (pg_temp.inactive_admin(), 'Inactive Admin', 1),

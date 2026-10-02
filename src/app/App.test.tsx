@@ -14,6 +14,7 @@ import { App, startApp } from "./App";
 
 import { AuthStore } from "@/auth/AuthStore";
 import { MockAuthService } from "@/services/mock/MockAuthService";
+import { MockDepotService } from "@/services/mock/MockDepotService";
 import { MockProductService } from "@/services/mock/MockProductService";
 
 describe("App", () => {
@@ -22,6 +23,7 @@ describe("App", () => {
     const services = {
       auth: new MockAuthService({ password: MOCK_PASSWORD }),
       products: new MockProductService(),
+      depots: new MockDepotService(),
     };
     const auth = new AuthStore(services.auth);
     void auth.start();

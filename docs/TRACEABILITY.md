@@ -57,3 +57,16 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | PRD-07, §6.5 | Distributors read active products only; managers all; no direct writes | `a2a_products.test.sql` | migration (RLS) |
 | AUD-03 | Product created / edited / (de)activated logged | `a2a_products.test.sql` | `admin_save_product` |
 | NFR-07, NFR-06 | Loading, empty, error; no saving offline | `ProductPages.test.tsx` | `ProductsPage.tsx`, `ProductFormPage.tsx` |
+
+## A2b — Depots
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| DEP-01 | Create, edit, activate/deactivate; no delete | `supabase/tests/a2b_depots.test.sql`, `src/pages/admin/DepotPages.test.tsx` | `supabase/migrations/20261002140*_a2b_*.sql` (`admin_save_depot`), `src/pages/admin/Depot*.tsx` |
+| DEP-02, Q-57k | Name, location, address required | `src/domain/depots.test.ts`, `a2b_depots.test.sql`, `DepotPages.test.tsx` | `src/domain/depots.ts`, migration |
+| Q-57i | Phones optional, several, Cameroon format, stored +237… | `src/domain/phone.test.ts`, `depots.test.ts`, `a2b_depots.test.sql`, `DepotPages.test.tsx` | `src/domain/phone.ts`, `PhoneListField.tsx`, `is_cameroon_phone_list()` |
+| DEP-03, USR-03, Q-57c | One active manager per depot; replacing deactivates the old one; warning before saving | `a2b_depots.test.sql`, `MockDepotService.test.ts`, `DepotPages.test.tsx` | `assign_depot_manager()`, unique index, `DepotFormPage.tsx` |
+| DEP-05 | Depot page with a history section (filled from A3/D1) | `DepotPages.test.tsx` | `DepotDetailPage.tsx` |
+| §6.5, DEP-06 | Admins read all depots; distributors active ones only; a manager reads their own; no direct writes | `a2b_depots.test.sql` | migration (RLS) |
+| AUD-03 | Depot created / edited / (de)activated, manager assigned, manager deactivated logged | `a2b_depots.test.sql` | `admin_save_depot`, `assign_depot_manager` |
+| NFR-07, NFR-06, Q-56 | Loading, empty, error; no saving offline; Back stays in the tab | `DepotPages.test.tsx` | `DepotsPage.tsx`, `DepotFormPage.tsx`, `MobilePortalLayout.tsx` |

@@ -3,7 +3,7 @@
  *
  * WHY:  Pages and stores depend on service interfaces only; this is the one
  *       place that decides between Supabase and the development mock (NFR-03).
- * HOW:  `createServices(config)` returns every service (auth, products) backed
+ * HOW:  `createServices(config)` returns every service (auth, products, depots) backed
  *       by one Supabase client, or the mocks when config/env.ts selected them
  *       (development builds only).
  * WHEN: Called once by App.tsx at start-up.
@@ -17,16 +17,20 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { AppConfig } from "@/config/env";
 import type { AuthService } from "@/services/interfaces/AuthService";
+import type { DepotService } from "@/services/interfaces/DepotService";
 import type { ProductService } from "@/services/interfaces/ProductService";
 import { MockAuthService } from "@/services/mock/MockAuthService";
+import { MockDepotService } from "@/services/mock/MockDepotService";
 import { MockProductService } from "@/services/mock/MockProductService";
 import { SupabaseAuthService } from "@/services/supabase/SupabaseAuthService";
+import { SupabaseDepotService } from "@/services/supabase/SupabaseDepotService";
 import { SupabaseProductService } from "@/services/supabase/SupabaseProductService";
 
 /** Every backend service the app uses. */
 export interface Services {
   auth: AuthService;
   products: ProductService;
+  depots: DepotService;
 }
 
 /** Creates the backend services for a valid configuration. */
@@ -36,6 +40,7 @@ export function createServices(config: Extract<AppConfig, { ok: true }>): Servic
     return {
       auth: new MockAuthService({ password: config.mockPassword, storage: window.localStorage }),
       products: new MockProductService(),
+      depots: new MockDepotService(),
     };
   }
   if (config.dataSource !== "supabase") {
@@ -55,5 +60,9 @@ export function createServices(config: Extract<AppConfig, { ok: true }>): Servic
     },
   });
   // One client for every service, so they share the signed-in session.
-  return { auth: new SupabaseAuthService(client), products: new SupabaseProductService(client) };
+  return {
+    auth: new SupabaseAuthService(client),
+    products: new SupabaseProductService(client),
+    depots: new SupabaseDepotService(client),
+  };
 }

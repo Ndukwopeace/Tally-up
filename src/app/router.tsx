@@ -90,7 +90,27 @@ export const routes: RouteObject[] = [
               tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
               tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
               tabRoute("more", <AdminMorePage />),
-              subPage("depots", en.nav.depots, "/admin/more"),
+              // A2b: depots (DEP-01 to DEP-03, DEP-05).
+              lazySubPage(
+                "depots",
+                "/admin/more",
+                async () => (await import("@/pages/admin/DepotsPage")).DepotsPage,
+              ),
+              lazySubPage(
+                "depots/new",
+                "/admin/depots",
+                async () => (await import("@/pages/admin/DepotFormPage")).NewDepotPage,
+              ),
+              lazySubPage(
+                "depots/:depotId",
+                "/admin/depots",
+                async () => (await import("@/pages/admin/DepotDetailPage")).DepotDetailPage,
+              ),
+              lazySubPage(
+                "depots/:depotId/edit",
+                "/admin/depots/:depotId",
+                async () => (await import("@/pages/admin/DepotFormPage")).EditDepotPage,
+              ),
               // A2a: products (PRD-01 to PRD-05).
               lazySubPage(
                 "products",
