@@ -63,6 +63,9 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261002130100_a2a_product_units_writer.sql` | A2a Products, part 2 |
 | `20261002130200_a2a_save_product.sql` | A2a Products, part 3 (save function) |
 | `20261002131000_a2a_description_optional.sql` | A2a: description optional |
+| `20261002140000_a2b_depots.sql` | A2b Depots, part 1 (table, depot link on accounts) |
+| `20261002140100_a2b_assign_manager.sql` | A2b Depots, part 2 |
+| `20261002140200_a2b_save_depot.sql` | A2b Depots, part 3 (save function) |
 
 For each file:
 

@@ -11,7 +11,7 @@
  * WHEN: Wraps every /admin/*, /distributor/* and /depot/* page.
  * SECURITY: Layout only. RequireRole wraps it in router.tsx (AUTH-08).
  */
-import { Outlet, useMatches } from "react-router";
+import { generatePath, Outlet, useMatches } from "react-router";
 
 import type { AccountMenuProps } from "./AccountMenu";
 import { BackButton } from "./BackButton";
@@ -24,7 +24,10 @@ import { ConnectionBanner } from "@/components/common/ConnectionBanner";
 
 /** Optional data a route can attach (React Router `handle`) to shape the frame. */
 export interface RouteHandle {
-  /** Where Back goes; no Back when undefined (Home and tab screens, Q-56). */
+  /**
+   * Where Back goes; no Back when undefined (Home and tab screens, Q-56).
+   * May hold the page's own parameters, e.g. "/admin/depots/:depotId".
+   */
   backTo?: string;
   /** Pages inside a tab: Back always goes to `backTo`, so it never leaves the tab. */
   backToParentOnly?: boolean;
@@ -47,7 +50,10 @@ export function MobilePortalLayout({
 }: Readonly<MobilePortalLayoutProps>) {
   // The deepest matched route decides whether Back is shown.
   const matches = useMatches();
-  const handle = matches.at(-1)?.handle as RouteHandle | undefined;
+  const deepest = matches.at(-1);
+  const handle = deepest?.handle as RouteHandle | undefined;
+  // Fill in parameters from the current URL (Edit depot → that depot's page).
+  const backTo = handle?.backTo ? generatePath(handle.backTo, deepest?.params) : undefined;
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
@@ -64,7 +70,7 @@ export function MobilePortalLayout({
         tabIndex={-1}
         className="mx-auto w-full max-w-xl flex-1 pt-6 pr-[max(1rem,env(safe-area-inset-right))] pb-28 pl-[max(1rem,env(safe-area-inset-left))] outline-none"
       >
-        {handle?.backTo ? <BackButton fallback={handle.backTo} parentOnly={handle.backToParentOnly} /> : null}
+        {backTo ? <BackButton fallback={backTo} parentOnly={handle?.backToParentOnly} /> : null}
         <Outlet />
       </main>
       <BottomNav items={navItems} />

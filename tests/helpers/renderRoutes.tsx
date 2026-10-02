@@ -4,7 +4,7 @@
  * WHY:  Since A1 every portal sits behind login (AUTH-08). Tests need to
  *       render a page "as" a given user without a network or Supabase.
  * HOW:  Builds a MockAuthService (signed in as `signedInAs`, if given), an
- *       AuthStore over it, a MockProductService (or the one passed), a fresh
+ *       AuthStore over it, mock product and depot services (or the ones passed), a fresh
  *       query cache, and a memory router at `path` with optional earlier
  *       `history` entries. `openPortals` defaults to every role so the
  *       distributor and depot frames can still be tested before their
@@ -21,6 +21,7 @@ import { routes } from "@/app/router";
 import { AuthProvider } from "@/auth/AuthProvider";
 import { AuthStore } from "@/auth/AuthStore";
 import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MockDepotService } from "@/services/mock/MockDepotService";
 import { MockProductService } from "@/services/mock/MockProductService";
 import { ServicesProvider } from "@/services/ServicesProvider";
 import { ROLES, type Role } from "@/types/enums";
@@ -36,6 +37,8 @@ export interface RenderRoutesOptions {
   service?: MockAuthService;
   /** Use this product service instead of an empty mock. */
   products?: MockProductService;
+  /** Use this depot service instead of an empty mock. */
+  depots?: MockDepotService;
   /** Leave the store un-started, to see the "checking" state. */
   start?: boolean;
 }
@@ -48,6 +51,7 @@ export function renderRoutes(path: string, options: RenderRoutesOptions = {}) {
     void store.start();
   }
   const products = options.products ?? new MockProductService();
+  const depots = options.depots ?? new MockDepotService();
   // A fresh cache per test; no retries, so error states show at once.
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -55,14 +59,14 @@ export function renderRoutes(path: string, options: RenderRoutesOptions = {}) {
   const router = createMemoryRouter(routes, { initialEntries: [...(options.history ?? []), path] });
   const view = render(
     <QueryClientProvider client={queryClient}>
-      <ServicesProvider services={{ auth: service, products }}>
+      <ServicesProvider services={{ auth: service, products, depots }}>
         <AuthProvider store={store}>
           <RouterProvider router={router} />
         </AuthProvider>
       </ServicesProvider>
     </QueryClientProvider>,
   );
-  return { router, store, service, products, view };
+  return { router, store, service, products, depots, view };
 }
 
 /** The mock user who owns a portal path, so portal tests are signed in as the right role. */

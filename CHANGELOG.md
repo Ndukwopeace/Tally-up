@@ -4,6 +4,12 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A2b Depots
+- Admin → More → Depots: list with search, manager and Active/Inactive; depot page with tap-to-call phones and a history section; add and edit forms.
+- Phone numbers: optional, several per depot, Cameroon format, stored as +237… (Q-57i). Address required (Q-57k).
+- One manager per depot. Choosing a new one deactivates the old one, and the form says so before saving (Q-57c).
+- Database: `depots`, `profiles.depot_id`, `admin_save_depot()` (the only write path, audited), RLS by role; 29 new pgTAP checks.
+
 ### Added — A2a Products
 - Admin → More → Products: list with search, units in loaves and Active/Inactive; add and edit forms.
 - Loaf is always a unit; Pack and Caisse optional with loaves per unit; a Caisse can be entered as loaves or as packs and is stored in loaves (PRD-05, Q-57d).

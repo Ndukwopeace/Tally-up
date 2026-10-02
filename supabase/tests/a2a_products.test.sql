@@ -79,8 +79,12 @@ insert into auth.users (id, email)
 select id, id || '@example.test'
 from unnest(array[pg_temp.admin_user(), pg_temp.distributor_user(), pg_temp.manager_user()]) as id;
 
-insert into public.profiles (id, full_name, email, role)
-select id, 'Person', id || '@example.test', (enum_range(null::public.app_role))[role_position]
+-- A depot for the test manager: an active depot manager always has one (USR-03, A2b).
+insert into public.depots (name, location, address) values ('Test depot', 'Douala', 'Test address');
+
+insert into public.profiles (id, full_name, email, role, depot_id)
+select id, 'Person', id || '@example.test', (enum_range(null::public.app_role))[role_position],
+  case when role_position = 3 then (select id from public.depots limit 1) end
 from (values (pg_temp.admin_user(), 1), (pg_temp.distributor_user(), 2), (pg_temp.manager_user(), 3))
   as fixture (id, role_position);
 

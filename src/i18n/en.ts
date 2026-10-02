@@ -10,8 +10,10 @@
  * WHEN: Imported by every component that shows text.
  * SECURITY: Static strings only. Never build HTML from these; React escapes them.
  */
+import type { DepotFieldError } from "@/domain/depots";
 import type { ProductFieldError } from "@/domain/products";
 import type { AuthErrorCode } from "@/services/interfaces/AuthService";
+import type { DepotErrorCode } from "@/services/interfaces/DepotService";
 import type { ProductErrorCode } from "@/services/interfaces/ProductService";
 import type { Role, Status } from "@/types/enums";
 
@@ -242,6 +244,70 @@ export const en = {
       not_admin: "Only an active admin can change products.",
       unavailable: "Tally-Up could not be reached. Check your connection and try again.",
     } satisfies Record<ProductErrorCode, string>,
+  },
+
+  // Phone number lists (Q-57i), used by depots and users.
+  phones: {
+    legend: "Phone numbers (optional)",
+    hint: "Cameroon numbers, for example 6 77 12 34 56 or +237 2 33 44 55 66.",
+    label: (position: number) => `Phone ${String(position)}`,
+    add: "Add another number",
+    remove: (position: number) => `Remove phone ${String(position)}`,
+    invalid: "Enter a Cameroon number: 9 digits starting with 2 or 6, with or without +237.",
+  },
+
+  // Depots list, detail and form (A2b: DEP-01 to DEP-06, Q-57c, Q-57i).
+  depots: {
+    add: "Add depot",
+    newTitle: "New depot",
+    editTitle: "Edit depot",
+    edit: "Edit depot",
+    search: "Search by name or location",
+    emptyTitle: "No depots yet",
+    emptyBody: "Add the depots your distributors deliver to.",
+    noMatch: (query: string) => `No depot matches "${query}".`,
+    saved: (name: string) => `${name} was saved.`,
+    name: "Name",
+    location: "Location",
+    address: "Address or description",
+    manager: "Manager",
+    noManager: "No manager yet",
+    managerNone: "No manager",
+    managerHint: "One manager per depot.",
+    managerOption: (name: string, where: string) => `${name} (${where})`,
+    managerRunsHere: "runs this depot",
+    managerRunsOther: (depot: string) => `runs ${depot}`,
+    managerFree: "no depot",
+    managerInactive: "inactive",
+    noManagersYet: "No depot manager accounts yet. Create them in Users.",
+    // RULE Q-57c: say who will lose access before saving.
+    replaceWarning: (name: string) => `${name} will be deactivated and will no longer run this depot.`,
+    // RULE DEP-03: one depot per manager, so moving them leaves their old depot without one.
+    moveWarning: (name: string, depot: string) => `${name} will move here. ${depot} will have no manager.`,
+    activeLabel: "Active",
+    activeHint: "Inactive depots are not offered to distributors.",
+    save: "Save depot",
+    phonesTitle: "Phone numbers",
+    noPhones: "No phone number",
+    historyTitle: "Distributions and receipts",
+    historyEmpty:
+      "The history of hand-overs to this depot will appear here once distributors start recording them.",
+    notFoundTitle: "Depot not found",
+    notFoundBody: "This depot does not exist, or the link is out of date.",
+    backToList: "Go to depots",
+    fieldErrors: {
+      name_required: "Enter the depot name.",
+      location_required: "Enter where the depot is, for example Douala.",
+      address_required: "Enter the address or a short description.",
+      phone_invalid: "Enter a Cameroon number: 9 digits starting with 2 or 6, with or without +237.",
+    } satisfies Record<DepotFieldError, string>,
+    errors: {
+      invalid: "Some values were refused. Check the form and try again.",
+      not_found: "This depot no longer exists.",
+      not_a_manager: "That account is not a depot manager.",
+      not_admin: "Only an active admin can change depots.",
+      unavailable: "Tally-Up could not be reached. Check your connection and try again.",
+    } satisfies Record<DepotErrorCode, string>,
   },
 
   // Shown when a build has no database settings (config/env.ts).
