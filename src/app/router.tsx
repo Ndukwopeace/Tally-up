@@ -127,7 +127,22 @@ export const routes: RouteObject[] = [
                 "/admin/products",
                 async () => (await import("@/pages/admin/ProductFormPage")).EditProductPage,
               ),
-              subPage("users", en.nav.users, "/admin/more"),
+              // A2c: users (USR-01 to USR-06).
+              lazySubPage(
+                "users",
+                "/admin/more",
+                async () => (await import("@/pages/admin/UsersPage")).UsersPage,
+              ),
+              lazySubPage(
+                "users/new",
+                "/admin/users",
+                async () => (await import("@/pages/admin/UserFormPage")).NewUserPage,
+              ),
+              lazySubPage(
+                "users/:userId/edit",
+                "/admin/users",
+                async () => (await import("@/pages/admin/UserFormPage")).EditUserPage,
+              ),
               subPage("reports", en.nav.reports, "/admin/more"),
               subPage("audit", en.nav.audit, "/admin/more"),
               subPage("settings", en.nav.settings, "/admin/more"),

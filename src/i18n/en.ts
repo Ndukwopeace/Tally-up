@@ -15,6 +15,7 @@ import type { ProductFieldError } from "@/domain/products";
 import type { AuthErrorCode } from "@/services/interfaces/AuthService";
 import type { DepotErrorCode } from "@/services/interfaces/DepotService";
 import type { ProductErrorCode } from "@/services/interfaces/ProductService";
+import type { UserErrorCode } from "@/services/interfaces/UserService";
 import type { Role, Status } from "@/types/enums";
 
 export const en = {
@@ -308,6 +309,71 @@ export const en = {
       not_admin: "Only an active admin can change depots.",
       unavailable: "Tally-Up could not be reached. Check your connection and try again.",
     } satisfies Record<DepotErrorCode, string>,
+  },
+
+  // Users list and form (A2c: USR-01 to USR-06, Q-57a, b, c, f, g, i).
+  users: {
+    add: "Add user",
+    newTitle: "New user",
+    editTitle: "Edit user",
+    search: "Search by name or email",
+    emptyTitle: "No users yet",
+    emptyBody: "Add the people who use Tally-Up.",
+    noMatch: (query: string) => `No user matches "${query}".`,
+    saved: (name: string) => `${name} was saved.`,
+    // Q-57a: the admin passes the temporary password on.
+    created: (name: string) => `${name} was created. Give them the temporary password you chose.`,
+    fullName: "Full name",
+    email: "Email",
+    emailHint: "This is what they sign in with.",
+    role: "Role",
+    depot: "Depot",
+    depotChoose: "Choose a depot",
+    depotHint: "A depot manager runs one depot. One manager per depot.",
+    depotOption: (name: string, manager: string | null) =>
+      manager === null ? `${name} (no manager)` : `${name} (${manager} runs it)`,
+    runs: (depot: string) => `Runs ${depot}`,
+    // RULE Q-57c: say who is affected before saving.
+    replaceWarning: (name: string, depot: string) =>
+      `${name} will be deactivated and will no longer run ${depot}.`,
+    leaveWarning: (name: string, depot: string) =>
+      `${name} will no longer run ${depot}. ${depot} will have no manager.`,
+    activeLabel: "Active",
+    activeHint: "Inactive users cannot sign in. An inactive depot manager does not run a depot.",
+    // RULE USR-06: why a switch or list is locked.
+    ownAccountHint: "You cannot deactivate your own account.",
+    lastAdminHint: "You are the only active admin, so you stay an admin.",
+    password: "Temporary password",
+    passwordHint: "You choose it and give it to them. They can change it in Profile.",
+    repeatPassword: "Repeat temporary password",
+    create: "Create user",
+    save: "Save user",
+    // Q-57b: a reset sets a new temporary password; nothing is emailed.
+    resetTitle: "Reset password",
+    resetHint: (name: string) =>
+      `Set a new temporary password and give it to ${name}. They can change it in Profile.`,
+    resetSave: "Set new password",
+    resetDone: (name: string) => `New temporary password set. Give it to ${name}.`,
+    notFoundTitle: "User not found",
+    notFoundBody: "This user does not exist, or the link is out of date.",
+    backToList: "Go to users",
+    fieldErrors: {
+      name_required: "Enter the full name.",
+      depot_required: "Choose the depot this manager runs.",
+      phone_invalid: "Enter a Cameroon number: 9 digits starting with 2 or 6, with or without +237.",
+    },
+    errors: {
+      unauthenticated: "Your session has ended. Sign in again.",
+      not_admin: "Only an active admin can change users.",
+      invalid: "Some values were refused. Check the form and try again.",
+      not_found: "This user no longer exists.",
+      email_taken: "Another user already has this email.",
+      weak_password: "That password is too weak. Choose a longer, harder one.",
+      cannot_deactivate_self: "You cannot deactivate your own account.",
+      last_admin: "The last active admin cannot be deactivated or given another role.",
+      depot_required: "Choose the depot this manager runs.",
+      unavailable: "Tally-Up could not be reached. Check your connection and try again.",
+    } satisfies Record<UserErrorCode, string>,
   },
 
   // Shown when a build has no database settings (config/env.ts).

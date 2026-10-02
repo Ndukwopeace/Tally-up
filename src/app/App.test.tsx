@@ -16,6 +16,7 @@ import { AuthStore } from "@/auth/AuthStore";
 import { MockAuthService } from "@/services/mock/MockAuthService";
 import { MockDepotService } from "@/services/mock/MockDepotService";
 import { MockProductService } from "@/services/mock/MockProductService";
+import { MockUserService } from "@/services/mock/MockUserService";
 
 describe("App", () => {
   it("opens the login page at / when signed out", async () => {
@@ -24,6 +25,7 @@ describe("App", () => {
       auth: new MockAuthService({ password: MOCK_PASSWORD }),
       products: new MockProductService(),
       depots: new MockDepotService(),
+      users: new MockUserService(),
     };
     const auth = new AuthStore(services.auth);
     void auth.start();

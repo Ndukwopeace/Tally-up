@@ -70,3 +70,22 @@ export interface ManagerOption {
   /** The depot they run now, or null. */
   depotId: string | null;
 }
+
+/** The depot an active depot manager runs, as shown with their account. */
+export interface UserDepotRef {
+  id: string;
+  name: string;
+}
+
+/** An account as the Users screens show it (REQUIREMENTS §9 User, USR-02). */
+export interface User {
+  id: string;
+  fullName: string;
+  email: string;
+  /** Stored as +237XXXXXXXXX (Q-57i); may be empty. */
+  phones: string[];
+  role: Role;
+  status: RecordStatus;
+  /** The depot they run: set only for an active depot manager (USR-03, Q-57c). */
+  depot: UserDepotRef | null;
+}
