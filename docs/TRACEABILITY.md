@@ -20,4 +20,5 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | WCAG 2.4.1, 2.4.2, J-1 | Skip link, page titles, bell top-right | `src/app/router.test.tsx` | `src/layouts/SkipLink.tsx`, `PortalHeader.tsx`, `src/pages/PlaceholderPage.tsx` |
 | PERF-1, PERF-2 | Initial JS ≤ 250 KB gzipped; per-portal code splitting | CI `build` job (`npm run budget`) | `scripts/check-budget.mjs`, `src/app/router.tsx` |
 | SEC-3, SEC-4 | No committed secrets | CI `secrets` job | `.github/workflows/ci.yml`, `.gitignore` |
+| Q-45 | Wireframe truck logo; wordmark colours; icons drawn from the same shapes | `src/components/common/AppLogo.test.tsx` | `src/assets/logo-shapes.json`, `AppLogo.tsx`, `scripts/generate-icons.mjs`, `public/*` |
 | SEC-10 | Security headers | Manual check on Vercel preview | `vercel.json` |

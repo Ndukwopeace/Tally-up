@@ -258,7 +258,7 @@ Taken from the wireframes' direction; exact values set in Milestone 1 as design 
 
 | Element | Rule |
 |---|---|
-| Colour roles | Primary (blue, actions) · Success (green, Confirmed / Fully Distributed) · Warning (amber, Awaiting / In Progress) · Danger (red, Discrepancy only) · Neutral (greys). |
+| Colour roles | Primary (blue, actions) · Success (green, Confirmed / Fully Distributed) · Warning (amber, Awaiting / In Progress) · Danger (red, Discrepancy only) · Neutral (greys) · Accent (orange, **logo only**, Q-45). |
 | Status mapping | In Progress = amber · Fully Distributed = green · Awaiting Confirmation = amber · Confirmed = green · Confirmed with Discrepancy = red. Each also has its own icon and text. |
 | Typography | One sans-serif family. Numbers use tabular figures so columns line up. Scale: 12 / 14 / 16 / 20 / 24 / 32 px. Body text minimum 16 px on mobile. |
 | Spacing | 4 px grid (4, 8, 12, 16, 24, 32). |

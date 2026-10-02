@@ -36,6 +36,10 @@
   --color-danger-hover: #991b1b;
   --color-danger-soft: #fef2f2;
 
+  /* Logo accent ("Up" in the wordmark, Q-45). Logo use only: below 4.5:1 on white,
+     allowed because WCAG 1.4.3 exempts logotypes. Never use for body text or status. */
+  --color-accent: #f59e0b;
+
   /* Neutrals */
   --color-ink: #0f172a;
   --color-ink-muted: #475569;

@@ -1,81 +1,113 @@
 /**
- * Draws the Tally-Up app icons as PNG files in public/.
+ * Draws the Tally-Up app icons (PNG) and favicon (SVG) in public/.
  *
  * WHY:  The PWA manifest needs PNG icons (192, 512, maskable 512) and iPhones
- *       need a 180px apple-touch-icon. Drawing them from code keeps them identical
- *       to the SVG logo (src/components/common/AppLogo.tsx, public/favicon.svg)
- *       without adding an image package (W-3).
- * HOW:  For each pixel, tests 3×3 sample points against the logo shapes (blue
- *       rounded square, five white tally strokes) and averages them for smooth
- *       edges, then writes a PNG with Node's built-in zlib.
+ *       need a 180px apple-touch-icon. Drawing them from src/assets/logo-shapes.json
+ *       (the same data AppLogo.tsx renders) keeps every icon identical to the
+ *       on-screen logo (Q-45) without adding an image package (W-3).
+ * HOW:  Places the 48×32 truck mark in the centre of a white square, tests 3×3
+ *       sample points per pixel against each shape in drawing order (later shapes
+ *       paint over earlier ones), averages for smooth edges, and writes a PNG with
+ *       Node's built-in zlib. The favicon is written as SVG from the same shapes.
  * WHEN: Run by hand (`node scripts/generate-icons.mjs`) only when the logo changes.
- *       The PNGs are committed; builds do not run this script.
- * SECURITY: Writes only to public/; reads nothing.
+ *       The output files are committed; builds do not run this script.
+ * SECURITY: Reads one JSON file from the repository; writes only to public/.
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 
-// Logo geometry in a 32×32 design grid, matching the SVG.
-const BRAND = [0x1d, 0x4e, 0xd8];
+const logo = JSON.parse(readFileSync("src/assets/logo-shapes.json", "utf8"));
 const WHITE = [0xff, 0xff, 0xff];
-const STROKE_HALF_WIDTH = 1.3;
-const SEGMENTS = [
-  [9, 9, 9, 23],
-  [13.5, 9, 13.5, 23],
-  [18, 9, 18, 23],
-  [22.5, 9, 22.5, 23],
-  [6.5, 21.5, 25, 10.5],
-];
+// Corner radius of the white tile as a fraction of its size (regular icons only).
+const TILE_RADIUS = 0.22;
+
+// "#1d4ed8" → [29, 78, 216]
+function hexToRgb(hex) {
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+}
 
 // Distance from point (px, py) to the line segment (x1, y1)–(x2, y2).
-function distanceToSegment(px, py, [x1, y1, x2, y2]) {
+function distanceToSegment(px, py, x1, y1, x2, y2) {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)));
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
-// True if (x, y) in the 32-grid lies inside a square with corner radius r.
-function insideRoundedSquare(x, y, r) {
-  if (x < 0 || y < 0 || x > 32 || y > 32) return false;
-  const cx = Math.min(Math.max(x, r), 32 - r);
-  const cy = Math.min(Math.max(y, r), 32 - r);
+// True if (x, y) lies inside a rectangle with rounded corners of radius r.
+function insideRoundRect(x, y, rx, ry, w, h, r) {
+  if (x < rx || y < ry || x > rx + w || y > ry + h) return false;
+  const cx = Math.min(Math.max(x, rx + r), rx + w - r);
+  const cy = Math.min(Math.max(y, ry + r), ry + h - r);
   return Math.hypot(x - cx, y - cy) <= r;
 }
 
+// True if logo-space point (x, y) is inside one shape from logo-shapes.json.
+function insideShape(shape, x, y) {
+  switch (shape.type) {
+    case "circle":
+      return Math.hypot(x - shape.cx, y - shape.cy) <= shape.r;
+    case "roundRect":
+      return insideRoundRect(x, y, shape.x, shape.y, shape.w, shape.h, shape.r);
+    default:
+      return distanceToSegment(x, y, shape.x1, shape.y1, shape.x2, shape.y2) <= shape.width / 2;
+  }
+}
+
 /**
- * Renders one icon.
- * @param size      output width/height in pixels
- * @param radius    corner radius in the 32-grid (0 = square, for maskable / iOS)
- * @param scale     how large the tally strokes are relative to the canvas (maskable needs a safe zone)
+ * Renders one square icon.
+ * @param size     output width/height in pixels
+ * @param rounded  true: white tile with rounded corners on transparency; false: full-bleed white
+ *                 (maskable icons and iOS, which crop the corners themselves)
+ * @param markWidth width of the truck mark as a fraction of the icon (smaller = more margin)
  */
-function render(size, radius, scale) {
+function render(size, rounded, markWidth) {
+  const scale = (size * markWidth) / logo.width;
+  const offsetX = (size - logo.width * scale) / 2;
+  const offsetY = (size - logo.height * scale) / 2;
+  const colours = logo.shapes.map((shape) => hexToRgb(shape.fill));
   const rows = [];
   for (let py = 0; py < size; py++) {
     const row = [0]; // PNG filter byte: none
     for (let px = 0; px < size; px++) {
-      let bg = 0;
-      let fg = 0;
+      let covered = 0;
+      const sum = [0, 0, 0];
       for (let sy = 0; sy < 3; sy++) {
         for (let sx = 0; sx < 3; sx++) {
-          const x = ((px + (sx + 0.5) / 3) / size) * 32;
-          const y = ((py + (sy + 0.5) / 3) / size) * 32;
-          if (!insideRoundedSquare(x, y, radius)) continue;
-          bg++;
-          // Map the point back into the unscaled design grid around the centre.
-          const ux = 16 + (x - 16) / scale;
-          const uy = 16 + (y - 16) / scale;
-          if (SEGMENTS.some((segment) => distanceToSegment(ux, uy, segment) <= STROKE_HALF_WIDTH)) fg++;
+          const x = px + (sx + 0.5) / 3;
+          const y = py + (sy + 0.5) / 3;
+          if (rounded && !insideRoundRect(x, y, 0, 0, size, size, size * TILE_RADIUS)) continue;
+          covered++;
+          // Topmost shape wins (painter's order); white tile underneath.
+          let colour = WHITE;
+          const lx = (x - offsetX) / scale;
+          const ly = (y - offsetY) / scale;
+          logo.shapes.forEach((shape, i) => {
+            if (insideShape(shape, lx, ly)) colour = colours[i];
+          });
+          for (let c = 0; c < 3; c++) sum[c] += colour[c];
         }
       }
-      const alpha = Math.round((bg / 9) * 255);
-      const mix = bg === 0 ? 0 : fg / bg;
-      const rgb = BRAND.map((c, i) => Math.round(c + (WHITE[i] - c) * mix));
-      row.push(...rgb, alpha);
+      const rgb = covered === 0 ? WHITE : sum.map((v) => Math.round(v / covered));
+      row.push(...rgb, Math.round((covered / 9) * 255));
     }
     rows.push(Buffer.from(row));
   }
   return encodePng(size, Buffer.concat(rows));
+}
+
+// SVG favicon: white rounded tile with the truck mark, from the same shapes.
+function faviconSvg() {
+  const pad = 4;
+  const side = logo.width + pad * 2;
+  const top = (side - logo.height) / 2;
+  const parts = logo.shapes.map((s) => {
+    if (s.type === "circle") return `<circle cx="${s.cx}" cy="${s.cy}" r="${s.r}" fill="${s.fill}"/>`;
+    if (s.type === "roundRect")
+      return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.r}" fill="${s.fill}"/>`;
+    return `<line x1="${s.x1}" y1="${s.y1}" x2="${s.x2}" y2="${s.y2}" stroke="${s.fill}" stroke-width="${s.width}" stroke-linecap="round"/>`;
+  });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${side} ${side}"><rect width="${side}" height="${side}" rx="${side * TILE_RADIUS}" fill="#fff"/><g transform="translate(${pad} ${top})">${parts.join("")}</g></svg>\n`;
 }
 
 // CRC-32 as required by the PNG format for each chunk.
@@ -112,14 +144,14 @@ function encodePng(size, raw) {
 }
 
 const outputs = [
-  ["public/pwa-192x192.png", render(192, 8, 1)],
-  ["public/pwa-512x512.png", render(512, 8, 1)],
-  // Maskable: full-bleed square, strokes shrunk to sit inside the 80% safe zone.
-  ["public/maskable-512x512.png", render(512, 0, 0.7)],
-  // iOS rounds corners itself, so the square is full-bleed.
-  ["public/apple-touch-icon.png", render(180, 0, 0.85)],
+  ["public/pwa-192x192.png", render(192, true, 0.8)],
+  ["public/pwa-512x512.png", render(512, true, 0.8)],
+  // Maskable: Android may crop to a circle, so the mark stays inside the central safe zone.
+  ["public/maskable-512x512.png", render(512, false, 0.62)],
+  ["public/apple-touch-icon.png", render(180, false, 0.78)],
+  ["public/favicon.svg", Buffer.from(faviconSvg())],
 ];
-for (const [path, png] of outputs) {
-  writeFileSync(path, png);
-  process.stdout.write(`wrote ${path} (${png.length} bytes)\n`);
+for (const [path, data] of outputs) {
+  writeFileSync(path, data);
+  process.stdout.write(`wrote ${path} (${data.length} bytes)\n`);
 }

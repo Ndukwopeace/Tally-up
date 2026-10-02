@@ -371,6 +371,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
 | Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
+| Q-45 | Logo | **The wireframe logo**: blue delivery truck with bread and rising bars on an orange cargo box; wordmark "Tally-" in brand blue (white on dark) and "Up" in orange. The truck is branding only; truck features stay out of scope (§2). |
 | Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
 ### Open items
