@@ -10,37 +10,41 @@ import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { App, startAuth } from "./App";
+import { App, startApp } from "./App";
 
 import { AuthStore } from "@/auth/AuthStore";
 import { MockAuthService } from "@/services/mock/MockAuthService";
+import { MockProductService } from "@/services/mock/MockProductService";
 
 describe("App", () => {
   it("opens the login page at / when signed out", async () => {
     window.history.pushState({}, "", "/");
-    const auth = new AuthStore(new MockAuthService({ password: MOCK_PASSWORD }));
+    const services = {
+      auth: new MockAuthService({ password: MOCK_PASSWORD }),
+      products: new MockProductService(),
+    };
+    const auth = new AuthStore(services.auth);
     void auth.start();
-    render(<App auth={auth} />);
+    render(<App start={{ auth, services }} />);
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/login");
   });
 
   it("says the app is not connected when the build has no database settings", () => {
-    expect(startAuth({ ok: false })).toBeNull();
-    render(<App auth={null} />);
+    expect(startApp({ ok: false })).toBeNull();
+    render(<App start={null} />);
     expect(screen.getByRole("heading", { level: 1, name: "Tally-Up is not connected" })).toBeInTheDocument();
   });
 
-  it("starts a store for a valid configuration", () => {
-    expect(startAuth({ ok: true, dataSource: "mock", mockPassword: MOCK_PASSWORD })).toBeInstanceOf(
+  it("starts the services and auth store for a valid configuration", () => {
+    expect(startApp({ ok: true, dataSource: "mock", mockPassword: MOCK_PASSWORD })?.auth).toBeInstanceOf(
       AuthStore,
     );
-    expect(
-      startAuth({
-        ok: true,
-        dataSource: "supabase",
-        supabase: { url: "https://x.supabase.co", publicKey: "k" },
-      }),
-    ).toBeInstanceOf(AuthStore);
+    const supabase = startApp({
+      ok: true,
+      dataSource: "supabase",
+      supabase: { url: "https://x.supabase.co", publicKey: "k" },
+    });
+    expect(supabase?.auth).toBeInstanceOf(AuthStore);
   });
 });

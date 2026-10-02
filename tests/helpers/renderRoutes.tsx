@@ -4,7 +4,8 @@
  * WHY:  Since A1 every portal sits behind login (AUTH-08). Tests need to
  *       render a page "as" a given user without a network or Supabase.
  * HOW:  Builds a MockAuthService (signed in as `signedInAs`, if given), an
- *       AuthStore over it, and a memory router at `path` with optional earlier
+ *       AuthStore over it, a MockProductService (or the one passed), a fresh
+ *       query cache, and a memory router at `path` with optional earlier
  *       `history` entries. `openPortals` defaults to every role so the
  *       distributor and depot frames can still be tested before their
  *       milestones; tests about Q-55 pass ["admin"].
@@ -12,6 +13,7 @@
  * SECURITY: Test-only; uses fictional mock users.
  */
 import { MOCK_PASSWORD } from "./mockPassword";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router";
 
@@ -19,6 +21,8 @@ import { routes } from "@/app/router";
 import { AuthProvider } from "@/auth/AuthProvider";
 import { AuthStore } from "@/auth/AuthStore";
 import { MOCK_USERS, MockAuthService } from "@/services/mock/MockAuthService";
+import { MockProductService } from "@/services/mock/MockProductService";
+import { ServicesProvider } from "@/services/ServicesProvider";
 import { ROLES, type Role } from "@/types/enums";
 
 export interface RenderRoutesOptions {
@@ -30,6 +34,8 @@ export interface RenderRoutesOptions {
   openPortals?: readonly Role[];
   /** Use this service instead of a fresh mock (e.g. to fail or hold calls). */
   service?: MockAuthService;
+  /** Use this product service instead of an empty mock. */
+  products?: MockProductService;
   /** Leave the store un-started, to see the "checking" state. */
   start?: boolean;
 }
@@ -41,13 +47,22 @@ export function renderRoutes(path: string, options: RenderRoutesOptions = {}) {
   if (options.start !== false) {
     void store.start();
   }
+  const products = options.products ?? new MockProductService();
+  // A fresh cache per test; no retries, so error states show at once.
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   const router = createMemoryRouter(routes, { initialEntries: [...(options.history ?? []), path] });
   const view = render(
-    <AuthProvider store={store}>
-      <RouterProvider router={router} />
-    </AuthProvider>,
+    <QueryClientProvider client={queryClient}>
+      <ServicesProvider services={{ auth: service, products }}>
+        <AuthProvider store={store}>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ServicesProvider>
+    </QueryClientProvider>,
   );
-  return { router, store, service, view };
+  return { router, store, service, products, view };
 }
 
 /** The mock user who owns a portal path, so portal tests are signed in as the right role. */

@@ -14,7 +14,7 @@
  *       go to /login and other roles to their own portal. Guards are convenience
  *       only; the database enforces access (AUTH-10, ARCHITECTURE §4.5).
  */
-import type { ReactElement } from "react";
+import type { ComponentType, ReactElement } from "react";
 import { createBrowserRouter, type RouteObject } from "react-router";
 
 import { RootLayout } from "./RootLayout";
@@ -52,6 +52,13 @@ function subPage(path: string, title: string, parent: string, element?: ReactEle
   return { path, element: element ?? <PlaceholderPage title={title} />, handle };
 }
 
+// Like subPage, for a built screen whose code downloads only when first opened
+// (PERF-2): the loading bar shows meanwhile (Q-56).
+function lazySubPage(path: string, parent: string, load: () => Promise<ComponentType>): RouteObject {
+  const handle: RouteHandle = { backTo: parent, backToParentOnly: true };
+  return { path, handle, lazy: async () => ({ Component: await load() }) };
+}
+
 // A page opened from the header (bell, account menu). Back returns to the page it was
 // opened from; opened directly (link, refresh) it goes to the portal home.
 function headerPage(path: string, title: string, home: string, element?: ReactElement): RouteObject {
@@ -84,7 +91,22 @@ export const routes: RouteObject[] = [
               tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
               tabRoute("more", <AdminMorePage />),
               subPage("depots", en.nav.depots, "/admin/more"),
-              subPage("products", en.nav.products, "/admin/more"),
+              // A2a: products (PRD-01 to PRD-05).
+              lazySubPage(
+                "products",
+                "/admin/more",
+                async () => (await import("@/pages/admin/ProductsPage")).ProductsPage,
+              ),
+              lazySubPage(
+                "products/new",
+                "/admin/products",
+                async () => (await import("@/pages/admin/ProductFormPage")).NewProductPage,
+              ),
+              lazySubPage(
+                "products/:productId",
+                "/admin/products",
+                async () => (await import("@/pages/admin/ProductFormPage")).EditProductPage,
+              ),
               subPage("users", en.nav.users, "/admin/more"),
               subPage("reports", en.nav.reports, "/admin/more"),
               subPage("audit", en.nav.audit, "/admin/more"),

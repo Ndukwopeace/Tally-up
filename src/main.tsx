@@ -8,7 +8,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import { App, startAuth } from "@/app/App";
+import { App, startApp } from "@/app/App";
 import { appConfig } from "@/config/env";
 import "@/styles/index.css";
 
@@ -17,11 +17,11 @@ if (!rootElement) {
   throw new Error('index.html is missing <div id="root">');
 }
 
-// Created here, outside React, so StrictMode's double rendering cannot start two sessions checks.
-const auth = startAuth(appConfig);
+// Created here, outside React, so StrictMode's double rendering cannot start two session checks.
+const start = startApp(appConfig);
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App auth={auth} />
+    <App start={start} />
   </StrictMode>,
 );

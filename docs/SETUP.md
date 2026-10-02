@@ -54,9 +54,24 @@ Why this matters: the "forgot password" email links back to `/reset-password` on
 
 Supabase → **SQL Editor** → **New query**.
 
-1. Open [`supabase/migrations/20261002120000_a1_profiles_and_audit.sql`](../supabase/migrations/20261002120000_a1_profiles_and_audit.sql) on GitHub, copy all of it, paste it into the editor.
+Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in name order**, in each project. Each file is run after its pull request is merged:
+
+| File | Milestone |
+|---|---|
+| `20261002120000_a1_profiles_and_audit.sql` | A1 (done) |
+| `20261002130000_a2a_products.sql` | A2a Products, part 1 (tables) |
+| `20261002130100_a2a_product_units_writer.sql` | A2a Products, part 2 |
+| `20261002130200_a2a_save_product.sql` | A2a Products, part 3 (save function) |
+| `20261002131000_a2a_description_optional.sql` | A2a: description optional |
+
+For each file:
+
+1. Open it on GitHub and click the **Copy raw file** button (two overlapping squares above the code). Selecting the text on the page can copy only part of a long file. Each file is kept under 100 lines for the same reason.
 2. Click **Run**. It should say "Success. No rows returned".
-3. Run it **once** per project. Running it twice fails with "already exists"; that is harmless.
+3. Running a file twice fails with "already exists"; that is harmless.
+4. If the editor warns that tables are created without Row Level Security, choose **Run without RLS**: every file switches RLS on itself. The other choice inserts extra lines into the query.
+
+Try a new migration on **staging** first, with the pull request's preview link. Run it on **production** after the pull request is merged (DB-3).
 
 ## 5. Create the first admin (you)
 

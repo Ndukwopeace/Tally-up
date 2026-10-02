@@ -1,0 +1,183 @@
+-- -----------------------------------------------------------------------------
+-- A2a database tests: products, their units, and admin_save_product().
+--
+-- WHY:  Product units and loaves-per-unit decide every quantity in the app
+--       (PRD-03 to PRD-05). The database must refuse a product without its
+--       Loaf unit, a zero conversion, a duplicate code, or a save by anyone
+--       but an active admin (SEC-1, SEC-12), and record each change (AUD-03).
+-- HOW:  pgTAP inside one rolled-back transaction, same helpers as the A1 test:
+--       users are inserted as the superuser, then each check "signs in" by
+--       setting the JWT claims and switching to the `authenticated` role.
+-- WHEN: scripts/db-test.sh (npm run db:test) and the CI `db-test` job.
+-- SECURITY: Fictional users only; everything is rolled back.
+-- -----------------------------------------------------------------------------
+begin;
+select plan(31);
+
+-- ---------------------------------------------------------------------------
+-- Helpers (pg_temp: exist only for this test session).
+-- ---------------------------------------------------------------------------
+create function pg_temp.fixture_id(n int) returns uuid language sql immutable as $$
+  select ('00000000-0000-0000-0000-' || lpad(to_hex(n), 12, '0'))::uuid
+$$;
+create function pg_temp.admin_user() returns uuid language sql immutable as $$ select pg_temp.fixture_id(20) $$;
+create function pg_temp.distributor_user() returns uuid language sql immutable as $$ select pg_temp.fixture_id(21) $$;
+create function pg_temp.manager_user() returns uuid language sql immutable as $$ select pg_temp.fixture_id(22) $$;
+
+create function pg_temp.sign_in_as(uid uuid) returns void language plpgsql as $$
+begin
+  reset role;
+  if uid is null then
+    perform set_config('request.jwt.claims', '', true);
+    set local role anon;
+  else
+    perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
+    set local role authenticated;
+  end if;
+end $$;
+
+-- Saves a product as the signed-in caller; returns its id.
+create function pg_temp.save(product_id uuid, product_code text, pack int, caisse int, active boolean)
+returns uuid language sql as $$
+  select public.admin_save_product(product_id, 'Bread ' || product_code, product_code, 'Test bread',
+    case when active then (enum_range(null::public.record_status))[1] else (enum_range(null::public.record_status))[2] end,
+    pack, caisse)
+$$;
+
+-- Loaves per unit for one product, as text like "Caisse=50,Loaf=1,Pack=10".
+create function pg_temp.units_of(product_id uuid) returns text language sql as $$
+  select string_agg(unit::text || '=' || loaves_per_unit, ',' order by unit::text)
+  from public.product_units where product_units.product_id = units_of.product_id
+$$;
+
+-- The statement is refused for lack of privilege (SQLSTATE 42501).
+create function pg_temp.refused(statement text, description text) returns text language sql as $$
+  select throws_ok(statement, '42501', null, description)
+$$;
+
+-- The statement is refused by a business rule with the given message.
+create function pg_temp.rule_refused(statement text, message text, description text) returns text language sql as $$
+  select throws_ok(statement, 'P0001', message, description)
+$$;
+
+-- The statement is refused as an invalid product.
+create function pg_temp.invalid(statement text, description text) returns text language sql as $$
+  select pg_temp.rule_refused(statement, 'INVALID_PRODUCT', description)
+$$;
+
+-- Ids of the products created below, by label.
+create temp table saved (label text primary key, id uuid);
+grant all on saved to authenticated;
+create function pg_temp.big() returns uuid language sql as $$ select id from saved where label = 'big' $$;
+create function pg_temp.loaf_only() returns uuid language sql as $$ select id from saved where label = 'loaf_only' $$;
+create function pg_temp.caisse_only() returns uuid language sql as $$ select id from saved where label = 'caisse_only' $$;
+
+-- ---------------------------------------------------------------------------
+-- Fixtures
+-- ---------------------------------------------------------------------------
+insert into auth.users (id, email)
+select id, id || '@example.test'
+from unnest(array[pg_temp.admin_user(), pg_temp.distributor_user(), pg_temp.manager_user()]) as id;
+
+insert into public.profiles (id, full_name, email, role)
+select id, 'Person', id || '@example.test', (enum_range(null::public.app_role))[role_position]
+from (values (pg_temp.admin_user(), 1), (pg_temp.distributor_user(), 2), (pg_temp.manager_user(), 3))
+  as fixture (id, role_position);
+
+-- ---------------------------------------------------------------------------
+-- Structure
+-- ---------------------------------------------------------------------------
+select enum_has_labels('public', 'product_unit', array['Loaf', 'Pack', 'Caisse'], 'RULE PRD-03: Loaf, Pack, Caisse');
+select ok((select relrowsecurity from pg_class where oid = 'public.products'::regclass), 'RLS on products');
+select ok((select relrowsecurity from pg_class where oid = 'public.product_units'::regclass), 'RLS on product_units');
+
+-- ---------------------------------------------------------------------------
+-- Admin creates and edits products
+-- ---------------------------------------------------------------------------
+select pg_temp.sign_in_as(pg_temp.admin_user());
+
+insert into saved values ('big', pg_temp.save(null, 'Bb-01', 10, 50, true));
+select is(pg_temp.units_of(pg_temp.big()), 'Caisse=50,Loaf=1,Pack=10',
+  'PRD-04: Loaf (always 1), Pack and Caisse are stored in loaves');
+
+insert into saved values ('loaf_only', pg_temp.save(null, 'LO-1', null, null, true));
+select is(pg_temp.units_of(pg_temp.loaf_only()), 'Loaf=1',
+  'Q-57d: every product has the Loaf unit, even with no Pack or Caisse');
+
+insert into saved values ('caisse_only', pg_temp.save(null, 'CO-1', null, 24, true));
+select is(pg_temp.units_of(pg_temp.caisse_only()), 'Caisse=24,Loaf=1',
+  'PRD-03: Pack is optional; Caisse can be set in loaves');
+
+select pg_temp.rule_refused($$select pg_temp.save(null, 'BB-01', null, null, true)$$, 'CODE_TAKEN',
+  'PRD-02 / Q-57h: product codes are unique ignoring letter case');
+select pg_temp.invalid($$select pg_temp.save(null, 'BAD CODE', null, null, true)$$,
+  'Q-57h: code allows letters, numbers and dashes only');
+select pg_temp.invalid($$select pg_temp.save(null, 'ABCDEFGHIJKLMNOPQRSTU', null, null, true)$$,
+  'Q-57h: code is at most 20 characters');
+select pg_temp.invalid($$select pg_temp.save(null, 'P0', 0, null, true)$$,
+  'PRD-04: loaves per Pack must be at least 1');
+select pg_temp.invalid($$select pg_temp.save(null, 'C0', null, -5, true)$$,
+  'PRD-04: loaves per Caisse must be at least 1');
+select pg_temp.invalid($$select public.admin_save_product(null, '  ', 'NB-1', null, 'active', null, null)$$,
+  'PRD-02: name is required');
+
+-- Q-57j: description is optional; a blank one is stored as empty (null).
+select lives_ok(
+  $$select public.admin_save_product(pg_temp.caisse_only(), 'Bread CO-1', 'CO-1', '  ', 'active', null, 24)$$,
+  'Q-57j: a product can be saved without a description');
+select is((select description from public.products where id = pg_temp.caisse_only()), null,
+  'Q-57j: a blank description is stored as empty');
+
+-- Edit: drop Caisse, change Pack, deactivate (the code is re-sent unchanged).
+select lives_ok(
+  $$select pg_temp.save(pg_temp.big(), (select code from public.products where id = pg_temp.big()), 12, null, false)$$,
+  'an admin edits a product');
+select is(pg_temp.units_of(pg_temp.big()), 'Loaf=1,Pack=12',
+  'PRD-06: units can change; a removed unit disappears, Loaf stays');
+select is((select status::text from public.products where id = pg_temp.big()), 'inactive',
+  'PRD-01: deactivated, not deleted');
+select is((select code from public.products where id = pg_temp.big()), 'Bb-01',
+  'the code keeps the letters as typed');
+select pg_temp.rule_refused($$select pg_temp.save(gen_random_uuid(), 'ZZ-1', null, null, true)$$, 'NOT_FOUND',
+  'editing a product that does not exist is refused');
+
+-- ---------------------------------------------------------------------------
+-- Audit (AUD-03): created, edited, deactivated
+-- ---------------------------------------------------------------------------
+reset role;
+select results_eq(
+  format($$select action from public.audit_log where record_id = %L order by created_at, action$$, pg_temp.big()::text),
+  $$values ('product.created'), ('product.deactivated'), ('product.edited')$$,
+  'AUD-03: product created, edited and deactivated are logged');
+select is((select user_id from public.audit_log where action = 'product.created' limit 1), pg_temp.admin_user(),
+  'AUD-02: the log says which admin did it');
+
+-- ---------------------------------------------------------------------------
+-- Who can see and change products (ARCHITECTURE §6.5)
+-- ---------------------------------------------------------------------------
+select pg_temp.sign_in_as(pg_temp.distributor_user());
+select is((select count(*)::int from public.products), 2,
+  'distributors see active products only (one of three is inactive)');
+select is((select count(*)::int from public.product_units), 3,
+  'distributors see units of active products only');
+select pg_temp.rule_refused($$select pg_temp.save(null, 'DX-1', null, null, true)$$, 'NOT_ADMIN',
+  'SECURITY: a distributor cannot save products');
+select pg_temp.refused($$insert into public.products (name, code, description) values ('Direct insert', 'X-1', null)$$,
+  'SECURITY: nobody writes products directly');
+select pg_temp.refused('update public.product_units set loaves_per_unit = 99',
+  'SECURITY: nobody changes loaves-per-unit directly');
+
+select pg_temp.sign_in_as(pg_temp.manager_user());
+select is((select count(*)::int from public.products), 3, 'depot managers see every product (past receipts)');
+
+select pg_temp.sign_in_as(null);
+select pg_temp.refused('select count(*) from public.products', 'signed-out visitors see no products');
+select pg_temp.refused($$select pg_temp.save(null, 'AN-1', null, null, true)$$,
+  'signed-out visitors cannot call the save function');
+
+select pg_temp.sign_in_as(pg_temp.admin_user());
+select is((select count(*)::int from public.products), 3, 'an admin sees every product');
+select pg_temp.refused('delete from public.products', 'PRD-01: no hard delete');
+
+select * from finish();
+rollback;

@@ -10,7 +10,9 @@
  * WHEN: Imported by every component that shows text.
  * SECURITY: Static strings only. Never build HTML from these; React escapes them.
  */
+import type { ProductFieldError } from "@/domain/products";
 import type { AuthErrorCode } from "@/services/interfaces/AuthService";
+import type { ProductErrorCode } from "@/services/interfaces/ProductService";
 import type { Role, Status } from "@/types/enums";
 
 export const en = {
@@ -177,6 +179,69 @@ export const en = {
     email: "Email",
     role: "Role",
     changePassword: "Change password",
+  },
+
+  // Active / Inactive for users, depots and products (REQUIREMENTS §8).
+  recordStatus: {
+    active: "Active",
+    inactive: "Inactive",
+  },
+
+  // Unit names, singular and plural (PRD-03).
+  units: {
+    Loaf: { one: "Loaf", many: "Loaves" },
+    Pack: { one: "Pack", many: "Packs" },
+    Caisse: { one: "Caisse", many: "Caisses" },
+  },
+
+  // Products list and form (A2a: PRD-01 to PRD-05, Q-57).
+  products: {
+    add: "Add product",
+    newTitle: "New product",
+    editTitle: "Edit product",
+    search: "Search by name or code",
+    emptyTitle: "No products yet",
+    emptyBody: "Add the breads your distributors collect.",
+    noMatch: (query: string) => `No product matches "${query}".`,
+    saved: (name: string) => `${name} was saved.`,
+    name: "Name",
+    code: "Code",
+    codeHint: "Letters, numbers and dashes, up to 20. For example BB-01.",
+    // RULE Q-57j: optional.
+    description: "Description (optional)",
+    unitsLegend: "Units",
+    loafAlways: "Loaf: always available, 1 loaf",
+    packOn: "Sold in Packs",
+    packLoaves: "Loaves in one Pack",
+    caisseOn: "Sold in Caisses",
+    caisseMode: "Count one Caisse in",
+    caisseCountLoaves: "Loaves in one Caisse",
+    caisseCountPacks: "Packs in one Caisse",
+    caisseTotal: (loaves: number) => `1 Caisse = ${loaves.toLocaleString("en")} loaves`,
+    activeLabel: "Active",
+    activeHint: "Inactive products cannot be added to new collections.",
+    save: "Save product",
+    notFoundTitle: "Product not found",
+    notFoundBody: "This product does not exist, or the link is out of date.",
+    backToList: "Go to products",
+    // "Pack = 10 loaves" in the list.
+    unitLine: (unit: string, loaves: number) => `${unit} = ${loaves.toLocaleString("en")} loaves`,
+    fieldErrors: {
+      name_required: "Enter the product name.",
+      code_required: "Enter a product code.",
+      code_invalid: "Use letters, numbers and dashes only, up to 20 characters.",
+      loaves_required: "Enter how many.",
+      loaves_min_one: "Must be at least 1.",
+      caisse_needs_pack: "Switch on Packs and set loaves per Pack first, or count the Caisse in loaves.",
+      too_large: "That number is too large.",
+    } satisfies Record<ProductFieldError, string>,
+    errors: {
+      code_taken: "Another product already uses this code.",
+      invalid: "Some values were refused. Check the form and try again.",
+      not_found: "This product no longer exists.",
+      not_admin: "Only an active admin can change products.",
+      unavailable: "Tally-Up could not be reached. Check your connection and try again.",
+    } satisfies Record<ProductErrorCode, string>,
   },
 
   // Shown when a build has no database settings (config/env.ts).

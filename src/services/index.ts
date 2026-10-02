@@ -3,8 +3,9 @@
  *
  * WHY:  Pages and stores depend on service interfaces only; this is the one
  *       place that decides between Supabase and the development mock (NFR-03).
- * HOW:  `createAuthService(config)` returns the Supabase implementation, or the
- *       mock when config/env.ts selected it (development builds only).
+ * HOW:  `createServices(config)` returns every service (auth, products) backed
+ *       by one Supabase client, or the mocks when config/env.ts selected them
+ *       (development builds only).
  * WHEN: Called once by App.tsx at start-up.
  * SECURITY: The mock branch is guarded by `import.meta.env.DEV`, which is the
  *       constant `false` in production builds, so the bundler drops the mock and
@@ -16,14 +17,26 @@ import { createClient } from "@supabase/supabase-js";
 
 import type { AppConfig } from "@/config/env";
 import type { AuthService } from "@/services/interfaces/AuthService";
+import type { ProductService } from "@/services/interfaces/ProductService";
 import { MockAuthService } from "@/services/mock/MockAuthService";
+import { MockProductService } from "@/services/mock/MockProductService";
 import { SupabaseAuthService } from "@/services/supabase/SupabaseAuthService";
+import { SupabaseProductService } from "@/services/supabase/SupabaseProductService";
 
-/** Creates the auth backend for a valid configuration. */
-export function createAuthService(config: Extract<AppConfig, { ok: true }>): AuthService {
+/** Every backend service the app uses. */
+export interface Services {
+  auth: AuthService;
+  products: ProductService;
+}
+
+/** Creates the backend services for a valid configuration. */
+export function createServices(config: Extract<AppConfig, { ok: true }>): Services {
   // RULE NFR-03: the mock exists only in development builds.
   if (import.meta.env.DEV && config.dataSource === "mock") {
-    return new MockAuthService({ password: config.mockPassword, storage: window.localStorage });
+    return {
+      auth: new MockAuthService({ password: config.mockPassword, storage: window.localStorage }),
+      products: new MockProductService(),
+    };
   }
   if (config.dataSource !== "supabase") {
     throw new Error("The mock backend is not available in this build.");
@@ -41,5 +54,6 @@ export function createAuthService(config: Extract<AppConfig, { ok: true }>): Aut
       flowType: "implicit",
     },
   });
-  return new SupabaseAuthService(client);
+  // One client for every service, so they share the signed-in session.
+  return { auth: new SupabaseAuthService(client), products: new SupabaseProductService(client) };
 }

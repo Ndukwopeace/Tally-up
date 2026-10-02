@@ -46,3 +46,14 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | NFR-06 | No sign-in or password changes offline | `LoginPage.test.tsx`, `PasswordPages.test.tsx` | `LoginPage.tsx`, `NewPasswordForm.tsx`, `ForgotPasswordPage.tsx` |
 | SEC-10 | CSP allows only this site and Supabase for data connections | Manual check on Vercel preview | `vercel.json` |
 
+## A2a — Products
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| PRD-01 | Create, edit, activate/deactivate; no delete | `supabase/tests/a2a_products.test.sql`, `src/pages/admin/ProductPages.test.tsx` | `supabase/migrations/20261002130*_a2a_*.sql` (`admin_save_product`), `src/pages/admin/*` |
+| PRD-02, Q-57h, Q-57j | Name, code (letters/numbers/dashes ≤ 20, unique ignoring case); description optional | `src/domain/products.test.ts`, `a2a_products.test.sql`, `ProductPages.test.tsx` | `src/domain/products.ts`, migration |
+| PRD-03, Q-57d | Loaf always; Pack and Caisse optional | `products.test.ts`, `a2a_products.test.sql` | `products.ts`, migration |
+| PRD-04, PRD-05 | Loaves per Pack/Caisse required, whole, ≥ 1; Caisse entered in loaves or packs, stored in loaves | `products.test.ts`, `ProductPages.test.tsx`, `a2a_products.test.sql` | `products.ts`, `ProductFormPage.tsx` |
+| PRD-07, §6.5 | Distributors read active products only; managers all; no direct writes | `a2a_products.test.sql` | migration (RLS) |
+| AUD-03 | Product created / edited / (de)activated logged | `a2a_products.test.sql` | `admin_save_product` |
+| NFR-07, NFR-06 | Loading, empty, error; no saving offline | `ProductPages.test.tsx` | `ProductsPage.tsx`, `ProductFormPage.tsx` |

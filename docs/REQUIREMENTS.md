@@ -1,6 +1,6 @@
 # Tally-Up — Requirements Document
 
-**Status:** v0.5 — v0.4 approved; v0.5 records owner decisions Q-55 (milestones per role) and Q-56 (Back and feedback), and open item SMTP-1
+**Status:** v0.5 — v0.4 approved; v0.5 records owner decisions Q-55 (milestones per role), Q-56 (Back and feedback), Q-57 (A2 rules), and open item SMTP-1
 **Date:** 2026-10-02
 **Source:** "TALLY-UP — Bakery Distribution Tracking System" specification (58 sections), plus owner answers recorded in Section 12
 
@@ -84,8 +84,8 @@ IDs are stable. Later commits and tests will reference them.
 | ID | Requirement |
 |---|---|
 | PRD-01 | Create, edit, activate/deactivate products. No hard delete. |
-| PRD-02 | Fields: Name, Code (unique), Description, Image URL (optional), Supported Units, Loaves per Unit, Status. |
-| PRD-03 | Supported units are chosen per product from: Loaf, Pack, Caisse. At least one required. |
+| PRD-02 | Fields: Name, Code (unique; letters, numbers and dashes, at most 20, unique ignoring letter case — Q-57h), Description (optional — Q-57j), Supported Units, Loaves per Unit, Status. No product photo (Q-57e). |
+| PRD-03 | Every product supports **Loaf** (the base unit, always on — Q-57d). The Admin adds Pack and/or Caisse per product. |
 | PRD-04 | **Loaf is the base unit.** For every Pack or Caisse a product supports, the Admin **must** enter how many loaves it holds. A product cannot be saved without it. |
 | PRD-05 | The Admin may enter Caisse as "N Packs" or "N Loaves"; the system stores loaves (e.g. 1 Caisse = 5 Packs × 10 Loaves = 50 Loaves). Values are whole numbers. No conversion value is hard-coded anywhere. |
 | PRD-06 | Changing a product's loaves-per-unit affects only new records. Past records keep the value used when they were submitted. |
@@ -96,8 +96,8 @@ IDs are stable. Later commits and tests will reference them.
 | ID | Requirement |
 |---|---|
 | DEP-01 | Create, edit, activate/deactivate depots. No hard delete. |
-| DEP-02 | Fields: Name, Location, Address/Description, Phone (optional), Assigned Manager, Status. |
-| DEP-03 | One Depot Manager per depot. Assigning a new manager replaces the previous one. |
+| DEP-02 | Fields: Name, Location, Address/Description, Phone numbers (optional, one or more, Cameroon format — Q-57i), Assigned Manager, Status. |
+| DEP-03 | One Depot Manager per depot. Assigning a new manager replaces the previous one; the previous manager is **deactivated automatically**, and reactivating them requires choosing a depot (Q-57c). |
 | DEP-04 | Receipt visibility follows the depot, not the person. A new manager sees the depot's full history. |
 | DEP-05 | Depot detail page shows its distribution/receipt history. |
 | DEP-06 | Inactive depots do not appear in the distributor's depot picker. Receipts already Awaiting Confirmation at an inactive depot can still be confirmed. |
@@ -107,10 +107,11 @@ IDs are stable. Later commits and tests will reference them.
 | ID | Requirement |
 |---|---|
 | USR-01 | Admin creates, edits, activates/deactivates Admin, Distributor and Depot Manager accounts. |
-| USR-02 | Fields: Full Name, Email (required — it is the login), Phone, Role, Assigned Depot (Depot Manager only), Status. |
+| USR-02 | Fields: Full Name, Email (required — it is the login), Phone numbers (optional, one or more, Cameroon format — Q-57i), Role, Assigned Depot (Depot Manager only), Status. New accounts get a **temporary password typed by the Admin**, who passes it on; the user changes it in Profile (Q-57a). Email and role can be changed later; changing a manager to another role removes their depot (Q-57g). |
 | USR-03 | A Depot Manager account requires a depot. A Distributor account has no depot field. |
-| USR-04 | Admin can reset a user's password. |
+| USR-04 | Admin can reset a user's password by **setting a new temporary password** (Q-57b). |
 | USR-05 | A deactivated distributor's In Progress collections stay as they are, visible to Admin. Nobody else can distribute from them. |
+| USR-06 | An Admin cannot deactivate their own account. The last active Admin cannot be deactivated or given another role (Q-57f). |
 
 ### 5.5 Collections (Distributor)
 
@@ -298,10 +299,10 @@ Settings (Admin) holds only items from Section 11. Nothing else is invented for 
 ## 9. Data Model
 
 ```
-User (id, full_name, email, phone?, role[admin|distributor|depot_manager], depot_id?, status, created_at)
-Depot (id, name, location, address, phone?, status, created_at)
-Product (id, name, code, description, image_url?, status)
-ProductUnit (id, product_id, unit[Loaf|Pack|Caisse], loaves_per_unit)   -- Loaf row always = 1
+User (id, full_name, email, phones[], role[admin|distributor|depot_manager], depot_id?, status, created_at)
+Depot (id, name, location, address, phones[], status, created_at)
+Product (id, name, code, description, status)
+ProductUnit (id, product_id, unit[Loaf|Pack|Caisse], loaves_per_unit)   -- every product has a Loaf row, always = 1
 
 Collection (id, number, distributor_id, created_at)
 CollectionItem (id, collection_id, product_id, unit, quantity, loaves_per_unit_snapshot)
@@ -378,7 +379,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-22 | Offline in v1? | **No.** (NFR-06) |
 | Q-23 | Mock data first? | ~~Yes, Supabase in Milestone 7~~ — **replaced by Q-37**: Supabase from Milestone 2. |
 | Q-24 | Export format | **PDF first.** (RPT-04) |
-| Q-25 | Product images | URL field; upload with Supabase Storage. |
+| Q-25 | Product images | ~~URL field; upload with Supabase Storage.~~ Replaced by Q-57e: no product photos. |
 | Q-26 | Admin notified of every distribution? | **No**, only discrepancies. (NOT-05) |
 | Q-27 | How to show Remaining | Loaves with breakdown. (DIS-02) |
 | Q-28 | Conversion changed later | Past records keep old value. (PRD-06) |
@@ -409,6 +410,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-45 | Logo | **The wireframe logo**: blue delivery truck with bread and rising bars on an orange cargo box; wordmark "Tally-" in brand blue (white on dark) and "Up" in orange. The truck is branding only; truck features stay out of scope (§2). |
 | Q-55 | Milestones per role | **Approved:** separate milestones per role, Admin first. A1 Admin login · A2 Admin data · A3 Admin monitoring · A4 Admin reports; then Distributor (D1…) and Depot Manager (DM1…), planned later; then Go-live. Versions: A1 = v0.2.0, A2 = v0.3.0, and so on; v1.0.0 at go-live. Until a role's milestone, its accounts exist but cannot sign in. Replaces the numbered plan of Q-52. Supabase connected by the owner: staging database for Preview + Development, production database for Production. (§13) |
 | Q-56 | Back button and feedback (BACK-1, after testing A1) | Sign Out acts at once (no "Sign out?" page). Every action shows an indicator. Back is not beside the logo, is never used to sign out, never changes tabs, and only goes back inside the tab. Replaces Q-53 ("every screen has a Back arrow"). (§7) |
+| Q-57 | A2 questions (owner, 2026-10-02) | a) New user's first password: Admin types a temporary password. b) Admin password reset: Admin sets a new temporary password. c) Replacing a depot's manager deactivates the previous manager. d) Loaf is always a unit of every product; the Admin sets how many loaves make one Pack and one Caisse per bread, and a Caisse may be entered as N Loaves or N Packs (PRD-05); counts may mix units, e.g. 1 Caisse + 2 Loaves (Q-36). e) No product photos. f) An Admin cannot deactivate themselves; the last active Admin cannot be deactivated or given another role. g) Email and role can be edited. h) Product code: letters, numbers, dashes, max 20, unique ignoring case. i) Phone numbers: optional, one or more, must be valid Cameroon numbers. j) Product description is optional (after reviewing A2a). (PRD-02, PRD-03, DEP-02, DEP-03, USR-02, USR-04) |
 | Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
 ### Open items
