@@ -54,9 +54,20 @@ Why this matters: the "forgot password" email links back to `/reset-password` on
 
 Supabase → **SQL Editor** → **New query**.
 
-1. Open [`supabase/migrations/20261002120000_a1_profiles_and_audit.sql`](../supabase/migrations/20261002120000_a1_profiles_and_audit.sql) on GitHub, copy all of it, paste it into the editor.
+Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in name order**, in each project. Each file is run after its pull request is merged:
+
+| File | Milestone |
+|---|---|
+| `20261002120000_a1_profiles_and_audit.sql` | A1 (done) |
+| `20261002130000_a2a_products.sql` | A2a Products |
+
+For each file:
+
+1. Open it on GitHub, copy all of it, paste it into the editor.
 2. Click **Run**. It should say "Success. No rows returned".
-3. Run it **once** per project. Running it twice fails with "already exists"; that is harmless.
+3. Running a file twice fails with "already exists"; that is harmless.
+
+Try a new migration on **staging** first, with the pull request's preview link. Run it on **production** after the pull request is merged (DB-3).
 
 ## 5. Create the first admin (you)
 

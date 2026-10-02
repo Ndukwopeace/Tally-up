@@ -251,7 +251,7 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/admin/depots/:id/edit` | Edit depot |
 | `/admin/products` | Product list |
 | `/admin/products/new` | Create product + units + loaves per unit |
-| `/admin/products/:id/edit` | Edit product |
+| `/admin/products/:id` | Edit product (A2a: the product opens straight into its form; there is no separate detail page) |
 | `/admin/users` | User list |
 | `/admin/users/new` | Create user |
 | `/admin/users/:id/edit` | Edit user, reset password, assign depot |
@@ -366,7 +366,7 @@ Matches requirements Section 9. All ids are `uuid`. All timestamps are `timestam
 -- master data
 profiles            (id uuid pk = auth.users.id, full_name, email, phone, role, depot_id, status, created_at)
 depots              (id, name, location, address, phone, status, created_at)
-products            (id, name, code unique, description, image_url, status, created_at)
+products            (id, name, code unique, description, status, created_at)   -- no image (Q-57e)
 product_units       (id, product_id, unit, loaves_per_unit int > 0, unique(product_id, unit))
 
 -- operations (insert-only for normal users)
