@@ -91,3 +91,30 @@ describe("InstallPrompt", () => {
     expect(screen.queryByRole("button", { name: "Install app" })).not.toBeInTheDocument();
   });
 });
+
+describe("InstallPrompt on iPhone Safari", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("explains Share → Add to Home Screen, because Safari has no install button", async () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    );
+    render(<InstallPrompt />);
+    expect(screen.getByRole("heading", { name: "Install Tally-Up on this phone" })).toBeInTheDocument();
+    expect(screen.getByText(/Tap the Share button, then “Add to Home Screen”/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.queryByText(/Add to Home Screen/)).not.toBeInTheDocument();
+  });
+
+  it("shows nothing when already opened from the home screen", () => {
+    vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)",
+    );
+    Object.defineProperty(navigator, "standalone", { value: true, configurable: true });
+    render(<InstallPrompt />);
+    expect(screen.queryByText(/Add to Home Screen/)).not.toBeInTheDocument();
+    Object.defineProperty(navigator, "standalone", { value: undefined, configurable: true });
+  });
+});

@@ -43,7 +43,8 @@
   /* Neutrals */
   --color-ink: #0f172a;
   --color-ink-muted: #475569;
-  --color-line: #e2e8f0;
+  /* Card and divider borders: dark enough to separate white cards from the grey page in sunlight (UI review #12). */
+  --color-line: #cbd5e1;
   --color-line-strong: #64748b;
   --color-surface: #ffffff;
   --color-canvas: #f1f5f9;
@@ -79,6 +80,16 @@
   html {
     scroll-padding-top: 5rem;
     scroll-padding-bottom: 7rem;
+  }
+
+  /* Q-50: a sideways swipe must not trigger the browser's back/forward page swipe
+     (Chrome honours this on Android and with trackpads). Vertical behaviour, such as
+     pull-to-refresh on lists (J-3), is untouched. The phone's own system back
+     gesture cannot be disabled by any website; tabs no longer add history entries,
+     so it does not walk through tabs. */
+  html,
+  body {
+    overscroll-behavior-x: none;
   }
 
   /* Respect users who ask the system for less motion (spinners, skeleton pulses). */

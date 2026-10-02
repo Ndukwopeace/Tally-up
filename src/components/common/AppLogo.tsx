@@ -56,7 +56,7 @@ export function AppLogo({ tone = "onLight" }: { tone?: "onLight" | "onDark" }) {
   return (
     <span className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
       {/* Decorative: the wordmark next to it is the accessible name. */}
-      <svg aria-hidden="true" viewBox={logo.viewBox} className="h-8 w-12 shrink-0">
+      <svg aria-hidden="true" viewBox={logo.viewBox} className="h-9 w-[54px] shrink-0">
         {logo.shapes.map(renderShape)}
       </svg>
       <span>

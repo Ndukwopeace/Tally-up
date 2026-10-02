@@ -28,7 +28,7 @@ export function ErrorState({ message, onRetry }: ErrorStateProps) {
       className="flex flex-col items-center gap-3 rounded-card border border-danger/40 bg-danger-soft px-6 py-10 text-center"
     >
       <CircleAlert aria-hidden="true" className="size-10 text-danger" />
-      <h2 className="text-xl font-semibold text-ink">{en.states.errorTitle}</h2>
+      <h2 className="text-lg font-semibold text-ink">{en.states.errorTitle}</h2>
       <p className="max-w-prose text-base text-ink">{message ?? en.states.errorDefault}</p>
       <Button variant="secondary" onClick={onRetry}>
         {en.actions.tryAgain}
