@@ -18,6 +18,8 @@ A2 adds the master data the admin manages: products (A2a), depots (A2b) and user
 | 5 | **Description optional** (Q-57j), added as a second small migration (`20261002131000_a2a_description_optional.sql`) instead of editing the first. A blank description is stored as empty (null) by a trigger. | The owner changed the rule after the first A2a file may already have been run on staging. A separate file works either way. |
 | 6 | **No react-hook-form** yet (T-1 approved). Forms use plain React state and the pure checks in `src/domain/`. | The product form has one conditional block. Revisit if forms grow. |
 
+| 7 | **Migration files under 100 lines**, one SQL function per file at most. The products migration is split in three parts, with a small private helper `save_product_units()`. | Pasting a longer file into the Supabase SQL editor was cut off at line 100 three times, which broke the function body ("unterminated dollar-quoted string"). Short files paste whole. |
+
 ## Consequences
 
-- Run `supabase/migrations/20261002130000_a2a_products.sql` and then `20261002131000_a2a_description_optional.sql` on **staging** to try the A2a preview, and on **production** after the pull request merges (docs/SETUP.md §4, DB-3).
+- Run the A2a migrations in name order (`…130000`, `…130100`, `…130200`, `…131000`) on **staging** to try the A2a preview, and on **production** after the pull request merges (docs/SETUP.md §4, DB-3).

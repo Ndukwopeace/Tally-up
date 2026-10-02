@@ -50,7 +50,7 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 
 | Requirement | What it means | Tests | Code |
 |---|---|---|---|
-| PRD-01 | Create, edit, activate/deactivate; no delete | `supabase/tests/a2a_products.test.sql`, `src/pages/admin/ProductPages.test.tsx` | `supabase/migrations/20261002130000_a2a_products.sql` (`admin_save_product`), `src/pages/admin/*` |
+| PRD-01 | Create, edit, activate/deactivate; no delete | `supabase/tests/a2a_products.test.sql`, `src/pages/admin/ProductPages.test.tsx` | `supabase/migrations/20261002130*_a2a_*.sql` (`admin_save_product`), `src/pages/admin/*` |
 | PRD-02, Q-57h, Q-57j | Name, code (letters/numbers/dashes ≤ 20, unique ignoring case); description optional | `src/domain/products.test.ts`, `a2a_products.test.sql`, `ProductPages.test.tsx` | `src/domain/products.ts`, migration |
 | PRD-03, Q-57d | Loaf always; Pack and Caisse optional | `products.test.ts`, `a2a_products.test.sql` | `products.ts`, migration |
 | PRD-04, PRD-05 | Loaves per Pack/Caisse required, whole, ≥ 1; Caisse entered in loaves or packs, stored in loaves | `products.test.ts`, `ProductPages.test.tsx`, `a2a_products.test.sql` | `products.ts`, `ProductFormPage.tsx` |
