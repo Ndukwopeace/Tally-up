@@ -5,7 +5,7 @@
  *       screen still has to download (the first visit to a portal, PERF-2)
  *       would otherwise look like nothing happened (N1, D-1).
  * HOW:  Reads React Router's navigation state. While it is not "idle", a
- *       status region shows a sliding bar (and "Loading…" for screen readers).
+ *       status region (<output>) shows a sliding bar (and "Loading…" for screen readers).
  *       Nothing is drawn when idle, so instant navigations show no flicker.
  * WHEN: Rendered once by RootLayout, above every page.
  * SECURITY: Display only.
@@ -20,9 +20,10 @@ export function NavigationProgress() {
     return null;
   }
   return (
-    <div role="status" className="fixed inset-x-0 top-0 z-50 h-1 overflow-hidden bg-brand-soft">
+    // <output>: the native element with the "status" role, announced politely.
+    <output className="fixed inset-x-0 top-0 z-50 block h-1 overflow-hidden bg-brand-soft">
       <span className="sr-only">{en.states.loading}</span>
-      <div aria-hidden="true" className="h-full w-2/5 animate-progress bg-brand" />
-    </div>
+      <span aria-hidden="true" className="block h-full w-2/5 animate-progress bg-brand" />
+    </output>
   );
 }
