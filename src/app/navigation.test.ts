@@ -32,12 +32,14 @@ describe("Admin phone navigation (Q-47)", () => {
     ]);
   });
 
-  it("lists Depots, Products, Users and Reports inside More", () => {
+  it("lists Depots, Products, Users, Reports, Audit log and Settings inside More (Q-47, Q-51)", () => {
     expect(labelsAndPaths(ADMIN_MORE_ITEMS)).toEqual([
       ["Depots", "/admin/depots"],
       ["Products", "/admin/products"],
       ["Users", "/admin/users"],
       ["Reports", "/admin/reports"],
+      ["Audit log", "/admin/audit"],
+      ["Settings", "/admin/settings"],
     ]);
   });
 
@@ -49,7 +51,14 @@ describe("Admin phone navigation (Q-47)", () => {
 
   it("keeps the More tab active on the pages it opens", () => {
     const more = ADMIN_NAV.find((item) => item.to === "/admin/more");
-    expect(more?.activeFor).toEqual(["/admin/depots", "/admin/products", "/admin/users", "/admin/reports"]);
+    expect(more?.activeFor).toEqual([
+      "/admin/depots",
+      "/admin/products",
+      "/admin/users",
+      "/admin/reports",
+      "/admin/audit",
+      "/admin/settings",
+    ]);
   });
 });
 

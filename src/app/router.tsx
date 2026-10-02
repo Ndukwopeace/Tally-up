@@ -52,6 +52,8 @@ export const routes: RouteObject[] = [
           subPage("products", en.nav.products, "/admin/more"),
           subPage("users", en.nav.users, "/admin/more"),
           subPage("reports", en.nav.reports, "/admin/more"),
+          subPage("audit", en.nav.audit, "/admin/more"),
+          subPage("settings", en.nav.settings, "/admin/more"),
           subPage("profile", en.nav.profileAccount, "/admin"),
           subPage("notifications", en.nav.notifications, "/admin"),
         ],

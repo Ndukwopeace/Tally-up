@@ -38,6 +38,8 @@ export const en = {
     products: "Products",
     users: "Users",
     reports: "Reports",
+    audit: "Audit log",
+    settings: "Settings",
     receipts: "Receipts",
     history: "History",
     profile: "Profile",
@@ -50,12 +52,14 @@ export const en = {
     logoHome: (destination: string) => `Tally-Up, go to ${destination}`,
   },
 
-  // One line under each item on the admin More page (Q-47), from REQUIREMENTS §5.2–5.4, §5.11.
+  // One line under each item on the admin More page (Q-47, Q-51), from REQUIREMENTS §5.2–5.4, §5.11, §5.12, §11.
   more: {
     depots: "Depot locations and their managers",
     products: "Bread products, units and loaves per unit",
     users: "Distributors, depot managers and admins",
     reports: "Filtered reports and PDF export",
+    audit: "Who did what, and when",
+    settings: "Business rules: time zone, units, record numbers",
   },
 
   // Messages for QuantityInput, one per QuantityError (domain/quantity.ts).
