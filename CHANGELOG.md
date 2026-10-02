@@ -6,6 +6,7 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ### Changed
 - Admin is phone-first (Q-48) with bottom tabs Home · Collections · Distributions · More, a More page (Depots, Products, Users, Reports), and an account menu (Profile / My Account, Sign Out) next to the bell (Q-47).
+- More page also holds Audit log and Settings (Q-51). Milestone plan re-cut role by role (Q-52).
 - Distributor tabs: Dashboard · Collections · Distributions · Profile; History tab removed (Q-46).
 - Navigation (Q-50): Back arrow on every sub-page; logo returns home; tabs no longer add browser history; sideways swipe-navigation turned off where the browser allows.
 - UI review fixes: status-bar safe area, active tab marked with a pill (not colour alone), white status-bar colour, plain "Coming soon" wording, stronger card borders, larger logo, aligned header width, today's date on home tabs, clearer start page, branded Not Found page, iPhone install instructions.

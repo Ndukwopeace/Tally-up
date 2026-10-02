@@ -61,20 +61,26 @@ describe("Admin portal (Q-47)", () => {
       ["Products", "/admin/products"],
       ["Users", "/admin/users"],
       ["Reports", "/admin/reports"],
+      ["Audit log", "/admin/audit"],
+      ["Settings", "/admin/settings"],
     ]) {
       expect(screen.getByRole("link", { name: new RegExp(`^${name}`) })).toHaveAttribute("href", href);
     }
   });
 
-  it.each(["Depots", "Products", "Users", "Reports"])(
-    "%s keeps the More tab active and shows Back instead of the logo",
-    async (name) => {
-      renderAt(`/admin/${name.toLowerCase()}`);
-      expect(await screen.findByRole("heading", { level: 1, name })).toBeInTheDocument();
-      expect(within(mainNav()).getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
-      expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
-    },
-  );
+  it.each([
+    ["Depots", "/admin/depots"],
+    ["Products", "/admin/products"],
+    ["Users", "/admin/users"],
+    ["Reports", "/admin/reports"],
+    ["Audit log", "/admin/audit"],
+    ["Settings", "/admin/settings"],
+  ])("%s keeps the More tab active and shows Back", async (name, path) => {
+    renderAt(path);
+    expect(await screen.findByRole("heading", { level: 1, name })).toBeInTheDocument();
+    expect(within(mainNav()).getByRole("link", { name: "More" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Back" })).toBeInTheDocument();
+  });
 
   it("Back returns to the previous page when there is one", async () => {
     const router = renderAt("/admin/depots", ["/admin/more"]);

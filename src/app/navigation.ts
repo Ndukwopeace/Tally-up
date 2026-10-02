@@ -22,7 +22,9 @@ import {
   LayoutDashboard,
   Menu,
   Package,
+  ScrollText,
   Send,
+  Settings,
   Truck,
   Users,
   Warehouse,
@@ -53,12 +55,14 @@ export const MAX_BOTTOM_TABS = 5;
 /** RULE Q-40 / Q-47: admin phone bottom navigation has 4 tabs. */
 export const MAX_ADMIN_MOBILE_TABS = 4;
 
-/** RULE Q-47: the pages opened from the admin More tab. */
+/** RULE Q-47 / Q-51: the pages opened from the admin More tab. */
 export const ADMIN_MORE_ITEMS: readonly MoreItem[] = [
   { label: en.nav.depots, to: "/admin/depots", icon: Warehouse, description: en.more.depots },
   { label: en.nav.products, to: "/admin/products", icon: Croissant, description: en.more.products },
   { label: en.nav.users, to: "/admin/users", icon: Users, description: en.more.users },
   { label: en.nav.reports, to: "/admin/reports", icon: ChartColumn, description: en.more.reports },
+  { label: en.nav.audit, to: "/admin/audit", icon: ScrollText, description: en.more.audit },
+  { label: en.nav.settings, to: "/admin/settings", icon: Settings, description: en.more.settings },
 ];
 
 /** RULE Q-47: Home · Collections · Distributions · More. */
