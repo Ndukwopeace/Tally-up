@@ -1,6 +1,6 @@
 # Tally-Up — Engineering Practices
 
-**Status:** v0.1 — APPROVED by owner 2026-10-02 (ENG-1 per-unit standard; ENG-2 to ENG-11 accepted)
+**Status:** v0.1 — APPROVED by owner 2026-10-02 (ENG-1 per-unit standard; ENG-2 to ENG-10 accepted; ENG-11 deferred)
 **Date:** 2026-10-02
 **Depends on:** `docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/UI_GUIDELINES.md`
 
@@ -149,7 +149,7 @@ Given the project's history, these settings protect the work:
 | Default branch | `main` |
 | Branch protection on `main` | Require PR, require CI passing, require 1 approval (owner), block force push, block deletion |
 | Repository | Do not grant AI tools admin rights; they cannot delete the repository |
-| Backup | [PROPOSED] Weekly mirror clone to the owner's Google Drive or a second GitHub account |
+| Backup | Not now (owner decision ENG-11). Revisit before go-live. |
 
 ---
 
@@ -318,6 +318,27 @@ Runs on every push and PR:
 
 A red CI blocks merge. CI is never bypassed.
 
+### 10.1 Required status checks on `main`
+
+Each step above runs as a separately named job, so GitHub shows exactly which one failed. These names are what the owner selects under **Settings → Branches → `main` → Require status checks to pass**.
+
+GitHub only lists a check after it has run at least once, so each check is added when the phase that creates it has run CI on a pull request.
+
+| Check name | What it proves | Available from |
+|---|---|---|
+| `ci / format` | Code is formatted (Prettier) | Phase 1 |
+| `ci / lint` | No lint errors or warnings, including accessibility lint | Phase 1 |
+| `ci / typecheck` | TypeScript compiles in strict mode | Phase 1 |
+| `ci / test` | Unit and component tests pass; coverage targets met (ENG-5) | Phase 1 |
+| `ci / build` | Production build succeeds; JS budget ≤ 250 KB (PERF-1) | Phase 1 |
+| `ci / audit` | No high/critical dependency vulnerabilities | Phase 1 |
+| `ci / secrets` | No service-role key or secret pattern in client code | Phase 1 |
+| `Vercel` | Preview deployment built (added by the Vercel GitHub app) | Phase 1, once the Vercel project is linked |
+| `ci / db-test` | pgTAP: RLS, database functions, triggers | Phase 2 |
+| `ci / e2e` | Playwright workflows + axe accessibility on the preview | Phase 2 |
+
+Also tick **"Require branches to be up to date before merging"**, so checks run against the latest `main`.
+
 ---
 
 ## 11. Versioning and Releases
@@ -380,7 +401,7 @@ Everything is documented in the repository, next to the code.
 |---|---|
 | AI-1 | The AI reads `CLAUDE.md` and the docs before any task. |
 | AI-2 | The AI states the requirement IDs it is working on before writing code. |
-| AI-3 | The AI never assumes a business rule. It asks. |
+| ENG-11 | Weekly repository backup | **Not now.** Revisit before go-live. |
 | AI-4 | The AI works on its assigned branch only and never deletes branches, rewrites history, or touches repository settings. |
 | AI-5 | The AI stops at the end of each phase and waits for owner sign-off. |
 | AI-6 | The AI reports test results honestly, including failures. |
