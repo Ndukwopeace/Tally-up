@@ -26,6 +26,16 @@ Technical details the A1 build needed that this document did not spell out. None
 | A-9 | Portals whose milestone has not arrived refuse sign-in with a plain message (`OPEN_PORTALS` in `src/auth/access.ts`, Q-55). | §4.5 |
 | A-10 | Database tests run on a plain Postgres 16 with pgTAP, using a small stand-in for Supabase's `auth` schema (`supabase/tests/stub/`). Migrations follow the Supabase CLI naming (`<timestamp>_<name>.sql`). | §6.7, §16 |
 
+### Proposed in A2c (accepted when the owner approves the A2c pull request)
+
+Technical details the Users build needed. None change business behaviour. Details and reasons: `docs/adr/0003-a2-admin-data.md` (#13 to #19).
+
+| # | Change | Section |
+|---|---|---|
+| A-11 | The admin endpoints are Vercel Functions as Web `Request`/`Response` handlers: `POST /api/admin/users`, `PATCH /api/admin/users/:id`, `POST /api/admin/users/:id/reset-password`. Shared code is in `api/_lib/`. Each call verifies the caller's token with Supabase and requires an active admin profile before acting. | §6.6 |
+| A-12 | The database functions `admin_save_user()` and `admin_record_password_reset()` take the acting admin as an argument and may be executed only by the service role. They check "active admin" again and write the audit log. A new login is created first, and removed again if its profile is refused. | §6.4, §6.6 |
+| A-13 | `SUPABASE_SERVICE_ROLE_KEY` (and the URL) are read only in `api/`. The CI `secrets` check keeps the key out of `src/`, `public/` and `VITE_*` names. | §15 |
+
 This document describes **how** the system is built. It adds no business rules.
 Technical choices not already fixed by the requirements are marked **[PROPOSED]** and listed in Section 17 for approval.
 

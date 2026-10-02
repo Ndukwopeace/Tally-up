@@ -66,6 +66,10 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261002140000_a2b_depots.sql` | A2b Depots, part 1 (table, depot link on accounts) |
 | `20261002140100_a2b_assign_manager.sql` | A2b Depots, part 2 |
 | `20261002140200_a2b_save_depot.sql` | A2b Depots, part 3 (save function) |
+| `20261002150000_a2c_user_phones.sql` | A2c Users, part 1 (phone numbers on accounts) |
+| `20261002150100_a2c_assign_manager_as.sql` | A2c Users, part 2 |
+| `20261002150200_a2c_user_checks.sql` | A2c Users, part 3 (the rules) |
+| `20261002150300_a2c_save_user.sql` | A2c Users, part 4 (save function) |
 
 For each file:
 
@@ -75,6 +79,19 @@ For each file:
 4. If the editor warns that tables are created without Row Level Security, choose **Run without RLS**: every file switches RLS on itself. The other choice inserts extra lines into the query.
 
 Try a new migration on **staging** first, with the pull request's preview link. Run it on **production** after the pull request is merged (DB-3).
+
+### 4a. The server key for Users (A2c)
+
+Creating a login and setting a password need Supabase's **secret** key. It lives only in Vercel and is never in the app or the repository (SEC-4).
+
+Vercel → **tallyup** → **Settings → Environment Variables**. Check that these exist for **Preview** (staging database) and **Production** (production database). The Supabase integration normally creates them:
+
+| Name | Value |
+|---|---|
+| `SUPABASE_URL` | The project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | The project's secret key (Supabase → Project Settings → API Keys, "service_role" or "secret") |
+
+If the secret key is missing, add it by hand, for the right environment only. After adding it, **redeploy** (Deployments → the latest → Redeploy), because functions read it when they start. Users shows "Tally-Up could not be reached" until this is done.
 
 ## 5. Create the first admin (you)
 
