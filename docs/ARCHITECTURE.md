@@ -246,6 +246,8 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/admin/audit` | Audit log |
 | `/admin/notifications` | Notifications |
 | `/admin/settings` | Business rules display (Section 11 of requirements) |
+| `/admin/more` | More tab: Depots, Products, Users, Reports (Q-47) |
+| `/admin/profile` | Profile / My Account (account menu, Q-47) |
 
 ### 4.3 Distributor — `/distributor/*` (role: distributor)
 
@@ -258,7 +260,6 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/distributor/collections/:id/distribute` | Distribute flow (depot → quantities → review → submit → success) |
 | `/distributor/distributions` | Own distributions with receipt status |
 | `/distributor/distributions/:id` | One distribution + depot result |
-| `/distributor/history` | Past collections and distributions |
 | `/distributor/notifications` | Notifications |
 | `/distributor/profile` | Profile, sign out |
 
