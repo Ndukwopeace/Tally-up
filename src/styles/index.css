@@ -1,0 +1,90 @@
+/*
+ * Design tokens and global styles (UI_GUIDELINES §8).
+ *
+ * WHY:  One source for colours, type, spacing, radii and focus, so every screen
+ *       looks the same (N4) and every colour is checked for contrast once.
+ * HOW:  Tailwind v4 `@theme` turns each token into utilities, e.g.
+ *       --color-brand → bg-brand / text-brand.
+ * WHEN: Loaded once by main.tsx.
+ * SECURITY: Static CSS from our own origin only (CSP style-src 'self').
+ *
+ * Contrast (WCAG 1.4.3 text ≥ 4.5:1, 1.4.11 UI ≥ 3:1), measured on white:
+ *   ink #0f172a 17.9:1 · ink-muted #475569 7.6:1 · brand #1d4ed8 6.7:1
+ *   success #15803d 5.0:1 · warning #b45309 5.0:1 · danger #b91c1c 6.5:1
+ *   line-strong #64748b 4.8:1 (input borders)
+ *   Status text on its soft background stays ≥ 4.5:1 (e.g. warning on #fffbeb 4.8:1).
+ */
+@import "tailwindcss";
+
+@theme {
+  /* One sans-serif family (UI_GUIDELINES §8): the phone's own system font, so no font download. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Type scale 12 / 14 / 16 / 20 / 24 / 32 px (§8). Tailwind's 3xl is changed to 32px to match. */
+  --text-3xl: 2rem;
+  --text-3xl--line-height: 1.2;
+
+  /* Colour roles (§8). Red (danger) is for discrepancies and destructive actions only. */
+  --color-brand: #1d4ed8;
+  --color-brand-hover: #1e40af;
+  --color-brand-soft: #eff6ff;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #b91c1c;
+  --color-danger-hover: #991b1b;
+  --color-danger-soft: #fef2f2;
+
+  /* Neutrals */
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-line: #e2e8f0;
+  --color-line-strong: #64748b;
+  --color-surface: #ffffff;
+  --color-canvas: #f1f5f9;
+
+  /* Admin sidebar (dark, as in the wireframes). Text on it: #e2e8f0 on #0f172a = 14.5:1. */
+  --color-sidebar: #0f172a;
+  --color-sidebar-ink: #e2e8f0;
+
+  /* One radius for cards, one for controls (§8). */
+  --radius-card: 0.75rem;
+  --radius-control: 0.5rem;
+}
+
+@layer base {
+  :root {
+    /* Light mode only in v1 (UI-4): better in sunlight. */
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-base text-ink antialiased;
+    /* Mobile body text never below 16px (§8); also stops iOS zooming into inputs. */
+    font-size: 1rem;
+  }
+
+  /* WCAG 2.4.7: a clearly visible focus ring on every interactive element. */
+  :focus-visible {
+    outline: 3px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  /* WCAG 2.4.11: sticky header and bottom tabs must not hide the focused element. */
+  html {
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: 7rem;
+  }
+
+  /* Respect users who ask the system for less motion (spinners, skeleton pulses). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
