@@ -1,6 +1,6 @@
 # Tally-Up — Requirements Document
 
-**Status:** v0.3 — all questions answered; awaiting owner approval to start Phase 1
+**Status:** v0.4 — v0.3 approved; v0.4 records owner decisions Q-37 to Q-42 (early deploy, navigation, IDs, profile)
 **Date:** 2026-10-02
 **Source:** "TALLY-UP — Bakery Distribution Tracking System" specification (58 sections), plus owner answers recorded in Section 12
 
@@ -72,12 +72,12 @@ IDs are stable. Later commits and tests will reference them.
 | AUTH-02 | Accounts are created only by an Admin. |
 | AUTH-03 | Login with **email + password**. |
 | AUTH-04 | "Continue with Google" on the login screen. Google sign-in succeeds only if the Google email matches an active account an Admin already created. Otherwise: "No Tally-Up account exists for this email. Contact your administrator." |
-| AUTH-05 | Until the backend is connected (Phase 7), the Google button shows "Not available yet". The owner creates the Google OAuth client manually; the app reads its settings from environment variables. |
-| AUTH-06 | `/forgot-password` sends a reset email once the backend is connected. Before that it shows "Contact your administrator." Admin can always reset a password (USR-04). |
+| AUTH-05 | The owner creates the Google OAuth client manually and adds it in Supabase. Until that is done, the Google button shows "Not available yet". |
+| AUTH-06 | `/forgot-password` sends a reset email (Supabase, from Phase 2). Admin can always reset a password (USR-04). |
 | AUTH-07 | After login, route by role: Admin → `/admin`, Distributor → `/distributor`, Depot Manager → `/depot`. |
 | AUTH-08 | Route guards block a role from another portal's URLs, including typed URLs. Redirect to own portal. |
 | AUTH-09 | Deactivated users cannot log in, by password or by Google. |
-| AUTH-10 | Every data request is filtered by role and ownership in the data layer, not only in the UI. In Phase 7 these rules become Supabase Row Level Security policies. |
+| AUTH-10 | Every data request is filtered by role and ownership in the data layer, not only in the UI, using Supabase Row Level Security policies from Phase 2. |
 
 ### 5.2 Products (Admin)
 
@@ -234,7 +234,8 @@ IDs are stable. Later commits and tests will reference them.
 |---|---|
 | NFR-01 | Stack: React, TypeScript, Vite, Tailwind CSS, shadcn/ui, React Router, Lucide, TanStack Query. |
 | NFR-02 | Hosting: **Vercel**. Database and auth: **Supabase, added through the Vercel Marketplace integration** (Postgres, Auth with Google provider, Row Level Security, Storage). |
-| NFR-03 | Phases 1–6 run on a mock data layer with realistic seed data. All data access goes through service interfaces. Phase 7 swaps in the Supabase implementation without UI changes. |
+| NFR-03 | All data access goes through service interfaces. From Phase 2 the deployed app uses Supabase, so testers on different phones share one database. A mock implementation of the same interfaces is used only for automated tests and offline local development. |
+| NFR-03a | The app is deployed to Vercel and installable as a PWA from Phase 1, so it can be tested on real phones as each phase lands. Every push to the working branch gets a Vercel preview URL. |
 | NFR-04 | Folder separation: `pages`, `components`, `layouts`, `services`, `hooks`, `types`, `auth`, `config`, `lib`. No single-file app. |
 | NFR-05 | PWA: installable manifest and service worker for the app shell. |
 | NFR-06 | Online only in v1. With no connection, screens show "No connection" and block submits. No fake sync: a write is never shown as saved until the data layer confirms it. |
@@ -248,9 +249,15 @@ IDs are stable. Later commits and tests will reference them.
 
 ## 7. Navigation
 
-**Admin (sidebar):** Dashboard · Collections · Distributions · Discrepancies · Depots · Products · Users · Reports · Notifications · Settings
-**Distributor (bottom):** Dashboard · Collections · Distributions · History · Profile
-**Depot Manager (bottom):** Dashboard · Receipts · History · Profile
+| Portal | Desktop | Phone (PWA) |
+|---|---|---|
+| Admin | Left sidebar, **at most 7 items** | **4 bottom tabs** |
+| Distributor | — (mobile-first) | 5 bottom tabs: Dashboard · Collections · Distributions · History · Profile |
+| Depot Manager | — (mobile-first) | 4 bottom tabs: Dashboard · Receipts · History · Profile |
+
+**Admin navigation contents are not decided yet (NAV-1).** The admin pages that must be reachable are: Dashboard, Collections, Distributions, Discrepancies, Depots, Products, Users, Reports, Notifications, Audit, Settings. The owner will decide which go in the 7 sidebar items and the 4 phone tabs, and how the rest are reached. Until then, nothing is built for admin navigation beyond the layout shell.
+
+**Profile (all roles):** name, email, role, assigned depot (managers), change password, sign out. No App Settings, Help & Support, or About.
 
 Settings (Admin) holds only items from Section 11. Nothing else is invented for it.
 
@@ -312,7 +319,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | `baseUnit` | `Loaf` | Owner confirmed. |
 | `allowDecimalQuantities` | `false` | Owner accepted. |
 | `collectionNumberFormat` | `COL-{seq:5}` global | Spec shows "#001" with no reset rule. |
-| `distributionNumberFormat` | `RCP-{seq:5}` global | Same. |
+| `distributionNumberFormat` | `DIS-{seq:5}` global (e.g. DIS-00018) | Owner chose DIS- (Q-39). One number per hand-over, shown the same to distributor, manager and admin. |
 | `staleCollectionHours` | `24` | When an In Progress collection is flagged to Admin. |
 
 ---
@@ -343,7 +350,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-20 | Whole numbers only? | **Yes.** |
 | Q-21 | Same product in two units on one collection | **Allowed**; same unit twice blocked. (COL-04) |
 | Q-22 | Offline in v1? | **No.** (NFR-06) |
-| Q-23 | Mock data first? | **Yes**, Supabase in Phase 7. (NFR-03) |
+| Q-23 | Mock data first? | ~~Yes, Supabase in Phase 7~~ — **replaced by Q-37**: Supabase from Phase 2. |
 | Q-24 | Export format | **PDF first.** (RPT-04) |
 | Q-25 | Product images | URL field; upload with Supabase Storage. |
 | Q-26 | Admin notified of every distribution? | **No**, only discrepancies. (NOT-05) |
@@ -352,11 +359,23 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-29 | Hand-over small → large unit? | **Yes**, either direction. (DIS-04) |
 | Q-30 | Unit with no conversion | Superseded: loaves-per-unit is now required. (PRD-04) |
 | Q-31 | Google login for unregistered email | **Refused.** (AUTH-04) |
-| Q-32 | Google before backend | Button shows "Not available yet" until Phase 7; owner creates OAuth client. (AUTH-05) |
+| Q-32 | Google before backend | ~~Not available until Phase 7~~ — **replaced by Q-37**: works once the owner adds the OAuth client. (AUTH-05) |
 | Q-33 | Reset email | After backend connected. (AUTH-06) |
 | Q-34 | Which database | **Supabase via Vercel Marketplace.** (NFR-02) |
 | Q-35 | Loaves-per-unit required? | **Yes.** (PRD-04) |
 | Q-36 | Manager mixes units on one line? | **Yes**, e.g. 19 Packs + 5 Loaves. (RCP-06) |
+| Q-37 | Deploy and test early? | **Yes.** Vercel + PWA from Phase 1; Supabase from Phase 2 so all testers share data. Replaces Q-23 and Q-32. (NFR-03, NFR-03a) |
+| Q-38 | Wireframes vs requirements | **Requirements win** where they conflict. |
+| Q-39 | Hand-over number prefix | **DIS-** (Section 11) |
+| Q-40 | Admin navigation | Desktop sidebar max 7 items; phone 4 bottom tabs. Contents decided later (NAV-1). (Section 7) |
+| Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
+| Q-42 | Screens with no wireframe | Designed together when their phase comes. |
+
+### Open items
+
+| # | Item | When |
+|---|---|---|
+| NAV-1 | Which admin pages go in the 7 sidebar items and 4 phone tabs, and how the others are reached | Before Phase 3 (first admin screens) |
 
 ## 13. Delivery Plan
 
@@ -364,14 +383,14 @@ Each phase ends with a commit, a push to the working branch, and owner sign-off 
 
 | Phase | Content | Done when |
 |---|---|---|
-| 0 | This document. | Owner approves it. |
-| 1 | Project scaffold, types, business-rules config, mock data layer, email/password login + route guards, Google button (disabled), three portal layouts with navigation. | You can log in as each role and cannot reach other portals. |
-| 2 | Admin: Products (with loaves-per-unit), Depots, Users. | Master data can be created and deactivated. |
-| 3 | Distributor: Collections, Distributions, mixed units, balances in loaves, over-distribution block. | Spec Section 3 example (800 → 250/300/250) works, plus a Caisse-collected / Pack-distributed case. |
-| 4 | Depot Manager: pending receipts, mixed-unit count, review, lock. | Spec Section 57 workflow works end to end. |
-| 5 | Admin: Dashboard, Today, Collection detail, Discrepancies, Corrections, Audit, Notifications. | Owner can answer the core question from the screen. |
-| 6 | Reports, filters, PDF export, PWA manifest/service worker. | Filtered PDF matches screen. |
-| 7 | Supabase via Vercel: schema, RLS, live auth, Google sign-in, reset email, image upload, CSV export. Deploy on Vercel. | Mock layer swapped, UI unchanged. |
+| 0 | Requirements, architecture, UI rules. | Owner approves them. |
+| 1 | Project scaffold, design tokens, shared components, business-rules config, **PWA (manifest, service worker, install prompt)**, three portal layout shells, **deployed to Vercel**. | Owner opens the Vercel link on a phone and installs the app to the home screen. |
+| 2 | **Supabase via Vercel**: schema, RLS, database functions, seed data, admin user API. Email/password login, forgot password, route guards. Google sign-in once the owner adds the OAuth client. | Owner logs in as each role on a real phone and cannot reach other portals. |
+| 3 | Admin: Products (with loaves-per-unit), Depots, Users. Admin navigation per NAV-1. | Master data can be created and deactivated. |
+| 4 | Distributor: Collections, Distributions, mixed units, balances in loaves, over-distribution block. | Spec Section 3 example (800 → 250/300/250) works, plus a Caisse-collected / Pack-distributed case. |
+| 5 | Depot Manager: pending receipts, mixed-unit count, review, lock. | Spec Section 57 workflow works end to end **across two phones**. |
+| 6 | Admin: Dashboard, Today, Collection detail, Discrepancies, Corrections, Audit, Notifications. | Owner can answer the core question from the screen. |
+| 7 | Reports, filters, PDF export, image upload, CSV export, real-user test, production go-live. | Filtered PDF matches screen; real users complete Section 57 on their own phones. |
 
 ## 14. Working Rules for the Build
 

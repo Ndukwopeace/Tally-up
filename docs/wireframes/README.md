@@ -1,7 +1,7 @@
 # Tally-Up — Proposed Wireframes
 
-**Status:** PROPOSED — supplied by the owner on 2026-10-02. Not yet approved for build.
-**Rule [PROPOSED]:** where a wireframe and `docs/REQUIREMENTS.md` disagree, the requirements win until the owner decides otherwise. Each conflict is listed below for a decision.
+**Status:** Visual direction ACCEPTED 2026-10-02, with the corrections listed below.
+**Rule (owner decision WD-1):** where a wireframe and `docs/REQUIREMENTS.md` disagree, the requirements win. Each conflict is listed below with its fix.
 
 The wireframes set the **visual direction**: layout, density, colour family, card style, icon style, navigation placement. They are not pixel specifications. Some labels in the images are garbled (e.g. "Creribute to Depot", "Colltctions") and will not be copied.
 
@@ -69,12 +69,12 @@ Each item names the screen, what the wireframe shows, the requirement it touches
 
 ---
 
-## Decisions Needed
+## Decisions (owner, 2026-10-02)
 
-| # | Question |
-|---|---|
-| WD-1 | Confirm the rule: requirements win over wireframes where they conflict. |
-| WD-2 | One number per hand-over: prefix `DIS-` or `REC-`? (W-A2) |
-| WD-3 | Admin on mobile: drawer, or bottom nav + "More"? (W-B2) |
-| WD-4 | Profile extras (App Settings, Help & Support, About): remove, or define them? (W-A4) |
-| WD-5 | Missing screens (W-B7): will you supply wireframes, or should they be built in the same style and reviewed? |
+| # | Question | Decision |
+|---|---|---|
+| WD-1 | Requirements vs wireframes | **Requirements win** where they conflict. All W-items above are fixed in the build. |
+| WD-2 | Hand-over number prefix (W-A2) | **DIS-** (e.g. DIS-00018), everywhere. |
+| WD-3 | Admin navigation (W-B1, W-B2) | Desktop: side tabs, **max 7**. Phone: **4 bottom tabs**. Which pages go where: decided later (NAV-1 in requirements). |
+| WD-4 | Profile extras (W-A4) | **Remove** App Settings, Help & Support, About. |
+| WD-5 | Missing screens (W-B7) | Designed together with the owner when their phase comes. |

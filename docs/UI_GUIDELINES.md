@@ -41,7 +41,7 @@ User-centred process for this project:
 | Rule | Tally-Up application |
 |---|---|
 | H-1 | One primary action per screen. Distributor home: **New Collection**. Depot home: **Review receipt**. |
-| H-2 | Bottom navigation has at most 5 items (Distributor 5, Depot 4). |
+| H-2 | Bottom navigation has at most 5 items (Distributor 5, Depot 4, Admin phone 4). Admin desktop sidebar has at most 7 items (Q-40). |
 | H-3 | Pickers show only valid options: active depots only; only units the product supports; only the distributor's In Progress collections. |
 | H-4 | Flows are split into short steps (Select → Quantities → Review → Submit) instead of one long form. |
 | H-5 | Admin filters start collapsed to the 3 most used (date, depot, status); the rest sit behind "More filters". |
@@ -244,11 +244,11 @@ Target: **WCAG 2.2 AA** on every screen. The points below are the ones that matt
 
 | # | Rule |
 |---|---|
-| AD-1 | Left sidebar, top header with page title and date context. |
+| AD-1 | Left sidebar (max 7 items, contents per NAV-1), top header with page title and date context. |
 | AD-2 | Tables: sortable columns, sticky header, right-aligned numbers, pagination at 25 rows. |
 | AD-3 | Every number on a summary links to the records behind it. |
 | AD-4 | Charts only when they answer an operational question; always with a table alternative. Never mix units in one chart (wireframe review W-A1). |
-| AD-5 | Below 1024 px: tables turn into cards; sidebar becomes a drawer (pending WD-3). |
+| AD-5 | Below 1024 px: tables turn into cards; the sidebar is replaced by 4 bottom tabs (Q-40, contents per NAV-1). |
 
 ---
 
@@ -323,4 +323,4 @@ Every screen is checked against this list before it is handed over.
 | UI-3 | Real-user test before go-live (one distributor, one depot manager) | Yes |
 | UI-4 | Dark mode in v1 | No |
 | UI-5 | Initial JS budget | ≤ 250 KB gzipped |
-| UI-6 | Wireframe decisions WD-1 … WD-5 | See `docs/wireframes/README.md` |
+| UI-6 | Wireframe decisions WD-1 … WD-5 | Decided — see `docs/wireframes/README.md` |

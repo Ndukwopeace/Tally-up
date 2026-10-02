@@ -1,8 +1,17 @@
 # Tally-Up — System Architecture
 
-**Status:** v0.1 — APPROVED by owner 2026-10-02 (including T-1 to T-10)
+**Status:** v0.2 — v0.1 APPROVED by owner 2026-10-02 (including T-1 to T-10); v0.2 amendments below follow owner decisions of the same day
 **Date:** 2026-10-02
-**Depends on:** `docs/REQUIREMENTS.md` v0.3. Requirement IDs (e.g. `DIS-06`) refer to that document.
+**Depends on:** `docs/REQUIREMENTS.md` v0.4. Requirement IDs (e.g. `DIS-06`) refer to that document.
+
+### Amendments in v0.2
+
+| # | Change | Reason (owner decision) |
+|---|---|---|
+| A-1 | Supabase is connected in **Phase 2**, not Phase 7. Testers on different phones share one database from Phase 2 onward. | Q-37: deploy and test early across devices |
+| A-2 | The mock backend (Section 7) is kept **only for automated tests and offline local development**. It is not deployed. | Follows A-1 |
+| A-3 | The app is deployed to Vercel and installable as a PWA from **Phase 1**. | Q-37 |
+| A-4 | Google sign-in works as soon as the owner adds the Google OAuth client in Supabase. No "Not available yet" period beyond that. | Follows A-1 |
 
 This document describes **how** the system is built. It adds no business rules.
 Technical choices not already fixed by the requirements are marked **[PROPOSED]** and listed in Section 17 for approval.
@@ -54,7 +63,7 @@ Three parts:
 
 There is no separate custom backend server. The database enforces the rules; the frontend displays them.
 
-Phases 1–6 replace Supabase with a **mock backend** running in the browser (Section 7). The frontend does not know which one it is talking to.
+From Phase 2 the deployed app talks to Supabase. A **mock backend** with the same interfaces (Section 7) is used only for automated tests and offline local development. The frontend does not know which one it is talking to.
 
 ---
 
@@ -90,7 +99,7 @@ flowchart TB
   P --> H[Hooks<br/>TanStack Query wrappers]
   H --> S[Services<br/>interfaces]
   S --> MI[Mock implementation<br/>Phases 1-6]
-  S --> SI[Supabase implementation<br/>Phase 7]
+  S --> SI[Supabase implementation<br/>Phase 2+]
   P & C & H --> DOM[Domain<br/>pure functions: units,<br/>balances, status]
   MI & SI --> DOM
 ```
@@ -130,7 +139,7 @@ src/
   services/
     interfaces/             # CollectionService, DistributionService, ...
     mock/                   # in-browser implementation + seed data
-    supabase/               # Phase 7 implementation
+    supabase/               # live implementation (Phase 2+)
     index.ts                # picks implementation from env
   hooks/
     useCollections.ts
@@ -158,7 +167,7 @@ src/
     export/                 # PDF builders
   i18n/
     en.ts                   # all UI strings (NFR-12)
-api/                        # Vercel Functions (Phase 7)
+api/                        # Vercel Functions (Phase 2+)
   admin/
 supabase/
   migrations/               # SQL, numbered, never edited after merge
@@ -208,8 +217,8 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 |---|---|
 | `/login` | Email + password, Google button |
 | `/forgot-password` | Reset request |
-| `/reset-password` | Set new password from email link (Phase 7) |
-| `/auth/callback` | Google sign-in return (Phase 7) |
+| `/reset-password` | Set new password from email link (Phase 2+) |
+| `/auth/callback` | Google sign-in return (once the owner adds the Google OAuth client) |
 | `/` | Redirects to own portal, or `/login` |
 | `*` | Not found |
 
@@ -300,18 +309,18 @@ sequenceDiagram
 
 - **Role is read from the `profiles` table**, never from data the user can edit (Supabase `user_metadata` is user-editable and is not used for roles).
 - **Public signup is disabled** in Supabase Auth settings. Only Admin-created users exist.
-- **Google sign-in** works for an email that already has an account. Supabase links the Google identity to the existing user by matching verified email. An unknown Google email is refused because signup is disabled (AUTH-04). *This linking behaviour is verified in Phase 7 before Google is switched on.*
+- **Google sign-in** works for an email that already has an account. Supabase links the Google identity to the existing user by matching verified email. An unknown Google email is refused because signup is disabled (AUTH-04). *This linking behaviour is verified in Phase 2 before Google is switched on.*
 - **Creating users** needs the Supabase service-role key, which must never reach the browser. The Admin UI calls `POST /api/admin/users` (Vercel Function). The function checks the caller's JWT, confirms they are an active admin, then creates the auth user and profile.
 - **Password reset by Admin**: `POST /api/admin/users/:id/reset-password`, same checks.
 - **Forgot password**: Supabase sends the email; the link opens `/reset-password`.
 - **Sessions**: Supabase stores the session and refreshes tokens. On deactivation, the next request fails RLS and the app signs the user out.
 
-### 5.3 Mock Auth (Phases 1–6)
+### 5.3 Mock Auth (tests and offline local development only)
 
 - Seeded users, one per role plus extras, with known demo passwords listed in the README.
 - Session stored in `localStorage`.
-- Google button disabled with "Not available yet" (AUTH-05).
-- Same `AuthService` interface as Supabase, so Phase 7 swaps only the implementation.
+- Google button disabled in the mock.
+- Same `AuthService` interface as Supabase. Never deployed.
 
 ---
 
@@ -423,7 +432,7 @@ Every function: verify JWT → load caller profile → require active admin → 
 
 ---
 
-## 7. Mock Backend (Phases 1–6)
+## 7. Mock Backend (tests and offline local development only)
 
 - Implements the same service interfaces as Supabase.
 - Stores data in `localStorage` so it survives a refresh. A "Reset demo data" action restores the seed.
@@ -433,7 +442,7 @@ Every function: verify JWT → load caller profile → require active admin → 
 - Can be set to fail a request on purpose, to test error states.
 - Seed data: Douala depots from the spec (Akwa, Bonaberi, Makepe), the spec's products (Big Bread, Small Bread, Milk Bread) with sample loaves-per-unit, one admin, two distributors, three depot managers, and a few days of history including discrepancies.
 
-The mock is a development tool. It is not shipped as a production mode.
+The mock is a development tool. It is not deployed. The Supabase staging project is loaded with the same seed data (`supabase/seed.sql`) so testers start with realistic records.
 
 ---
 
@@ -451,7 +460,7 @@ Pure TypeScript in `src/domain/`, fully unit-tested. Mirrored in SQL views/funct
 | `receiptLineDifference(recorded, counts)` | REC-02 |
 | `receiptStatus(lines, confirmed)` | RCP-11 |
 
-A shared test fixture runs the spec's Section 3 and Section 57 examples against both the TypeScript and (in Phase 7) SQL versions.
+A shared test fixture runs the spec's Section 3 and Section 57 examples against both the TypeScript and (from Phase 2) SQL versions.
 
 ---
 
@@ -459,7 +468,7 @@ A shared test fixture runs the spec's Section 3 and Section 57 examples against 
 
 - Rows in `notifications`, written by database triggers (mock: by the mock service).
 - Frontend shows an unread count in the header/bottom nav.
-- **Delivery to the screen**: [PROPOSED] Supabase Realtime subscription on the user's own notifications in Phase 7; polling every 30 s in the mock.
+- **Delivery to the screen**: [PROPOSED] Supabase Realtime subscription on the user's own notifications ; polling every 30 s in the mock.
 - All creation goes through one place (trigger / `NotificationService`), so web push can be added later without touching callers (NOT-05).
 
 ---
@@ -516,7 +525,7 @@ Backend functions return error codes (e.g. `OVER_DISTRIBUTION`, `ALREADY_CONFIRM
 - Browser gets only the Supabase URL and anon key, which are safe to expose because RLS protects data.
 - No secrets in the repository. `.env.example` lists variable names only.
 - Security headers set in `vercel.json` (Content-Security-Policy, X-Frame-Options, Referrer-Policy).
-- Product image upload (Phase 7) limited to images, size-capped, admin-only bucket policy.
+- Product image upload (Phase 3) limited to images, size-capped, admin-only bucket policy.
 
 ---
 
@@ -524,8 +533,8 @@ Backend functions return error codes (e.g. `OVER_DISTRIBUTION`, `ALREADY_CONFIRM
 
 | Environment | Frontend | Backend | Trigger |
 |---|---|---|---|
-| Local | `npm run dev` | Mock (Phases 1–6) or local Supabase (Phase 7+) | Developer |
-| Preview | Vercel preview URL | Mock, or a Supabase staging project | Every push to a branch |
+| Local | `npm run dev` | Mock (offline) or Supabase staging | Developer |
+| Preview | Vercel preview URL (installable PWA) | Supabase staging project | Every push to a branch, from Phase 1 |
 | Production | Vercel production domain | Supabase production project | Merge to main |
 
 Environment variables:
@@ -549,7 +558,7 @@ The Vercel Marketplace Supabase integration fills the Supabase variables automat
 | Unit | Vitest | `domain/` functions: conversions, balances, status, every example from the spec |
 | Component | React Testing Library | QuantityInput, review screens, guards |
 | Service | Vitest | Mock backend rules: role filtering, over-distribution, lock, corrections |
-| Database | SQL tests (Phase 7) | RLS: each role tries to read/write what it must not |
+| Database | SQL tests (from Phase 2) | RLS: each role tries to read/write what it must not |
 | End-to-end | Playwright | Login per role; spec Section 57 workflow from collection to discrepancy on admin screen |
 
 [PROPOSED] GitHub Actions on every push: typecheck, lint, unit tests, build. A phase is not handed over unless these pass.
