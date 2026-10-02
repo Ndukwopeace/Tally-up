@@ -40,6 +40,11 @@ create table public.products (
 -- RULE Q-57h: unique ignoring letter case (BB-01 and bb-01 are the same code).
 create unique index products_code_unique on public.products (lower(code));
 
+-- SECURITY: Row Level Security on from the start; the read policies are below.
+-- (Placed right after the table so the Supabase SQL editor sees it and does not
+-- offer to add its own lines, which would break the function further down.)
+alter table public.products enable row level security;
+
 -- ---------------------------------------------------------------------------
 -- product_units (PRD-03, PRD-04)
 -- ---------------------------------------------------------------------------
@@ -55,6 +60,9 @@ create table public.product_units (
   -- RULE PRD-04: a Loaf is one loaf.
   check (unit <> 'Loaf' or loaves_per_unit = 1)
 );
+
+-- SECURITY: Row Level Security on from the start; the read policy is below.
+alter table public.product_units enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- admin_save_product: create (product_id null) or edit a product.
@@ -164,8 +172,7 @@ $$;
 -- ---------------------------------------------------------------------------
 -- Row Level Security (ARCHITECTURE §6.5)
 -- ---------------------------------------------------------------------------
-alter table public.products enable row level security;
-alter table public.product_units enable row level security;
+-- (RLS itself was switched on right after each table was created.)
 
 -- Admins: everything. Depot managers: everything (their receipts may list a
 -- product deactivated since). Distributors: active products only, the ones
