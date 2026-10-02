@@ -31,7 +31,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # initdb refuses to run as root, so a root shell (e.g. a container) re-runs this
 # script as the `postgres` system user, which the Postgres package creates.
-if [ "$(id -u)" -eq 0 ]; then
+if [[ "$(id -u)" -eq 0 ]]; then
   exec su postgres -s /bin/bash -c "PG_BIN='$PG_BIN' bash '$0'"
 fi
 
