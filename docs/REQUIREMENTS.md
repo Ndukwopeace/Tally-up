@@ -370,6 +370,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-40 | Admin navigation | Desktop sidebar max 7 items; phone 4 bottom tabs. Contents decided later (NAV-1). (Section 7) |
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their phase comes. |
+| Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Phase 2. |
 
 ### Open items
 

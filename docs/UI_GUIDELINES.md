@@ -1,6 +1,6 @@
 # Tally-Up — User Interface Rules
 
-**Status:** DRAFT v0.1 — awaiting owner review
+**Status:** v0.1 — APPROVED by owner 2026-10-02 (UI-1 to UI-6 accepted)
 **Date:** 2026-10-02
 **Depends on:** `docs/REQUIREMENTS.md` v0.3, `docs/ARCHITECTURE.md`, `docs/wireframes/`
 
@@ -314,9 +314,9 @@ Every screen is checked against this list before it is handed over.
 
 ---
 
-## 12. Decisions Needed
+## 12. Decisions (all accepted by owner 2026-10-02)
 
-| # | Question | Proposal |
+| # | Question | Decision |
 |---|---|---|
 | UI-1 | Minimum touch target | 48 × 48 px |
 | UI-2 | Accessibility target | WCAG 2.2 AA |
