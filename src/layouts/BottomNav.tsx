@@ -32,7 +32,7 @@ function isActive(pathname: string, item: NavItem): boolean {
   return item.end ? pathname === item.to : isUnder(pathname, item.to);
 }
 
-export function BottomNav({ items }: { items: readonly NavItem[] }) {
+export function BottomNav({ items }: Readonly<{ items: readonly NavItem[] }>) {
   const { pathname } = useLocation();
 
   return (

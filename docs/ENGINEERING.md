@@ -240,6 +240,7 @@ Coverage is a floor, not a goal. A test that asserts nothing doesn't count.
 | Lint | ESLint with TypeScript, React, React Hooks, jsx-a11y rules. Zero warnings allowed in CI. |
 | Format | Prettier, run on save and in CI. No style debates. |
 | Imports | Absolute imports via `@/` alias. Order enforced by lint. |
+| React props | Component props are typed `Readonly<…>`, so a component can never change what it was given (SonarQube rule S6759). |
 | Naming | Files: `PascalCase.tsx` for components, `camelCase.ts` otherwise. Types/interfaces `PascalCase`. Constants `UPPER_SNAKE_CASE`. SQL: `snake_case`. |
 | Errors | Typed error codes (`OVER_DISTRIBUTION`, `ALREADY_CONFIRMED`), mapped to messages in `i18n/en.ts`. |
 | Logging | No `console.log` in committed code. Errors go through one `logger` module (prints in development; production sink decided later). Never log passwords, tokens, or personal data. |

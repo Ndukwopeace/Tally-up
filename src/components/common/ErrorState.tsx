@@ -21,7 +21,7 @@ export interface ErrorStateProps {
   onRetry: () => void;
 }
 
-export function ErrorState({ message, onRetry }: ErrorStateProps) {
+export function ErrorState({ message, onRetry }: Readonly<ErrorStateProps>) {
   return (
     <div
       role="alert"

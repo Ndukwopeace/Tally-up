@@ -52,7 +52,7 @@ function renderShape(shape: Shape, index: number) {
   }
 }
 
-export function AppLogo({ tone = "onLight" }: { tone?: "onLight" | "onDark" }) {
+export function AppLogo({ tone = "onLight" }: Readonly<{ tone?: "onLight" | "onDark" }>) {
   return (
     <span className="inline-flex items-center gap-2 text-xl font-extrabold tracking-tight">
       {/* Decorative: the wordmark next to it is the accessible name. */}

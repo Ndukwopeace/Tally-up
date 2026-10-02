@@ -13,7 +13,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children }: Readonly<{ children: ReactNode }>) {
   // useState keeps one client per page load, even if React re-renders this component.
   const [queryClient] = useState(
     () =>

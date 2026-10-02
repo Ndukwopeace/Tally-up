@@ -23,7 +23,7 @@ export interface AccountMenuProps {
   signOutHref: string;
 }
 
-export function AccountMenu({ profileHref, signOutHref }: AccountMenuProps) {
+export function AccountMenu({ profileHref, signOutHref }: Readonly<AccountMenuProps>) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);

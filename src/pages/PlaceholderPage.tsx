@@ -10,7 +10,7 @@ import { PageTitle } from "./PageTitle";
 
 import { ComingSoon } from "@/components/common/ComingSoon";
 
-export function PlaceholderPage({ title }: { title: string }) {
+export function PlaceholderPage({ title }: Readonly<{ title: string }>) {
   return (
     <>
       <PageTitle title={title} />

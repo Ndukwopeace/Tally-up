@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from "react-router";
 
 import { en } from "@/i18n/en";
 
-export function BackButton({ fallback }: { fallback: string }) {
+export function BackButton({ fallback }: Readonly<{ fallback: string }>) {
   const navigate = useNavigate();
   const location = useLocation();
 

@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 
 import { en } from "@/i18n/en";
 
-export function PageTitle({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
+export function PageTitle({ title, subtitle }: Readonly<{ title: string; subtitle?: ReactNode }>) {
   return (
     <div className="mb-6">
       <title>{`${title} · ${en.app.name}`}</title>

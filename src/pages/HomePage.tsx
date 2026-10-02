@@ -12,7 +12,7 @@ import { PageTitle } from "./PageTitle";
 import { ComingSoon } from "@/components/common/ComingSoon";
 import { formatToday } from "@/lib/format";
 
-export function HomePage({ title }: { title: string }) {
+export function HomePage({ title }: Readonly<{ title: string }>) {
   return (
     <>
       <PageTitle title={title} subtitle={<span data-testid="today">{formatToday()}</span>} />

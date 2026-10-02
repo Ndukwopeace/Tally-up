@@ -41,7 +41,7 @@ export function MobilePortalLayout({
   notificationsHref,
   navItems,
   account,
-}: MobilePortalLayoutProps) {
+}: Readonly<MobilePortalLayoutProps>) {
   // The deepest matched route decides whether Back is shown.
   const matches = useMatches();
   const handle = matches.at(-1)?.handle as RouteHandle | undefined;

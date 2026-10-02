@@ -19,7 +19,7 @@ export interface EmptyStateProps {
   action?: ReactNode;
 }
 
-export function EmptyState({ title, description, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action }: Readonly<EmptyStateProps>) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface px-6 py-10 text-center shadow-sm">
       <Inbox aria-hidden="true" className="size-10 text-ink-muted" />

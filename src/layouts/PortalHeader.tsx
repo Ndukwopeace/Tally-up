@@ -32,7 +32,13 @@ export interface PortalHeaderProps {
   account?: AccountMenuProps;
 }
 
-export function PortalHeader({ homeHref, homeLabel, notificationsHref, backTo, account }: PortalHeaderProps) {
+export function PortalHeader({
+  homeHref,
+  homeLabel,
+  notificationsHref,
+  backTo,
+  account,
+}: Readonly<PortalHeaderProps>) {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex min-h-16 w-full max-w-xl items-center justify-between gap-2 pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]">
