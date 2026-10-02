@@ -11,6 +11,7 @@
  * SECURITY: Display only; numbers are checked by domain/phone.ts and again by the database.
  */
 import { Plus, X } from "lucide-react";
+import { useState } from "react";
 
 import { TextField } from "./TextField";
 
@@ -32,14 +33,25 @@ export function PhoneListField({
   onValuesChange,
   errors = {},
 }: Readonly<PhoneListFieldProps>) {
+  // Each row gets a stable key, so removing a middle row does not hand its
+  // field state to the row below it. Kept beside the values, not inside them,
+  // so callers still work with a plain string[].
+  const [rowKeys, setRowKeys] = useState<number[]>(() => values.map((_, position) => position));
+  const [nextKey, setNextKey] = useState(values.length);
+  // Reconcile with the values: a form reset or a loaded record changes the count from outside.
+  if (rowKeys.length !== values.length) {
+    const fresh = Array.from({ length: Math.max(values.length - rowKeys.length, 0) }, (_, k) => nextKey + k);
+    setRowKeys([...rowKeys, ...fresh].slice(0, values.length));
+    setNextKey(nextKey + fresh.length);
+  }
+
   return (
     // min-w-0: a fieldset otherwise refuses to shrink and can widen the page.
     <fieldset className="flex min-w-0 flex-col gap-3">
       <legend className="text-base font-semibold text-ink">{en.phones.legend}</legend>
       <p className="text-sm text-ink-muted">{en.phones.hint}</p>
       {values.map((value, index) => (
-        // Rows have no stable id; the index is the row's identity (rows are only added at the end or removed).
-        <div key={index} className="flex items-end gap-2">
+        <div key={rowKeys[index] ?? index} className="flex items-end gap-2">
           <div className="min-w-0 flex-1">
             <TextField
               id={`${idPrefix}-${String(index + 1)}`}
@@ -60,6 +72,8 @@ export function PhoneListField({
               size="icon"
               aria-label={en.phones.remove(index + 1)}
               onClick={() => {
+                // Drop this row's key too, so the keys stay in step with the values.
+                setRowKeys(rowKeys.filter((_, position) => position !== index));
                 onValuesChange(values.filter((_, position) => position !== index));
               }}
               className={errors[index] ? "mb-7" : undefined}
