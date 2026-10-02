@@ -3,9 +3,9 @@
  *
  * WHY:  Spec §44 / UI_GUIDELINES §6: one-handed use, bottom navigation, clear
  *       connection state. One frame for every portal keeps them consistent (N4).
- * HOW:  Skip link → header (Back + logo, bell, account) → connection banner →
+ * HOW:  Skip link → header (logo, bell, account) → connection banner →
  *       page content (<Outlet/>) → fixed bottom tabs. The current route may set
- *       `handle.backTo` (its parent page); the header then shows Back.
+ *       `handle.backTo`; the page then starts with a Back link (Q-56).
  *       Content gets bottom padding so the fixed tabs never cover the last field
  *       or a focused input (WCAG 2.4.11).
  * WHEN: Wraps every /admin/*, /distributor/* and /depot/* page.
@@ -14,6 +14,7 @@
 import { Outlet, useMatches } from "react-router";
 
 import type { AccountMenuProps } from "./AccountMenu";
+import { BackButton } from "./BackButton";
 import { BottomNav } from "./BottomNav";
 import { PortalHeader } from "./PortalHeader";
 import { SkipLink } from "./SkipLink";
@@ -23,9 +24,9 @@ import { ConnectionBanner } from "@/components/common/ConnectionBanner";
 
 /** Optional data a route can attach (React Router `handle`) to shape the frame. */
 export interface RouteHandle {
-  /** Parent page; when set, the header shows a Back arrow (every portal screen sets it, Q-53). */
+  /** Where Back goes; no Back when undefined (Home and tab screens, Q-56). */
   backTo?: string;
-  /** Tab screens: Back always goes to `backTo` rather than one step back in history. */
+  /** Pages inside a tab: Back always goes to `backTo`, so it never leaves the tab. */
   backToParentOnly?: boolean;
 }
 
@@ -55,8 +56,6 @@ export function MobilePortalLayout({
         homeHref={homeHref}
         homeLabel={homeLabel}
         notificationsHref={notificationsHref}
-        backTo={handle?.backTo}
-        backToParentOnly={handle?.backToParentOnly}
         account={account}
       />
       <ConnectionBanner />
@@ -65,6 +64,7 @@ export function MobilePortalLayout({
         tabIndex={-1}
         className="mx-auto w-full max-w-xl flex-1 pt-6 pr-[max(1rem,env(safe-area-inset-right))] pb-28 pl-[max(1rem,env(safe-area-inset-left))] outline-none"
       >
+        {handle?.backTo ? <BackButton fallback={handle.backTo} parentOnly={handle.backToParentOnly} /> : null}
         <Outlet />
       </main>
       <BottomNav items={navItems} />

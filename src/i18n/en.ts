@@ -166,13 +166,9 @@ export const en = {
     } satisfies Record<AuthErrorCode, string>,
   },
 
-  // Sign-out confirmation (Back on Home, §7).
+  // Shown on Sign Out while the session ends (Q-56: every action shows progress).
   signOut: {
-    title: "Sign out?",
-    body: "You will need your email and password to sign in again.",
-    confirm: "Sign Out",
     signingOut: "Signing out…",
-    cancel: "Stay signed in",
   },
 
   // Profile / My Account (§7: name, email, role, change password, sign out).

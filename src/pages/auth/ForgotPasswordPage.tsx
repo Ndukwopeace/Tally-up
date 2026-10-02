@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title={en.auth.forgotTitle} backTo="/login">
+    <AuthLayout title={en.auth.forgotTitle}>
       <div>
         <h1 className="text-2xl font-bold text-ink">{en.auth.forgotTitle}</h1>
         {sentTo ? null : <p className="mt-1 text-base text-ink-muted">{en.auth.forgotIntro}</p>}

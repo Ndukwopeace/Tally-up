@@ -1,10 +1,10 @@
 /**
- * Tests for Profile / My Account and the "Sign out?" page.
+ * Tests for Profile / My Account and signing out.
  *
  * Rules under test:
  *  - REQUIREMENTS §7 Profile: name, email, role, change password, sign out.
- *  - Q-47: Sign Out from the account menu ends the session.
- *  - Q-53: Back on Home leads to "Sign out?"; "Stay signed in" returns.
+ *  - Q-56: Sign Out acts at once (no confirmation page) and shows
+ *    "Signing out…" while it works; afterwards Back cannot reopen the portal.
  */
 import { MOCK_PASSWORD } from "../../tests/helpers/mockPassword";
 import { screen, waitFor } from "@testing-library/react";
@@ -38,34 +38,22 @@ describe("Profile / My Account", () => {
     expect(screen.getByLabelText("New password")).toHaveValue("");
   });
 
-  it("offers Sign Out, which asks for confirmation", async () => {
-    const { router } = renderRoutes("/admin/profile", { signedInAs: admin.id });
-    await userEvent.click(await screen.findByRole("link", { name: "Sign Out" }));
-    expect(router.state.location.pathname).toBe("/admin/sign-out");
-  });
-});
-
-describe("Sign out?", () => {
-  it("signs out, opens the login page and leaves no way back into the portal", async () => {
-    const { router, service } = renderRoutes("/admin/sign-out", {
-      signedInAs: admin.id,
-      history: ["/admin"],
-    });
+  it("Q-56: Sign Out signs out at once and opens the login page", async () => {
+    const { router, service } = renderRoutes("/admin/profile", { signedInAs: admin.id, history: ["/admin"] });
     await userEvent.click(await screen.findByRole("button", { name: "Sign Out" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/login");
     expect(await service.getAccount()).toBeNull();
-    // Even going back in history ends on the login page, because the portal is guarded.
+    // Going back in history ends on the login page too, because the portal is guarded.
     await router.navigate(-1);
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/login");
     });
-    expect(screen.getByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
   });
 
-  it("shows Signing out… while it works", async () => {
+  it("Q-56: shows Signing out… while it works", async () => {
     const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
-    renderRoutes("/admin/sign-out", { service });
+    renderRoutes("/admin/profile", { service });
     const button = await screen.findByRole("button", { name: "Sign Out" });
     const release = service.holdNextCall();
     await userEvent.click(button);
@@ -73,26 +61,29 @@ describe("Sign out?", () => {
     release();
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
   });
+});
 
-  it("'Stay signed in' returns to Home", async () => {
-    const { router } = renderRoutes("/admin/sign-out", { signedInAs: admin.id });
-    await userEvent.click(await screen.findByRole("link", { name: "Stay signed in" }));
-    expect(router.state.location.pathname).toBe("/admin");
-  });
-
-  it("Back returns to where the user came from", async () => {
-    const { router } = renderRoutes("/admin/sign-out", { signedInAs: admin.id, history: ["/admin/more"] });
-    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/admin/more");
-  });
-
-  it("after signing in again, never lands back on the sign-out page", async () => {
-    const { router } = renderRoutes("/admin/sign-out");
+describe("Sign Out in the account menu", () => {
+  it("Q-56: shows Signing out… in the menu, then the login page", async () => {
+    const service = new MockAuthService({ password: MOCK_PASSWORD, signedInAs: admin.id });
+    renderRoutes("/admin", { service });
+    await userEvent.click(await screen.findByRole("button", { name: "Account" }));
+    const release = service.holdNextCall();
+    await userEvent.click(screen.getByRole("button", { name: "Sign Out" }));
+    expect(screen.getByRole("button", { name: "Signing out…" })).toHaveAttribute("aria-busy", "true");
+    release();
     expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
-    await userEvent.type(screen.getByLabelText("Email"), admin.email);
+  });
+
+  it("after signing in again, returns to the page the user was on (same account)", async () => {
+    const { router } = renderRoutes("/admin/profile", { signedInAs: admin.id });
+    await userEvent.click(await screen.findByRole("button", { name: "Sign Out" }));
+    await userEvent.type(await screen.findByLabelText("Email"), admin.email);
     await userEvent.type(screen.getByLabelText("Password"), MOCK_PASSWORD);
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Home" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/admin");
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Profile / My Account" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/admin/profile");
   });
 });

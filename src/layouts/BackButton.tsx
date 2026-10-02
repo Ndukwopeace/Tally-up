@@ -1,18 +1,22 @@
 /**
- * "Back" arrow shown in the header of every screen (Q-50, Q-53).
+ * "Back" link at the top of a page inside a tab (Q-56).
  *
- * WHY:  An installed app on iPhone has no browser or system Back button, so every
- *       screen needs a visible way back (N3, user control and freedom).
- * HOW:  Two modes:
- *       - Default (pages inside a tab): go back one step if the user arrived from
- *         another page in the app; if the page was opened directly (a link, a
- *         refresh, the first page after install), go up to the parent page instead
- *         of leaving the app.
- *       - `parentOnly` (tab screens): always go to the parent (the portal's home).
- *         Tabs replace history instead of adding to it (Q-50), so "one step back"
- *         from a tab would skip the home screen; going to the parent is predictable.
- * WHEN: Rendered by PortalHeader (from the route's `handle.backTo`) and by the
- *       Page not found screen.
+ * WHY:  An installed app on iPhone has no browser Back button, so a page opened
+ *       inside a tab (More → Depots, the bell, Profile) needs a visible way back.
+ *       The owner decided (Q-56) that Back:
+ *       - sits with the page content, not beside the logo, so the two are never
+ *         confused (Fitts: no small, crowded targets in the corner);
+ *       - only moves back *within* the tab, never to another tab;
+ *       - never signs out (tab screens and Home have no Back at all).
+ * HOW:  An arrow and the word "Back" as one large target (48px), above the page
+ *       title. Two modes:
+ *       - `parentOnly` (pages inside a tab, e.g. Depots): always go to the parent
+ *         page in the same tab (More). History could hold another tab, so it is
+ *         not used.
+ *       - default (pages opened from the header: Profile, Notifications): return
+ *         to the page they were opened from; when opened directly (link, refresh),
+ *         go to the portal home instead of leaving the app.
+ * WHEN: Rendered by MobilePortalLayout when the route declares `handle.backTo`.
  * SECURITY: Navigation only; the parent path comes from the route table, not from user input.
  */
 import { ArrowLeft } from "lucide-react";
@@ -35,7 +39,6 @@ export function BackButton({
   return (
     <button
       type="button"
-      aria-label={en.nav.back}
       onClick={() => {
         if (goToParent) {
           void navigate(fallback);
@@ -43,9 +46,10 @@ export function BackButton({
           void navigate(-1);
         }
       }}
-      className="-ml-2 inline-flex size-12 shrink-0 items-center justify-center rounded-full text-ink hover:bg-canvas"
+      className="-ml-3 mb-2 inline-flex min-h-12 items-center gap-2 rounded-control px-3 text-base font-semibold text-brand hover:bg-brand-soft active:bg-brand-soft"
     >
-      <ArrowLeft aria-hidden="true" className="size-6" />
+      <ArrowLeft aria-hidden="true" className="size-5" />
+      {en.nav.back}
     </button>
   );
 }

@@ -85,8 +85,9 @@ Open the Vercel preview link from the pull request.
 | Wrong password | "Wrong email or password." |
 | Your email and password | The admin Home |
 | Profile (account menu) | Your name, email, role "Admin" |
-| Back arrow on Home | "Sign out?" |
-| Sign Out | The login page; Back does not reopen the admin screens |
+| Home and the tabs | No Back arrow |
+| More → Depots → Back | Back to More (never another tab) |
+| Sign Out (account menu) | "Signing out…", then the login page; Back does not reopen the admin screens |
 | Forgot password with your email | An email arrives; its link opens "Choose a new password" |
 | Type `/depot` in the address bar while signed in | You stay in the admin portal |
 

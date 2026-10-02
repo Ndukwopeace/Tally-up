@@ -5,8 +5,8 @@
  *       and keeps /admin/*, /distributor/* and /depot/* separate (spec §38).
  * HOW:  React Router route objects. Each portal layout is loaded on demand
  *       (`lazy`), so a distributor's phone never downloads admin code (PERF-2).
- *       Every portal screen sets `handle.backTo`, so the header always shows a
- *       Back arrow (Q-50, Q-53). Unbuilt screens show
+ *       Pages inside a tab set `handle.backTo`, so they start with a Back link;
+ *       Home and tab screens have none (Q-56). Unbuilt screens show
  *       "Coming soon" under their real title. Public pages (login, forgot and
  *       reset password) sit outside the portals (ARCHITECTURE §4.1).
  * WHEN: Used by App.tsx (browser router) and router.test.tsx (memory router).
@@ -31,34 +31,31 @@ import { HomePage } from "@/pages/HomePage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import { ProfilePage } from "@/pages/ProfilePage";
-import { SignOutPage } from "@/pages/SignOutPage";
 
-// RULE Q-53: every portal screen has a Back arrow. Four kinds of screen:
+// RULE Q-56: Back only moves back inside a tab, sits below the header (away from
+// the logo) and never signs out. Four kinds of screen:
 
-// A portal's home tab. There is nothing earlier in the app to go back to, so
-// Back asks "Sign out?" (the portal's sign-out page) instead of leaving silently.
-function homeRoute(title: string, home: string): RouteObject {
-  const handle: RouteHandle = { backTo: `${home}/sign-out`, backToParentOnly: true };
-  return { index: true, element: <HomePage title={title} />, handle };
+// A portal's home tab: no Back (nothing earlier inside the tab).
+function homeRoute(title: string): RouteObject {
+  return { index: true, element: <HomePage title={title} /> };
 }
 
-// The "Sign out?" page. Back returns to where the user came from (usually Home).
-function signOutRoute(home: string): RouteObject {
-  const handle: RouteHandle = { backTo: home };
-  return { path: "sign-out", element: <SignOutPage />, handle };
+// Any other bottom tab: no Back. Moving between tabs is done with the tabs themselves.
+function tabRoute(path: string, element: ReactElement): RouteObject {
+  return { path, element };
 }
 
-// Any other bottom tab. Back always goes to the portal's home, because tabs do not
-// add history (Q-50) and "one step back" would skip the home screen.
-function tabRoute(path: string, home: string, element: ReactElement): RouteObject {
-  const handle: RouteHandle = { backTo: home, backToParentOnly: true };
-  return { path, element, handle };
-}
-
-// A page inside a tab (from More, the bell or the account menu); "Coming soon" unless
-// `element` is given. Back goes to the previous page, or to `parent` when opened directly.
+// A page inside a tab (More → Depots, …); "Coming soon" unless `element` is given.
+// Back always returns to `parent` in the same tab, never to another tab.
 function subPage(path: string, title: string, parent: string, element?: ReactElement): RouteObject {
-  const handle: RouteHandle = { backTo: parent };
+  const handle: RouteHandle = { backTo: parent, backToParentOnly: true };
+  return { path, element: element ?? <PlaceholderPage title={title} />, handle };
+}
+
+// A page opened from the header (bell, account menu). Back returns to the page it was
+// opened from; opened directly (link, refresh) it goes to the portal home.
+function headerPage(path: string, title: string, home: string, element?: ReactElement): RouteObject {
+  const handle: RouteHandle = { backTo: home };
   return { path, element: element ?? <PlaceholderPage title={title} />, handle };
 }
 
@@ -82,19 +79,18 @@ export const routes: RouteObject[] = [
           {
             lazy: async () => ({ Component: (await import("@/layouts/AdminLayout")).default }),
             children: [
-              homeRoute(en.nav.home, "/admin"),
-              tabRoute("collections", "/admin", <PlaceholderPage title={en.nav.collections} />),
-              tabRoute("distributions", "/admin", <PlaceholderPage title={en.nav.distributions} />),
-              tabRoute("more", "/admin", <AdminMorePage />),
+              homeRoute(en.nav.home),
+              tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
+              tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
+              tabRoute("more", <AdminMorePage />),
               subPage("depots", en.nav.depots, "/admin/more"),
               subPage("products", en.nav.products, "/admin/more"),
               subPage("users", en.nav.users, "/admin/more"),
               subPage("reports", en.nav.reports, "/admin/more"),
               subPage("audit", en.nav.audit, "/admin/more"),
               subPage("settings", en.nav.settings, "/admin/more"),
-              subPage("profile", en.nav.profileAccount, "/admin", <ProfilePage />),
-              subPage("notifications", en.nav.notifications, "/admin"),
-              signOutRoute("/admin"),
+              headerPage("profile", en.nav.profileAccount, "/admin", <ProfilePage />),
+              headerPage("notifications", en.nav.notifications, "/admin"),
             ],
           },
         ],
@@ -108,12 +104,11 @@ export const routes: RouteObject[] = [
           {
             lazy: async () => ({ Component: (await import("@/layouts/DistributorLayout")).default }),
             children: [
-              homeRoute(en.nav.dashboard, "/distributor"),
-              tabRoute("collections", "/distributor", <PlaceholderPage title={en.nav.collections} />),
-              tabRoute("distributions", "/distributor", <PlaceholderPage title={en.nav.distributions} />),
-              tabRoute("profile", "/distributor", <PlaceholderPage title={en.nav.profile} />),
-              subPage("notifications", en.nav.notifications, "/distributor"),
-              signOutRoute("/distributor"),
+              homeRoute(en.nav.dashboard),
+              tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
+              tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
+              tabRoute("profile", <PlaceholderPage title={en.nav.profile} />),
+              headerPage("notifications", en.nav.notifications, "/distributor"),
             ],
           },
         ],
@@ -127,12 +122,11 @@ export const routes: RouteObject[] = [
           {
             lazy: async () => ({ Component: (await import("@/layouts/DepotLayout")).default }),
             children: [
-              homeRoute(en.nav.dashboard, "/depot"),
-              tabRoute("receipts", "/depot", <PlaceholderPage title={en.nav.receipts} />),
-              tabRoute("history", "/depot", <PlaceholderPage title={en.nav.history} />),
-              tabRoute("profile", "/depot", <PlaceholderPage title={en.nav.profile} />),
-              subPage("notifications", en.nav.notifications, "/depot"),
-              signOutRoute("/depot"),
+              homeRoute(en.nav.dashboard),
+              tabRoute("receipts", <PlaceholderPage title={en.nav.receipts} />),
+              tabRoute("history", <PlaceholderPage title={en.nav.history} />),
+              tabRoute("profile", <PlaceholderPage title={en.nav.profile} />),
+              headerPage("notifications", en.nav.notifications, "/depot"),
             ],
           },
         ],

@@ -19,8 +19,7 @@ export default function AdminLayout() {
       homeLabel={en.nav.home}
       notificationsHref="/admin/notifications"
       navItems={ADMIN_NAV}
-      // Sign Out opens the "Sign out?" page, the one place that ends the session.
-      account={{ profileHref: "/admin/profile", signOutHref: "/admin/sign-out" }}
+      account={{ profileHref: "/admin/profile" }}
     />
   );
 }

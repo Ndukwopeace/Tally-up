@@ -40,7 +40,7 @@ export function ResetPasswordPage() {
 
   if (state.status === "signed_out") {
     return (
-      <AuthLayout title={en.auth.linkExpiredTitle} backTo="/login">
+      <AuthLayout title={en.auth.linkExpiredTitle}>
         <div>
           <h1 className="text-2xl font-bold text-ink">{en.auth.linkExpiredTitle}</h1>
           {state.notice ? null : <p className="mt-1 text-base text-ink-muted">{en.auth.linkExpiredBody}</p>}
@@ -54,7 +54,7 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout title={en.auth.resetTitle} backTo="/">
+    <AuthLayout title={en.auth.resetTitle}>
       <h1 className="text-2xl font-bold text-ink">{en.auth.resetTitle}</h1>
       {saved ? (
         <>

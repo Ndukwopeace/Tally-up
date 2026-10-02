@@ -1,6 +1,6 @@
 # Tally-Up — Requirements Document
 
-**Status:** v0.5 — v0.4 approved; v0.5 records owner decision Q-55 (milestones per role) and A1 open items BACK-1, SMTP-1
+**Status:** v0.5 — v0.4 approved; v0.5 records owner decisions Q-55 (milestones per role) and Q-56 (Back and feedback), and open item SMTP-1
 **Date:** 2026-10-02
 **Source:** "TALLY-UP — Bakery Distribution Tracking System" specification (58 sections), plus owner answers recorded in Section 12
 
@@ -270,11 +270,18 @@ All three portals are built **phone-first** (Q-48). An admin desktop layout come
 
 **Distributor history (Q-46):** past records live inside Collections and Distributions (with a date filter); there is no separate History tab.
 
-**Back navigation (Q-50, Q-53):** **every screen** shows a Back arrow, because an installed app on iPhone has no browser or system Back button.
-- Pages inside a tab (Depots, Profile, Notifications, …): back to the previous page, or to their parent page when opened directly.
-- Tab screens (Collections, Distributions, More, Receipts, …): back to the portal's home (tabs do not add history, so "one step back" would skip home).
-- Home / Dashboard: there is nothing earlier in the app, so Back opens **"Sign out?"** (Sign Out / Stay signed in). Set in A1; the account menu's Sign Out opens the same page. Awaiting owner review on the preview (BACK-1).
-- Page not found: back to the previous page or the start page. The logo always returns to the portal's home. Switching tabs does not add browser history, so a back-swipe does not walk through tabs, and sideways swipes do not trigger page navigation where the browser allows turning it off.
+**Back navigation (Q-50, Q-56):** an installed app on iPhone has no browser Back button, so pages inside a tab have a Back link. Owner rules (Q-56):
+- Back sits with the page content, below the header, **never beside the logo**.
+- Back **only moves back inside the tab**. It never switches tabs; tabs are changed with the tabs.
+- Back **never signs out**. Home and the tab screens (Collections, Distributions, More, Receipts, …) have no Back.
+- Pages inside a tab (More → Depots, Products, …): Back goes to the tab's page they belong to (More).
+- Pages opened from the header (Profile / My Account, Notifications): Back returns to the page they were opened from; opened directly, to the portal home.
+- Login, forgot and reset password, and Page not found: no Back arrow; they end with a plain link ("Back to sign in", "Go to the start page").
+- The logo always returns to the portal's home. Switching tabs does not add browser history, and sideways swipes do not trigger page navigation where the browser allows turning it off.
+
+**Sign Out (Q-56):** acts at once, with no confirmation page, from the account menu and from Profile. It shows "Signing out…" until the login page appears.
+
+**Feedback on every action (Q-56):** every tap shows that it registered (buttons and tabs press down), every action that waits shows progress ("Signing in…", "Saving…", "Signing out…"), and a loading bar runs across the top while a screen loads.
 
 **Profile (all roles):** name, email, role, assigned depot (managers), change password, sign out. No App Settings, Help & Support, or About.
 
@@ -390,7 +397,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-41 | Profile extras | **Remove** App Settings, Help & Support, About. (Section 7) |
 | Q-42 | Screens with no wireframe | Designed together when their milestone comes. |
 | Q-43 | Who creates the Vercel project | **The owner**, in the Vercel dashboard, linked to `Ndukwopeace/Tally-up`. The owner also adds the Supabase integration (staging + production) before Milestone 2. |
-| Q-53 | Back arrow on screens | **Every screen** in the PWA has a Back arrow. (§7) |
+| Q-53 | Back arrow on screens | ~~**Every screen** in the PWA has a Back arrow.~~ Replaced by Q-56. (§7) |
 | Q-54 | Installed start page left the top half empty | **Option A:** logo at the top, heading and choices at the bottom in thumb reach. |
 | Q-51 | Where Audit log and Settings live | **Inside More**, after Reports. (§7) |
 | Q-52 | Role-by-role milestone plan (PLAN-1) | **Approved**; numbering replaced by Q-55. (§13) |
@@ -401,6 +408,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 | Q-50 | Swipe and back navigation | Sideways swipes must not switch tabs; there must be a way back to the previous page; the logo must do something. (§7) |
 | Q-45 | Logo | **The wireframe logo**: blue delivery truck with bread and rising bars on an orange cargo box; wordmark "Tally-" in brand blue (white on dark) and "Up" in orange. The truck is branding only; truck features stay out of scope (§2). |
 | Q-55 | Milestones per role | **Approved:** separate milestones per role, Admin first. A1 Admin login · A2 Admin data · A3 Admin monitoring · A4 Admin reports; then Distributor (D1…) and Depot Manager (DM1…), planned later; then Go-live. Versions: A1 = v0.2.0, A2 = v0.3.0, and so on; v1.0.0 at go-live. Until a role's milestone, its accounts exist but cannot sign in. Replaces the numbered plan of Q-52. Supabase connected by the owner: staging database for Preview + Development, production database for Production. (§13) |
+| Q-56 | Back button and feedback (BACK-1, after testing A1) | Sign Out acts at once (no "Sign out?" page). Every action shows an indicator. Back is not beside the logo, is never used to sign out, never changes tabs, and only goes back inside the tab. Replaces Q-53 ("every screen has a Back arrow"). (§7) |
 | Q-44 | "Phase" or "Milestone" | **Milestone.** All documents, CI comments and branch names use "milestone" (e.g. `feat/milestone-1-scaffold`). |
 
 ### Open items
@@ -409,7 +417,7 @@ Kept in one file (`src/config/business-rules.ts`), and shown in Admin → Settin
 |---|---|---|
 | NAV-1 | ~~Admin navigation~~ — resolved by Q-47 and Q-51. Still open: whether the **Discrepancies** list is its own page or shown on Home and inside Distributions (spec §21) | Before A3 |
 | ACC-1 | Should Distributor and Depot Manager move Profile from a bottom tab to the header profile icon, like Admin? | Before D1 |
-| BACK-1 | Back on Home opens "Sign out?" (§7), and the account menu's Sign Out asks for the same confirmation. Owner to confirm or change after trying it on the A1 preview. | A1 sign-off |
+| BACK-1 | ~~Back on Home opens "Sign out?"~~ — resolved by Q-56: no Back on Home; Sign Out acts at once. | Closed |
 | SMTP-1 | Supabase's built-in email only reaches the project's team members, with a low hourly limit. Forgot-password emails for other users need an email provider (custom SMTP) set up in Supabase. Which provider, and when? | Before D1 (distributors are the first non-team users) |
 
 ## 13. Delivery Plan
@@ -422,7 +430,7 @@ Order: **separate milestones per role, Admin first** (Q-49, Q-55). Distributor a
 |---|---|---|---|
 | 0 | — | Requirements, architecture, UI rules. **Done.** | Owner approves them. |
 | 1 | v0.1.0 | Project scaffold, design tokens, shared components, business-rules config, PWA, portal frames, deployed to Vercel. **Done** (plus logo Q-45, admin phone navigation Q-47). | Owner installs the app from the Vercel link. |
-| **A1** | v0.2.0 | **Admin login.** Supabase connected; database tables and security rules (profiles, audit log, RLS); admin sign-in; forgot password; real Sign Out; admin-only access. **Tested by the owner on staging (2026-10-02); merge pending.** | Owner signs in as admin on a phone, and non-admin accounts are refused. |
+| **A1** | v0.2.0 | **Admin login.** Supabase connected; database tables and security rules (profiles, audit log, RLS); admin sign-in; forgot password; real Sign Out; admin-only access. **Tested by the owner on staging (2026-10-02); Q-56 changes added; merge pending.** | Owner signs in as admin on a phone, and non-admin accounts are refused. |
 | A2 | v0.3.0 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, reset password). Distributor and manager accounts can be created but cannot sign in yet. | Master data can be created, edited and deactivated from the phone. |
 | A3 | v0.4.0 | **Admin monitoring.** Home, Collections, Distributions, discrepancies, corrections, notifications, audit log, settings, shown with realistic **test data** in the staging database. | Owner can answer the core question from the screen using the test data. |
 | A4 | v0.5.0 | **Admin reports.** Filters, PDF export (CSV later). | Filtered PDF matches the screen. |

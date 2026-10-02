@@ -10,11 +10,13 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 - Route guards on all portals: signed-out visitors go to `/login`; each role is kept in its own portal; `/` sends you to your portal.
 - Only admins can sign in for now (Q-55); other roles and inactive accounts are refused with a plain reason.
 - Profile / My Account: name, email, role, change password, Sign Out.
-- "Sign out?" page: reached from Back on Home and from Sign Out in the account menu (BACK-1, for owner review).
+- Sign Out acts at once from the account menu and Profile, showing "Signing out…" (Q-56).
+- Feedback on every action (Q-56): loading bar while a screen loads, buttons and tabs press down when tapped.
 - Owner setup guide `docs/SETUP.md`; ADR 0002; `.env.example`.
 
 ### Changed
 - The temporary "Choose a portal" start page is gone; the login page replaces it (install card included).
+- Back (Q-56, replaces Q-53): now a "Back" link under the header, only on pages inside a tab or opened from the header; it never changes tabs or signs out. Home, tab screens, login pages and Page not found have none.
 - Content-Security-Policy allows data connections to Supabase only.
 - Milestones re-cut per role (Q-55): A1–A4 for Admin, then Distributor, Depot Manager, go-live.
 - Admin is phone-first (Q-48) with bottom tabs Home · Collections · Distributions · More, a More page (Depots, Products, Users, Reports), and an account menu (Profile / My Account, Sign Out) next to the bell (Q-47).

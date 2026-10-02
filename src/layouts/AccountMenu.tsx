@@ -9,26 +9,27 @@
  *       A disclosure is used instead of an ARIA "menu" because it needs no
  *       arrow-key handling and screen readers read it as plain links/buttons.
  * WHEN: Admin header (all admin pages).
- * SECURITY: Sign Out opens the portal's "Sign out?" page (pages/SignOutPage.tsx),
- *       which ends the Supabase session on this device.
+ *       Sign Out acts at once (Q-56): the menu stays open and the item shows
+ *       "Signing out…" with a spinner until the login page appears.
+ * SECURITY: Sign Out ends the Supabase session on this device (auth/useSignOut.ts).
  */
-import { CircleUser, LogOut, UserRound } from "lucide-react";
+import { CircleUser, LoaderCircle, LogOut, UserRound } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 
+import { useSignOut } from "@/auth/useSignOut";
 import { en } from "@/i18n/en";
 
 export interface AccountMenuProps {
   profileHref: string;
-  signOutHref: string;
 }
 
-export function AccountMenu({ profileHref, signOutHref }: Readonly<AccountMenuProps>) {
+export function AccountMenu({ profileHref }: Readonly<AccountMenuProps>) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate();
+  const { signOut, signingOut } = useSignOut();
 
   // While open: close on Escape (and give focus back) or on a tap outside the menu.
   useEffect(() => {
@@ -55,7 +56,7 @@ export function AccountMenu({ profileHref, signOutHref }: Readonly<AccountMenuPr
   }, [open]);
 
   const itemClass =
-    "flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-base font-medium text-ink hover:bg-canvas";
+    "flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-base font-medium text-ink hover:bg-canvas active:bg-canvas disabled:opacity-60";
 
   return (
     <div ref={rootRef} className="relative">
@@ -90,13 +91,16 @@ export function AccountMenu({ profileHref, signOutHref }: Readonly<AccountMenuPr
           <button
             type="button"
             className={itemClass}
-            onClick={() => {
-              setOpen(false);
-              void navigate(signOutHref);
-            }}
+            disabled={signingOut}
+            aria-busy={signingOut}
+            onClick={() => void signOut()}
           >
-            <LogOut aria-hidden="true" className="size-5 text-ink-muted" />
-            {en.nav.signOut}
+            {signingOut ? (
+              <LoaderCircle aria-hidden="true" className="size-5 animate-spin text-ink-muted" />
+            ) : (
+              <LogOut aria-hidden="true" className="size-5 text-ink-muted" />
+            )}
+            {signingOut ? en.signOut.signingOut : en.nav.signOut}
           </button>
         </div>
       ) : null}

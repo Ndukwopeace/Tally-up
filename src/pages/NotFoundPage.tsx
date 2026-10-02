@@ -3,8 +3,8 @@
  *
  * WHY:  N9: a clear message and a way back. Branded like the rest of the app
  *       (UI review #21), with the way back as a real button.
- * HOW:  Back arrow (Q-53, like every screen), logo, heading, short explanation,
- *       button to the start page.
+ * HOW:  Logo, heading, short explanation, button to the start page (which
+ *       leads to the user's portal or the login page).
  * WHEN: React Router's catch-all route ("*").
  * SECURITY: Record pages (A3 onward) also show "Not found" for records a user may not see,
  *       so the app never confirms that a forbidden record exists (ARCHITECTURE §4.5).
@@ -12,7 +12,6 @@
 import { Link } from "react-router";
 
 import { AppLogo } from "@/components/common/AppLogo";
-import { BackButton } from "@/layouts/BackButton";
 import { buttonVariants } from "@/components/ui/button";
 import { en } from "@/i18n/en";
 
@@ -20,11 +19,6 @@ export function NotFoundPage() {
   return (
     <main id="main" className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-6 px-4">
       <title>{`${en.pages.notFoundTitle} · ${en.app.name}`}</title>
-      <div className="fixed top-0 left-0 pt-[env(safe-area-inset-top)] pl-[max(0.5rem,env(safe-area-inset-left))]">
-        <div className="flex min-h-16 items-center pl-2">
-          <BackButton fallback="/" />
-        </div>
-      </div>
       <AppLogo />
       <div>
         <h1 className="text-2xl font-bold text-ink">{en.pages.notFoundTitle}</h1>

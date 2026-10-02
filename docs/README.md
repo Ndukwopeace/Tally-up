@@ -2,7 +2,7 @@
 
 | Document | Purpose | Status |
 |---|---|---|
-| [REQUIREMENTS.md](REQUIREMENTS.md) | What the system does, decision log, delivery plan | v0.5 — Q-55 recorded; open items BACK-1, SMTP-1 |
+| [REQUIREMENTS.md](REQUIREMENTS.md) | What the system does, decision log, delivery plan | v0.5 — Q-55, Q-56 recorded; open item SMTP-1 |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Frontend, auth, backend, routes, security, deployment | v0.2 — approved; A-5 to A-10 proposed in A1 |
 | [UI_GUIDELINES.md](UI_GUIDELINES.md) | UI laws, heuristics, WCAG 2.2 AA, mobile/admin rules, screen checklist | v0.1 — approved |
 | [ENGINEERING.md](ENGINEERING.md) | Comments, GitHub Flow, clean code, TDD, CI, security, versioning | v0.1 — approved |

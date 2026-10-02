@@ -5,7 +5,7 @@
  *  - AUTH-01 / AUTH-06: /forgot-password sends a reset email whose link opens
  *    /reset-password; the answer never reveals whether the email has an account.
  *  - AUTH-09 / Q-55: refused accounts never reach the new-password form.
- *  - Q-53: Back arrow on these screens.
+ *  - Q-56: no Back beside the logo; a "Back to sign in" link with the content.
  *  - NFR-06: no sending while offline.
  */
 import { MOCK_PASSWORD } from "../../../tests/helpers/mockPassword";
@@ -24,11 +24,12 @@ afterEach(() => {
 });
 
 describe("forgot password", () => {
-  it("is reached from the login page and has Back to it", async () => {
+  it("is reached from the login page and leads back to it", async () => {
     const { router } = renderRoutes("/login");
     await userEvent.click(await screen.findByRole("link", { name: "Forgot password?" }));
     expect(await screen.findByRole("heading", { level: 1, name: "Reset your password" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Back" }));
+    expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("link", { name: "Back to sign in" }));
     expect(router.state.location.pathname).toBe("/login");
   });
 

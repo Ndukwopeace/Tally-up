@@ -55,7 +55,8 @@ export function BottomNav({ items }: Readonly<{ items: readonly NavItem[] }>) {
                   active ? "font-bold text-brand" : "font-medium text-ink-muted hover:text-ink",
                 )}
               >
-                <span className="relative flex h-8 w-14 items-center justify-center">
+                {/* active:scale-90: the icon dips when tapped, so the tap visibly registers (Q-56). */}
+                <span className="relative flex h-8 w-14 items-center justify-center transition-transform active:scale-90">
                   {active ? (
                     <span
                       data-active-marker

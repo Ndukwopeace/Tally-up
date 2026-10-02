@@ -4,8 +4,10 @@
  * Rules under test:
  *  - Q-47: admin phone tabs, More page, bell + account menu at the top.
  *  - Q-46: distributor tabs without History.
- *  - Q-50: tabs do not add browser history; pages below the top level show Back;
- *          the logo goes to the portal's home.
+ *  - Q-50: tabs do not add browser history; the logo goes to the portal's home.
+ *  - Q-56: Back only on pages inside a tab or opened from the header; it sits
+ *          below the header (not beside the logo), stays inside the tab and never
+ *          signs out. Home and tab screens have no Back.
  *  - WCAG 1.4.1: the active tab is not shown by colour alone.
  *  - WCAG 2.4.1 skip link, 2.4.2 page titles; no developer wording on screen.
  * Each portal is rendered signed in as its own role (guards are tested in
@@ -96,21 +98,39 @@ describe("Admin portal (Q-47)", () => {
   });
 
   it.each([
+    ["/admin", "Home"],
     ["/admin/collections", "Collections"],
     ["/admin/distributions", "Distributions"],
     ["/admin/more", "More"],
-  ])("tab screen %s has Back, which goes to Home (not to the previously tapped tab)", async (path, title) => {
-    const router = renderAt(path, ["/admin", "/admin/distributions"]);
+  ])("Q-56: %s (a tab screen) has no Back; tabs are changed with the tabs", async (path, title) => {
+    renderAt(path, ["/admin/distributions"]);
     expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/admin");
+    expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
   });
 
-  it("Home has Back, which asks 'Sign out?' (Q-53: nothing earlier to go back to)", async () => {
-    const router = renderAt("/admin");
+  it("Q-56: Back on a page inside More stays in More, even if another tab was visited before", async () => {
+    const router = renderAt("/admin/depots", ["/admin/collections", "/admin/more"]);
     await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/admin/sign-out");
-    expect(await screen.findByRole("heading", { level: 1, name: "Sign out?" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/admin/more");
+  });
+
+  it("Q-56: Back sits with the page content, not in the header beside the logo", async () => {
+    renderAt("/admin/depots");
+    const back = await screen.findByRole("button", { name: "Back" });
+    expect(screen.getByRole("banner")).not.toContainElement(back);
+    expect(screen.getByRole("main")).toContainElement(back);
+  });
+
+  it("Q-56: Profile, opened from the account menu, goes Back to the page it was opened from", async () => {
+    const router = renderAt("/admin/profile", ["/admin/collections"]);
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/admin/collections");
+  });
+
+  it("Q-56: Profile opened directly goes Back to Home", async () => {
+    const router = renderAt("/admin/profile");
+    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
+    expect(router.state.location.pathname).toBe("/admin");
   });
 
   it("the logo takes you to Home", async () => {
@@ -136,7 +156,9 @@ describe("Admin portal (Q-47)", () => {
       "/admin/profile",
     );
     await userEvent.click(screen.getByRole("button", { name: "Sign Out" }));
-    expect(router.state.location.pathname).toBe("/admin/sign-out");
+    // Q-56: Sign Out acts at once; the login page replaces the portal.
+    expect(await screen.findByRole("heading", { level: 1, name: "Sign in" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/login");
   });
 
   it("closes the account menu with Escape and returns focus to the button", async () => {
@@ -237,13 +259,6 @@ describe("every portal", () => {
 });
 
 describe("unknown addresses", () => {
-  it("has a Back arrow, like every other screen; opened directly it leads to the user's portal", async () => {
-    const router = renderAt("/nowhere");
-    await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    // "/" sends a signed-in admin on to their portal (AUTH-07).
-    expect(router.state.location.pathname).toBe("/admin");
-  });
-
   it("shows Page not found with the logo and a way back", async () => {
     renderAt("/nowhere");
     expect(await screen.findByRole("heading", { level: 1, name: "Page not found" })).toBeInTheDocument();
@@ -252,7 +267,7 @@ describe("unknown addresses", () => {
   });
 });
 
-describe("Back on every portal screen", () => {
+describe("Back in the other portals (Q-56)", () => {
   it.each([
     "/distributor",
     "/distributor/collections",
@@ -262,14 +277,15 @@ describe("Back on every portal screen", () => {
     "/depot/receipts",
     "/depot/history",
     "/depot/profile",
-  ])("%s shows a Back arrow", async (path) => {
+  ])("tab screen %s has no Back", async (path) => {
     renderAt(path);
-    expect(await screen.findByRole("button", { name: "Back" })).toBeInTheDocument();
+    await screen.findAllByRole("heading", { level: 1 });
+    expect(screen.queryByRole("button", { name: "Back" })).not.toBeInTheDocument();
   });
 
-  it("a distributor tab goes back to the Dashboard", async () => {
-    const router = renderAt("/distributor/profile");
+  it("notifications, opened from the bell, go Back to where they were opened from", async () => {
+    const router = renderAt("/distributor/notifications", ["/distributor/collections"]);
     await userEvent.click(await screen.findByRole("button", { name: "Back" }));
-    expect(router.state.location.pathname).toBe("/distributor");
+    expect(router.state.location.pathname).toBe("/distributor/collections");
   });
 });
