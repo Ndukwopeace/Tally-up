@@ -70,6 +70,7 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261002150100_a2c_assign_manager_as.sql` | A2c Users, part 2 |
 | `20261002150200_a2c_user_checks.sql` | A2c Users, part 3 (the rules) |
 | `20261002150300_a2c_save_user.sql` | A2c Users, part 4 (save function) |
+| `20261002150400_a2c_active_depots_only.sql` | A2c: inactive depots are not given to managers (Q-58) |
 
 For each file:
 

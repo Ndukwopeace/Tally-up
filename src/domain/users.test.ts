@@ -9,7 +9,14 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { depotConsequences, emptyUserForm, isLastActiveAdmin, userFormFrom, validateUserForm } from "./users";
+import {
+  assignableDepots,
+  depotConsequences,
+  emptyUserForm,
+  isLastActiveAdmin,
+  userFormFrom,
+  validateUserForm,
+} from "./users";
 
 import type { Depot, User } from "@/types/entities";
 
@@ -217,5 +224,17 @@ describe("isLastActiveAdmin (USR-06)", () => {
       ),
     ).toBe(false);
     expect(isLastActiveAdmin([ADMIN, MIA], "u-mia")).toBe(false);
+  });
+});
+
+describe("assignableDepots (Q-58: inactive depots are not offered to a manager)", () => {
+  const CLOSED: Depot = { ...BONABERI, id: "d-closed", name: "Closed", status: "inactive" };
+
+  it("offers active depots only", () => {
+    expect(assignableDepots([AKWA, CLOSED, BONABERI], null)).toEqual([AKWA, BONABERI]);
+  });
+
+  it("keeps the account's own depot in the list even if it has become inactive, so an edit does not lose it", () => {
+    expect(assignableDepots([AKWA, CLOSED], "d-closed")).toEqual([AKWA, CLOSED]);
   });
 });

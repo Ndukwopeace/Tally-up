@@ -173,3 +173,12 @@ export function isLastActiveAdmin(users: readonly User[], id: string): boolean {
   const activeAdmins = users.filter((user) => user.role === "admin" && user.status === "active");
   return activeAdmins.length === 1 && activeAdmins[0]?.id === id;
 }
+
+/**
+ * RULE Q-58: the depots an admin may give to a depot manager: active ones only.
+ * `currentDepotId` is the depot the account already runs; it stays in the list
+ * even if it became inactive, so editing the account does not lose it.
+ */
+export function assignableDepots(depots: readonly Depot[], currentDepotId: string | null): Depot[] {
+  return depots.filter((depot) => depot.status === "active" || depot.id === currentDepotId);
+}

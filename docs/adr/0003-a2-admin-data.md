@@ -39,7 +39,7 @@ A2 adds the master data the admin manages: products (A2a), depots (A2b) and user
 | 20 | **Only an active depot manager has a depot.** Deactivating a manager, or giving them another role, takes them off the depot, and the form says which depot is left without a manager. Reactivating a manager needs a depot. | Q-57c already deactivates a *replaced* manager and requires a depot on reactivation; USR-03 says an account has a depot only if it is a manager. This applies the same rule to every deactivation. |
 | 21 | **The "last active admin" rule only blocks an admin from changing their own role.** The person asking is always an active admin, so for anyone else another active admin exists. Deactivating yourself is always refused. | USR-06 / Q-57f. |
 | 22 | **A deactivated account's existing sign-in is not cut off in Supabase Auth.** It gets no data (the database treats an inactive account as having no role, AUTH-09) and the app refuses it when it checks the account. | Keeps deactivation to one switch. Banning the login in Auth as well can be added if you want it. |
-| 23 | **The depot list in the user form shows every depot, active or not.** | DEP-06 lets a manager keep working at an inactive depot, so no rule forbids it. |
+| 23 | **Inactive depots are not offered to a depot manager** (owner decision Q-58a, replaces the first version of this choice). The form lists active depots only, plus the depot the account already runs if it became inactive. The database refuses an inactive depot for a manager (migration `…150400_a2c_active_depots_only.sql`). | Owner: an inactive depot must not be visible for giving to a manager. Keeping the manager's own depot means an edit does not fail or lose it. |
 
 ## Consequences
 

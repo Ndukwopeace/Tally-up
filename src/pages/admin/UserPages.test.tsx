@@ -33,6 +33,7 @@ const AKWA = {
   status: "active" as const,
 };
 const BONABERI = { ...AKWA, id: "d-bon", name: "Bonaberi" };
+const CLOSED = { ...AKWA, id: "d-closed", name: "Closed Depot", status: "inactive" as const };
 const MIA_AS_MANAGER: ManagerOption = {
   id: "u-mia",
   fullName: "Mia Manager",
@@ -86,7 +87,7 @@ function people(extra: User[] = [SECOND_ADMIN]) {
 }
 
 function depotsWithMia() {
-  return new MockDepotService([AKWA, BONABERI], [MIA_AS_MANAGER]);
+  return new MockDepotService([AKWA, BONABERI, CLOSED], [MIA_AS_MANAGER]);
 }
 
 function renderUsers(path: string, users = people(), history: string[] = []) {
@@ -241,6 +242,13 @@ describe("Add user", () => {
     expect(screen.getByRole("option", { name: "Bonaberi (no manager)" })).toBeInTheDocument();
   });
 
+  it("Q-58: does not offer an inactive depot to a depot manager", async () => {
+    await openNew();
+    await userEvent.selectOptions(screen.getByLabelText("Role"), "depot_manager");
+    expect(screen.getByRole("option", { name: "Bonaberi (no manager)" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /Closed Depot/ })).not.toBeInTheDocument();
+  });
+
   it("Q-57c: warns that the manager who runs the chosen depot will be deactivated", async () => {
     await openNew();
     await userEvent.selectOptions(screen.getByLabelText("Role"), "depot_manager");
@@ -351,6 +359,14 @@ describe("Edit user", () => {
       role: "distributor",
       depot: null,
     });
+  });
+
+  it("Q-58: a manager's own depot stays in their list even after it became inactive", async () => {
+    const closedAkwa = new MockDepotService([{ ...AKWA, status: "inactive" }, BONABERI], [MIA_AS_MANAGER]);
+    renderRoutes("/admin/users/u-mia/edit", { signedInAs: admin, users: people(), depots: closedAkwa });
+    const depot = await screen.findByLabelText("Depot");
+    expect(await screen.findByRole("option", { name: "Akwa (Mia Manager runs it)" })).toBeInTheDocument();
+    expect(depot).toHaveValue("d-akwa");
   });
 
   it("Q-57c: moving a manager to another depot says the old depot is left without one", async () => {
