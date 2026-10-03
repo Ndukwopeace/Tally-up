@@ -13,7 +13,7 @@
  * SECURITY: Convenience only; the database function enforces every rule.
  */
 import { formatCameroonPhone, normalizeCameroonPhone } from "./phone";
-import { validateEmail, validateNewPassword, type EmailError, type NewPasswordErrors } from "./validation";
+import { validateEmail, validateNewPassword, type EmailError } from "./validation";
 
 import type { Depot, DepotManagerRef, User } from "@/types/entities";
 import type { RecordStatus, Role } from "@/types/enums";
@@ -38,8 +38,8 @@ export interface UserFormErrors {
   /** Errors by phone row index. */
   phones?: Record<number, "phone_invalid">;
   depot?: "depot_required";
-  password?: NewPasswordErrors["password"];
-  repeat?: NewPasswordErrors["repeat"];
+  password?: "new_password_required";
+  repeat?: "passwords_differ";
 }
 
 /** What is sent to the server once the form is valid. */
