@@ -113,7 +113,8 @@ export function validateDepotForm(values: DepotFormValues): {
       address,
       phones,
       status: values.active ? "active" : "inactive",
-      managerId: values.managerId,
+      // RULE Q-58c: an inactive depot has no manager.
+      managerId: values.active ? values.managerId : null,
     },
   };
 }
@@ -128,4 +129,12 @@ export function replacedManager(depot: Depot | undefined, chosenId: string | nul
     return null;
   }
   return current;
+}
+
+/**
+ * RULE Q-58c: the manager who will be deactivated if `depot` is saved as inactive
+ * (an inactive depot has no manager), or null when nobody is affected.
+ */
+export function managerLosingDepot(depot: Depot | undefined, active: boolean): DepotManagerRef | null {
+  return active ? null : (depot?.manager ?? null);
 }

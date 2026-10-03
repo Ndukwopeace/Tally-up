@@ -33,6 +33,7 @@ const AKWA = {
   status: "active" as const,
 };
 const BONABERI = { ...AKWA, id: "d-bon", name: "Bonaberi" };
+const CLOSED = { ...AKWA, id: "d-closed", name: "Closed Depot", status: "inactive" as const };
 const MIA_AS_MANAGER: ManagerOption = {
   id: "u-mia",
   fullName: "Mia Manager",
@@ -86,7 +87,7 @@ function people(extra: User[] = [SECOND_ADMIN]) {
 }
 
 function depotsWithMia() {
-  return new MockDepotService([AKWA, BONABERI], [MIA_AS_MANAGER]);
+  return new MockDepotService([AKWA, BONABERI, CLOSED], [MIA_AS_MANAGER]);
 }
 
 function renderUsers(path: string, users = people(), history: string[] = []) {
@@ -239,6 +240,13 @@ describe("Add user", () => {
     await userEvent.selectOptions(screen.getByLabelText("Role"), "depot_manager");
     expect(screen.getByRole("option", { name: "Akwa (Mia Manager runs it)" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Bonaberi (no manager)" })).toBeInTheDocument();
+  });
+
+  it("Q-58: does not offer an inactive depot to a depot manager", async () => {
+    await openNew();
+    await userEvent.selectOptions(screen.getByLabelText("Role"), "depot_manager");
+    expect(screen.getByRole("option", { name: "Bonaberi (no manager)" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: /Closed Depot/ })).not.toBeInTheDocument();
   });
 
   it("Q-57c: warns that the manager who runs the chosen depot will be deactivated", async () => {

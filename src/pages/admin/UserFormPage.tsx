@@ -37,6 +37,7 @@ import { WarningNote } from "@/components/common/WarningNote";
 import { buttonVariants } from "@/components/ui/button";
 import { validateNewPassword, type NewPasswordErrors } from "@/domain/validation";
 import {
+  assignableDepots,
   depotConsequences,
   emptyUserForm,
   isLastActiveAdmin,
@@ -155,7 +156,8 @@ function DepotSection({
   onDepotChange: (depotId: string | null) => void;
 }>) {
   const depots = useDepots();
-  const depotList = depots.data ?? [];
+  // RULE Q-58a: inactive depots are not offered.
+  const depotList = assignableDepots(depots.data ?? []);
   const options: SelectOption[] = [
     { value: NO_DEPOT, label: en.users.depotChoose },
     ...depotList.map((depot) => ({

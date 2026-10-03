@@ -4,6 +4,11 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Changed — A2c Users
+- An inactive depot is no longer offered to a depot manager in the Users form, and the database refuses it (Q-58a).
+- An inactive depot has no manager (Q-58c): saving a depot as inactive deactivates its manager, the Depot form hides the manager list for an inactive depot and warns first, and a manager cannot be chosen for one.
+- Decision recorded: discrepancies are shown on Home and inside Distributions, with no page of their own (Q-58b, closes NAV-1).
+
 ### Added — A2c Users
 - Admin → More → Users: list with search by name or email; add and edit forms; reset password.
 - Create an account (name, email, phones, role, depot for a manager, Active) with a temporary password the admin types and passes on (Q-57a). Edit email and role later (Q-57g). Deactivate, never delete.

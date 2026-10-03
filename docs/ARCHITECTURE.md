@@ -254,7 +254,7 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/admin/collections/:id` | Collection detail + depot allocations |
 | `/admin/distributions` | All distributions / receipts |
 | `/admin/receipts/:id` | Receipt detail: recorded vs counted, corrections |
-| `/admin/discrepancies` | Discrepancy list |
+| ~~`/admin/discrepancies`~~ | Not built: discrepancies are shown on Home and inside Distributions (Q-58b) |
 | `/admin/depots` | Depot list |
 | `/admin/depots/new` | Create depot |
 | `/admin/depots/:id` | Depot detail + history |
