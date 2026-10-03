@@ -49,6 +49,20 @@ describe("MockDepotService", () => {
     expect((await service.get(id))?.manager?.id).toBe("m2");
   });
 
+  it("Q-58c: deactivating a depot deactivates its manager; an inactive depot cannot be given one", async () => {
+    const service = new MockDepotService([], managers);
+    const id = await service.save({ ...INPUT, managerId: "m1" });
+    await service.save({ ...INPUT, status: "inactive" }, id);
+    expect((await service.get(id))?.manager).toBeNull();
+    expect((await service.listManagers()).find((manager) => manager.id === "m1")).toMatchObject({
+      status: "inactive",
+      depotId: null,
+    });
+    await expect(service.save({ ...INPUT, status: "inactive", managerId: "m2" }, id)).rejects.toEqual(
+      new DepotError("invalid"),
+    );
+  });
+
   it("refuses an unknown manager", async () => {
     await expect(new MockDepotService().save({ ...INPUT, managerId: "nobody" })).rejects.toEqual(
       new DepotError("not_a_manager"),

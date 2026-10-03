@@ -12,7 +12,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(29);
+select plan(37);
 
 -- ---------------------------------------------------------------------------
 -- Helpers
@@ -137,12 +137,30 @@ select is((select count(*)::int from public.profiles where depot_id = pg_temp.ak
   'DEP-03: a manager runs one depot at a time');
 
 -- Editing a depot without choosing a manager keeps the current one.
-select lives_ok($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], null, false)$$,
-  'an admin edits and deactivates a depot');
+select lives_ok($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], null, true)$$,
+  'an admin edits a depot');
 select is(pg_temp.manager_state(pg_temp.second_manager()), 'active@' || pg_temp.bonaberi(),
   'leaving the manager empty keeps the current manager');
+select pg_temp.sign_in_as(pg_temp.second_manager());
+select results_eq('select id from public.depots', 'select pg_temp.bonaberi()',
+  'a depot manager sees their own depot only (DEP-06)');
+select pg_temp.sign_in_as(pg_temp.admin_user());
+
+-- Q-58c: an inactive depot has no manager.
+select pg_temp.rule_refused($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], pg_temp.second_manager(), false)$$,
+  'INVALID_DEPOT', 'Q-58c: an inactive depot cannot be given a manager');
+select lives_ok($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], null, false)$$,
+  'an admin deactivates a depot that has a manager');
 select is((select status::text from public.depots where id = pg_temp.bonaberi()), 'inactive',
   'DEP-01: deactivated, not deleted');
+select is(pg_temp.manager_state(pg_temp.second_manager()), 'inactive@',
+  'Q-58c: deactivating a depot deactivates its manager and takes them off it');
+select lives_ok($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], null, true)$$,
+  'a depot can be reactivated; it starts with no manager');
+select is((select count(*)::int from public.profiles where depot_id = pg_temp.bonaberi()), 0,
+  'Q-58c: a reactivated depot has no manager until one is chosen');
+select lives_ok($$select pg_temp.save(pg_temp.bonaberi(), 'Bonaberi Port', array[]::text[], null, false)$$,
+  'an admin deactivates a depot that has no manager');
 
 select pg_temp.rule_refused($$select pg_temp.save(pg_temp.akwa(), 'Akwa', array[]::text[], pg_temp.distributor_user(), true)$$,
   'NOT_A_MANAGER', 'DEP-03: only a depot manager account can be assigned');
@@ -155,12 +173,16 @@ select pg_temp.rule_refused($$select pg_temp.save(gen_random_uuid(), 'Ghost', ar
 reset role;
 select results_eq(
   format($$select action from public.audit_log where record_id = %L order by action$$, pg_temp.bonaberi()::text),
-  $$values ('depot.created'), ('depot.deactivated'), ('depot.edited'), ('depot.edited'), ('depot.manager_assigned')$$,
-  'AUD-03: depot created, edited, deactivated and manager assigned are logged');
+  $$values ('depot.activated'), ('depot.created'), ('depot.deactivated'), ('depot.deactivated'), ('depot.edited'), ('depot.edited'), ('depot.edited'), ('depot.edited'), ('depot.edited'), ('depot.manager_assigned')$$,
+  'AUD-03: depot created, edited, (de)activated and manager assigned are logged');
 select is(
   (select count(*)::int from public.audit_log
     where record_id = pg_temp.first_manager()::text and action = 'user.deactivated'),
   1, 'AUD-03: the replaced manager''s deactivation is logged');
+select is(
+  (select count(*)::int from public.audit_log
+    where record_id = pg_temp.second_manager()::text and action = 'user.deactivated'),
+  1, 'AUD-03: the deactivation of a manager with their depot is logged');
 
 -- ---------------------------------------------------------------------------
 -- Who can see depots (ARCHITECTURE §6.5)
@@ -172,8 +194,8 @@ select pg_temp.rule_refused($$select pg_temp.save(null, 'Mine', array[]::text[],
   'SECURITY: a distributor cannot save depots');
 
 select pg_temp.sign_in_as(pg_temp.second_manager());
-select results_eq('select id from public.depots', 'select pg_temp.bonaberi()',
-  'a depot manager sees their own depot only, even when it is inactive (DEP-06)');
+select is((select count(*)::int from public.depots), 0,
+  'a deactivated manager has no role, so sees no depots (AUTH-09)');
 
 select pg_temp.sign_in_as(null);
 select pg_temp.refused('select count(*) from public.depots', 'signed-out visitors see no depots');

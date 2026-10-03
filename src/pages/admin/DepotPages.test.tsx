@@ -226,6 +226,14 @@ describe("Add depot", () => {
     expect(screen.getByText("Ann Manager will move here. Akwa will have no manager.")).toBeInTheDocument();
   });
 
+  it("Q-58c: a new depot saved as inactive has no manager list", async () => {
+    await openNew();
+    await userEvent.click(screen.getByLabelText("Active"));
+    expect(screen.queryByLabelText("Manager")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByLabelText("Active"));
+    expect(screen.getByLabelText("Manager")).toBeInTheDocument();
+  });
+
   it("removes a phone row", async () => {
     await openNew();
     await userEvent.click(screen.getByRole("button", { name: "Add another number" }));
@@ -293,6 +301,24 @@ describe("Edit depot", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save depot" }));
     expect(await screen.findByText("Akwa was saved.")).toBeInTheDocument();
     expect((await depots.get("d-akwa"))?.manager).toEqual({ id: "m-ben", fullName: "Ben Manager" });
+    expect((await depots.listManagers()).find((manager) => manager.id === "m-ann")).toMatchObject({
+      status: "inactive",
+      depotId: null,
+    });
+  });
+
+  it("Q-58c: an inactive depot has no manager: switching Active off warns and hides the list, and saving deactivates the manager", async () => {
+    const depots = fixtures();
+    await openEdit(depots);
+    await userEvent.click(screen.getByLabelText("Active"));
+    expect(screen.queryByLabelText("Manager")).not.toBeInTheDocument();
+    expect(screen.getByText("An inactive depot has no manager.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ann Manager will be deactivated and will no longer run this depot."),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Save depot" }));
+    expect(await screen.findByText("Akwa was saved.")).toBeInTheDocument();
+    expect((await depots.get("d-akwa"))?.manager).toBeNull();
     expect((await depots.listManagers()).find((manager) => manager.id === "m-ann")).toMatchObject({
       status: "inactive",
       depotId: null,

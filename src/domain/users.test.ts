@@ -227,14 +227,10 @@ describe("isLastActiveAdmin (USR-06)", () => {
   });
 });
 
-describe("assignableDepots (Q-58: inactive depots are not offered to a manager)", () => {
+describe("assignableDepots (Q-58a: inactive depots are not offered to a manager)", () => {
   const CLOSED: Depot = { ...BONABERI, id: "d-closed", name: "Closed", status: "inactive" };
 
   it("offers active depots only", () => {
-    expect(assignableDepots([AKWA, CLOSED, BONABERI], null)).toEqual([AKWA, BONABERI]);
-  });
-
-  it("keeps the account's own depot in the list even if it has become inactive, so an edit does not lose it", () => {
-    expect(assignableDepots([AKWA, CLOSED], "d-closed")).toEqual([AKWA, CLOSED]);
+    expect(assignableDepots([AKWA, CLOSED, BONABERI])).toEqual([AKWA, BONABERI]);
   });
 });

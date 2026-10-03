@@ -361,14 +361,6 @@ describe("Edit user", () => {
     });
   });
 
-  it("Q-58: a manager's own depot stays in their list even after it became inactive", async () => {
-    const closedAkwa = new MockDepotService([{ ...AKWA, status: "inactive" }, BONABERI], [MIA_AS_MANAGER]);
-    renderRoutes("/admin/users/u-mia/edit", { signedInAs: admin, users: people(), depots: closedAkwa });
-    const depot = await screen.findByLabelText("Depot");
-    expect(await screen.findByRole("option", { name: "Akwa (Mia Manager runs it)" })).toBeInTheDocument();
-    expect(depot).toHaveValue("d-akwa");
-  });
-
   it("Q-57c: moving a manager to another depot says the old depot is left without one", async () => {
     await openEdit("u-mia");
     await userEvent.selectOptions(screen.getByLabelText("Depot"), "d-bon");

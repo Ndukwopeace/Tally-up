@@ -156,8 +156,8 @@ function DepotSection({
   onDepotChange: (depotId: string | null) => void;
 }>) {
   const depots = useDepots();
-  // RULE Q-58: inactive depots are not offered (the manager's own current depot stays).
-  const depotList = assignableDepots(depots.data ?? [], user?.depot?.id ?? null);
+  // RULE Q-58a: inactive depots are not offered.
+  const depotList = assignableDepots(depots.data ?? []);
   const options: SelectOption[] = [
     { value: NO_DEPOT, label: en.users.depotChoose },
     ...depotList.map((depot) => ({

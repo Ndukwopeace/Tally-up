@@ -15,7 +15,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(53);
+select plan(52);
 
 -- ---------------------------------------------------------------------------
 -- Helpers
@@ -238,10 +238,9 @@ select lives_ok($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.auth_
   'port@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.akwa(), true)$$,
   'a manager is put in charge of an active depot');
 update public.depots set status = 'inactive' where id = pg_temp.akwa();
-select lives_ok($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.fixture_id(78), 'Port Manager Jr',
+select pg_temp.rule_refused($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.fixture_id(78), 'Port Manager Jr',
   'port@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.akwa(), false)$$,
-  'Q-58: editing a manager does not fail because their own depot has since become inactive');
-select is(pg_temp.state(pg_temp.fixture_id(78)), 'active@' || pg_temp.akwa(), 'Q-58: they keep that depot');
+  'INVALID_USER', 'Q-58: a manager cannot keep, or be given, a depot that is inactive');
 
 -- ---------------------------------------------------------------------------
 -- Reading (ARCHITECTURE §6.5): the new column follows the existing rules
