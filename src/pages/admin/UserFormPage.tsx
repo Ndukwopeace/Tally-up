@@ -129,6 +129,110 @@ function errorOrder(errors: UserFormErrors): string[] {
   return ids;
 }
 
+// RULE USR-06 / Q-57f: whether this is the signed-in admin's own account, and whether it is the only active admin.
+function useAccountLocks(user: User | undefined): { isSelf: boolean; lastAdmin: boolean } {
+  const { state } = useAuth();
+  const everyone = useUsers();
+  if (user === undefined) {
+    return { isSelf: false, lastAdmin: false };
+  }
+  return {
+    isSelf: state.status === "signed_in" && state.account.id === user.id,
+    lastAdmin: isLastActiveAdmin(everyone.data ?? [], user.id),
+  };
+}
+
+/** The depot list for an active depot manager (USR-03), with the warnings about whom a choice affects (Q-57c, DEP-03). */
+function DepotSection({
+  values,
+  user,
+  error,
+  onDepotChange,
+}: Readonly<{
+  values: UserFormValues;
+  user: User | undefined;
+  error: UserFormErrors["depot"];
+  onDepotChange: (depotId: string | null) => void;
+}>) {
+  const depots = useDepots();
+  const depotList = depots.data ?? [];
+  const options: SelectOption[] = [
+    { value: NO_DEPOT, label: en.users.depotChoose },
+    ...depotList.map((depot) => ({
+      value: depot.id,
+      label: en.users.depotOption(depot.name, depot.manager?.fullName ?? null),
+    })),
+  ];
+  const { replaced, leaves } = depotConsequences(values, user, depotList);
+  const chosenDepot = depotList.find((depot) => depot.id === values.depotId);
+
+  return (
+    <>
+      {values.role === "depot_manager" && values.active ? (
+        <SelectField
+          id={FIELD_IDS.depot}
+          label={en.users.depot}
+          hint={error ? en.users.fieldErrors[error] : en.users.depotHint}
+          value={values.depotId ?? NO_DEPOT}
+          options={options}
+          onValueChange={(depotId) => {
+            onDepotChange(depotId === NO_DEPOT ? null : depotId);
+          }}
+        />
+      ) : null}
+      {/* RULE Q-57c / DEP-03: say who is affected before the admin saves. The live
+          region stays mounted so a new warning is read out when it appears. */}
+      <div aria-live="polite" className="flex flex-col gap-2 empty:hidden">
+        {replaced && chosenDepot ? (
+          <WarningNote>{en.users.replaceWarning(replaced.fullName, chosenDepot.name)}</WarningNote>
+        ) : null}
+        {leaves !== null && user ? (
+          <WarningNote>{en.users.leaveWarning(user.fullName, leaves)}</WarningNote>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+/** Q-57a: the temporary password the admin types, twice, when creating an account. */
+function PasswordFields({
+  values,
+  errors,
+  onChange,
+}: Readonly<{
+  values: UserFormValues;
+  errors: UserFormErrors;
+  onChange: (patch: Partial<UserFormValues>) => void;
+}>) {
+  return (
+    <>
+      <TextField
+        id={FIELD_IDS.password}
+        label={en.users.password}
+        hint={en.users.passwordHint}
+        type="password"
+        autoComplete="new-password"
+        value={values.password}
+        onValueChange={(password) => {
+          onChange({ password });
+        }}
+        error={errors.password ? en.auth.fieldErrors[errors.password] : undefined}
+      />
+      <TextField
+        id={FIELD_IDS.repeat}
+        label={en.users.repeatPassword}
+        type="password"
+        autoComplete="new-password"
+        value={values.repeat}
+        onValueChange={(repeat) => {
+          onChange({ repeat });
+        }}
+        error={errors.repeat ? en.auth.fieldErrors[errors.repeat] : undefined}
+      />
+    </>
+  );
+}
+
 function UserForm({
   title,
   initial,
@@ -137,9 +241,6 @@ function UserForm({
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<UserFormErrors>({});
   const save = useSaveUser();
-  const depots = useDepots();
-  const everyone = useUsers();
-  const { state } = useAuth();
   const navigate = useNavigate();
   const online = useOnlineStatus();
   const formRef = useRef<HTMLFormElement>(null);
@@ -176,21 +277,7 @@ function UserForm({
     Object.entries(errors.phones ?? {}).map(([index, code]) => [index, en.users.fieldErrors[code]]),
   );
 
-  const depotList = depots.data ?? [];
-  const showDepot = values.role === "depot_manager" && values.active;
-  const depotOptions: SelectOption[] = [
-    { value: NO_DEPOT, label: en.users.depotChoose },
-    ...depotList.map((depot) => ({
-      value: depot.id,
-      label: en.users.depotOption(depot.name, depot.manager?.fullName ?? null),
-    })),
-  ];
-  const { replaced, leaves } = depotConsequences(values, user, depotList);
-  const chosenDepot = depotList.find((depot) => depot.id === values.depotId);
-
-  // RULE USR-06 / Q-57f: an admin cannot switch themselves off; the only active admin keeps the role.
-  const isSelf = state.status === "signed_in" && user !== undefined && state.account.id === user.id;
-  const lastAdmin = user !== undefined && isLastActiveAdmin(everyone.data ?? [], user.id);
+  const { isSelf, lastAdmin } = useAccountLocks(user);
   const activeHint = isSelf ? `${en.users.activeHint} ${en.users.ownAccountHint}` : en.users.activeHint;
 
   return (
@@ -244,28 +331,14 @@ function UserForm({
           }}
         />
 
-        {showDepot ? (
-          <SelectField
-            id={FIELD_IDS.depot}
-            label={en.users.depot}
-            hint={errors.depot ? en.users.fieldErrors[errors.depot] : en.users.depotHint}
-            value={values.depotId ?? NO_DEPOT}
-            options={depotOptions}
-            onValueChange={(depotId) => {
-              update({ depotId: depotId === NO_DEPOT ? null : depotId });
-            }}
-          />
-        ) : null}
-        {/* RULE Q-57c / DEP-03: say who is affected before the admin saves. The live
-            region stays mounted so a new warning is read out when it appears. */}
-        <div aria-live="polite" className="flex flex-col gap-2 empty:hidden">
-          {replaced && chosenDepot ? (
-            <WarningNote>{en.users.replaceWarning(replaced.fullName, chosenDepot.name)}</WarningNote>
-          ) : null}
-          {leaves !== null && user ? (
-            <WarningNote>{en.users.leaveWarning(user.fullName, leaves)}</WarningNote>
-          ) : null}
-        </div>
+        <DepotSection
+          values={values}
+          user={user}
+          error={errors.depot}
+          onDepotChange={(depotId) => {
+            update({ depotId });
+          }}
+        />
 
         <CheckboxField
           label={en.users.activeLabel}
@@ -279,31 +352,13 @@ function UserForm({
         />
 
         {creating ? (
-          <>
-            <TextField
-              id={FIELD_IDS.password}
-              label={en.users.password}
-              hint={en.users.passwordHint}
-              type="password"
-              autoComplete="new-password"
-              value={values.password}
-              onValueChange={(password) => {
-                update({ password });
-              }}
-              error={errors.password ? en.auth.fieldErrors[errors.password] : undefined}
-            />
-            <TextField
-              id={FIELD_IDS.repeat}
-              label={en.users.repeatPassword}
-              type="password"
-              autoComplete="new-password"
-              value={values.repeat}
-              onValueChange={(repeat) => {
-                update({ repeat });
-              }}
-              error={errors.repeat ? en.auth.fieldErrors[errors.repeat] : undefined}
-            />
-          </>
+          <PasswordFields
+            values={values}
+            errors={errors}
+            onChange={(patch) => {
+              update(patch);
+            }}
+          />
         ) : null}
 
         <SubmitButton pending={save.isPending} disabled={!online} disabledReason={en.auth.offline}>
