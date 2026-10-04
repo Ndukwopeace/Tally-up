@@ -3,7 +3,7 @@
  *
  * WHY:  Pages and stores depend on service interfaces only; this is the one
  *       place that decides between Supabase and the development mock (NFR-03).
- * HOW:  `createServices(config)` returns every service (auth, products, depots, users) backed
+ * HOW:  `createServices(config)` returns every service (auth, products, depots, users, operations) backed
  *       by one Supabase client, or the mocks when config/env.ts selected them
  *       (development builds only).
  * WHEN: Called once by App.tsx at start-up.
@@ -18,14 +18,17 @@ import { createClient } from "@supabase/supabase-js";
 import type { AppConfig } from "@/config/env";
 import type { AuthService } from "@/services/interfaces/AuthService";
 import type { DepotService } from "@/services/interfaces/DepotService";
+import type { OperationsService } from "@/services/interfaces/OperationsService";
 import type { ProductService } from "@/services/interfaces/ProductService";
 import type { UserService } from "@/services/interfaces/UserService";
 import { MockAuthService } from "@/services/mock/MockAuthService";
 import { MockDepotService } from "@/services/mock/MockDepotService";
+import { MockOperationsService } from "@/services/mock/MockOperationsService";
 import { MockProductService } from "@/services/mock/MockProductService";
 import { MockUserService } from "@/services/mock/MockUserService";
 import { SupabaseAuthService } from "@/services/supabase/SupabaseAuthService";
 import { SupabaseDepotService } from "@/services/supabase/SupabaseDepotService";
+import { SupabaseOperationsService } from "@/services/supabase/SupabaseOperationsService";
 import { SupabaseProductService } from "@/services/supabase/SupabaseProductService";
 import { SupabaseUserService } from "@/services/supabase/SupabaseUserService";
 
@@ -35,6 +38,7 @@ export interface Services {
   products: ProductService;
   depots: DepotService;
   users: UserService;
+  operations: OperationsService;
 }
 
 /** Creates the backend services for a valid configuration. */
@@ -46,6 +50,7 @@ export function createServices(config: Extract<AppConfig, { ok: true }>): Servic
       products: new MockProductService(),
       depots: new MockDepotService(),
       users: new MockUserService(),
+      operations: new MockOperationsService(),
     };
   }
   if (config.dataSource !== "supabase") {
@@ -70,5 +75,6 @@ export function createServices(config: Extract<AppConfig, { ok: true }>): Servic
     products: new SupabaseProductService(client),
     depots: new SupabaseDepotService(client),
     users: new SupabaseUserService(client),
+    operations: new SupabaseOperationsService(client),
   };
 }
