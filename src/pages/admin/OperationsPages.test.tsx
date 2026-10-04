@@ -198,7 +198,7 @@ describe("Collection detail", () => {
     expect(screen.getByText("Yesterday, 7:00 AM")).toBeInTheDocument();
 
     const lines = within(screen.getByRole("region", { name: "Collected products" }));
-    expect(lines.getByText("500 Loaves (500 Loaves)")).toBeInTheDocument();
+    expect(lines.getByText("500 Loaves")).toBeInTheDocument();
     expect(lines.getByText("10 Caisses (500 Loaves)")).toBeInTheDocument();
 
     const balance = within(screen.getByRole("region", { name: "Balance per product" }));
@@ -406,8 +406,8 @@ describe("Receipt detail", () => {
       "listitem",
     );
     // Loaf first: 100 recorded, 95 counted, 5 short.
-    expect(lines[0]).toHaveTextContent("Recorded: 100 Loaves (100 Loaves)");
-    expect(lines[0]).toHaveTextContent("Depot count: 95 Loaves (95 Loaves)");
+    expect(lines[0]).toHaveTextContent("Recorded: 100 Loaves");
+    expect(lines[0]).toHaveTextContent("Depot count: 95 Loaves");
     expect(lines[0]).toHaveTextContent("Difference: −5 Loaves");
     // 3 Caisses recorded, counted as 2 Caisses + 5 Packs: the same 150 loaves.
     expect(lines[1]).toHaveTextContent("Recorded: 3 Caisses (150 Loaves)");

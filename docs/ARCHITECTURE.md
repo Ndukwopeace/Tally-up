@@ -253,7 +253,7 @@ All routes are defined in `src/app/router.tsx`. Every portal is wrapped by a `Re
 | `/admin/collections` | All collections, filterable |
 | `/admin/collections/:id` | Collection detail + depot allocations |
 | `/admin/distributions` | All distributions / receipts |
-| `/admin/receipts/:id` | Receipt detail: recorded vs counted, corrections |
+| `/admin/distributions/:receiptId` and `/admin/collections/:collectionId/receipts/:receiptId` | Receipt detail: recorded vs counted, corrections. One page, two routes, so Back stays inside the tab (Q-56, ADR 0004 #11) |
 | ~~`/admin/discrepancies`~~ | Not built: discrepancies are shown on Home and inside Distributions (Q-58b) |
 | `/admin/depots` | Depot list |
 | `/admin/depots/new` | Create depot |

@@ -78,6 +78,7 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261003160300_a3a_corrections_notifications.sql` | A3a Operations, part 4 |
 | `20261003160400_a3a_views_effective.sql` | A3a Operations, part 5 (views with corrections) |
 | `20261003160500_a3a_views_balances.sql` | A3a Operations, part 6 (balances and statuses) |
+| `20261004170000_a3b_list_views.sql` | A3b: list views for Collections and Distributions |
 
 For each file:
 

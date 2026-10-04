@@ -387,6 +387,18 @@ export const en = {
     // C-3: a number always carries its unit, e.g. "1 Caisse", "45 Packs", "1,000 Loaves".
     amount: (quantity: number, unit: Unit) =>
       `${quantity.toLocaleString("en")} ${quantity === 1 ? unitNames[unit].one : unitNames[unit].many}`,
+    // A quantity with its loaves in brackets, e.g. "3 Caisses (150 Loaves)"; a count of Loaves needs no brackets.
+    amountWithLoaves: (entries: readonly { unit: Unit; quantity: number }[], loaves: number) => {
+      const text = entries
+        .map(
+          (entry) =>
+            `${entry.quantity.toLocaleString("en")} ${entry.quantity === 1 ? unitNames[entry.unit].one : unitNames[entry.unit].many}`,
+        )
+        .join(" + ");
+      return entries.length === 1 && entries[0]?.unit === "Loaf"
+        ? text
+        : `${text} (${loaves.toLocaleString("en")} ${loaves === 1 ? "Loaf" : "Loaves"})`;
+    },
     loaves: (loaves: number) => `${loaves.toLocaleString("en")} ${loaves === 1 ? "Loaf" : "Loaves"}`,
     // RULE REC-02: the difference in loaves, signed.
     signedLoaves: (loaves: number) =>

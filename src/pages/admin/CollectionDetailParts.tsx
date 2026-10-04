@@ -56,7 +56,7 @@ export function LinesSection({
               {names.get(line.productId) ?? en.ops.unknownProduct}
             </span>
             <span className="text-base text-ink">
-              {en.ops.amount(line.quantity, line.unit)} ({en.ops.loaves(line.loaves)})
+              {en.ops.amountWithLoaves([{ unit: line.unit, quantity: line.quantity }], line.loaves)}
             </span>
             {line.isCorrected ? (
               <CorrectedMark was={en.ops.amount(line.originalQuantity, line.unit)} />

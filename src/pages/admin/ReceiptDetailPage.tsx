@@ -51,8 +51,8 @@ function LineCard({ line, name }: Readonly<{ line: ReceiptLineDetail; name: stri
     <li className="flex flex-col gap-1.5 rounded-card border border-line bg-surface px-4 py-3">
       <span className="text-base font-semibold break-words text-ink">{name}</span>
       <span className="text-sm text-ink">
-        {en.ops.receipts.recorded}: {en.ops.amount(line.recordedQuantity, line.unit)} (
-        {en.ops.loaves(line.recordedLoaves)})
+        {en.ops.receipts.recorded}:{" "}
+        {en.ops.amountWithLoaves([{ unit: line.unit, quantity: line.recordedQuantity }], line.recordedLoaves)}
       </span>
       {line.recordedIsCorrected ? (
         <CorrectedMark was={en.ops.amount(line.originalRecordedQuantity, line.unit)} />
@@ -62,9 +62,7 @@ function LineCard({ line, name }: Readonly<{ line: ReceiptLineDetail; name: stri
       ) : (
         <>
           <span className="text-sm text-ink">
-            {en.ops.receipts.countTitle}:{" "}
-            {line.counts.map((count) => en.ops.amount(count.quantity, count.unit)).join(" + ")} (
-            {en.ops.loaves(line.countedLoaves)})
+            {en.ops.receipts.countTitle}: {en.ops.amountWithLoaves(line.counts, line.countedLoaves)}
           </span>
           {line.counts
             .filter((count) => count.isCorrected)
