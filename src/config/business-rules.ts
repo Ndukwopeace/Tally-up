@@ -32,6 +32,8 @@ export interface BusinessRules {
   readonly distributionNumberFormat: RecordNumberFormat;
   /** Hours an In Progress collection may wait before it is flagged to Admin (COL-11). */
   readonly staleCollectionHours: number;
+  /** Hours a receipt may stay Awaiting Confirmation before it is flagged to Admin (RCP-15, Q-59f). */
+  readonly agedReceiptHours: number;
 }
 
 export const BUSINESS_RULES: BusinessRules = Object.freeze({
@@ -41,4 +43,5 @@ export const BUSINESS_RULES: BusinessRules = Object.freeze({
   collectionNumberFormat: Object.freeze({ prefix: "COL-", digits: 5 }),
   distributionNumberFormat: Object.freeze({ prefix: "DIS-", digits: 5 }),
   staleCollectionHours: 24,
+  agedReceiptHours: 24,
 });
