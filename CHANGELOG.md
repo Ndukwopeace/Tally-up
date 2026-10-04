@@ -4,6 +4,10 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+## [0.3.0] — A2 Admin data
+
+Products (A2a), Depots (A2b) and Users (A2c). Signed off by the owner on 2026-10-04.
+
 ### Changed — A2c Users
 - An inactive depot is no longer offered to a depot manager in the Users form, and the database refuses it (Q-58a).
 - An inactive depot has no manager (Q-58c): saving a depot as inactive deactivates its manager, the Depot form hides the manager list for an inactive depot and warns first, and a manager cannot be chosen for one.

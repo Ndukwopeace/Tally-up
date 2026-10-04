@@ -1,7 +1,7 @@
 {
   "name": "tally-up",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Tally-Up: bakery distribution tracking (collections, depot hand-overs, depot confirmations).",
   "type": "module",
   "engines": {

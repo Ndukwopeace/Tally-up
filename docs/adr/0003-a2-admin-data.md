@@ -1,6 +1,6 @@
 # ADR 0003 — A2 Admin data: technical choices
 
-**Status:** Proposed (grows with the A2a, A2b and A2c pull requests; accepted when the owner merges each one)
+**Status:** Accepted for A2 (A2a, A2b and A2c merged; the owner signed off A2 on 2026-10-04, including choices #9, #10 and #20 to #24)
 **Date:** 2026-10-02
 
 ## Context

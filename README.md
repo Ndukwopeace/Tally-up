@@ -11,8 +11,8 @@ Not a sales, delivery, truck or warehouse system. Full scope: [`docs/REQUIREMENT
 | 0 | Documents | Done |
 | 1 | Foundation: scaffold, design tokens, shared components, PWA, portal frames, Vercel | Done |
 | A1 | Admin login (Supabase, security rules, sign-in, forgot password, sign out) | Done (v0.2.0) |
-| A2 | Admin data: products, depots, users | In progress: A2a and A2b merged; A2c Users in review |
-| A3 | Admin monitoring | Planned |
+| A2 | Admin data: products, depots, users | Done (v0.3.0) |
+| A3 | Admin monitoring | Next: questions to the owner |
 | A4 | Admin reports | Planned |
 | D… / DM… | Distributor, then Depot Manager | Planned later |
 | Go-live | All roles, real-user test, v1.0.0 | Planned |

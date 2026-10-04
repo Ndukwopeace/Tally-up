@@ -434,7 +434,7 @@ Order: **separate milestones per role, Admin first** (Q-49, Q-55). Distributor a
 | 0 | — | Requirements, architecture, UI rules. **Done.** | Owner approves them. |
 | 1 | v0.1.0 | Project scaffold, design tokens, shared components, business-rules config, PWA, portal frames, deployed to Vercel. **Done** (plus logo Q-45, admin phone navigation Q-47). | Owner installs the app from the Vercel link. |
 | **A1** | v0.2.0 | **Admin login.** Supabase connected; database tables and security rules (profiles, audit log, RLS); admin sign-in; forgot password; real Sign Out; admin-only access. **Done** (owner tested staging and production, 2026-10-02). | Owner signs in as admin on a phone, and non-admin accounts are refused. |
-| A2 | v0.3.0 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, reset password). Distributor and manager accounts can be created but cannot sign in yet. | Master data can be created, edited and deactivated from the phone. |
+| A2 | v0.3.0 | **Admin data.** Products (units, loaves per unit), Depots (with manager), Users (create, edit, deactivate, reset password). Distributor and manager accounts can be created but cannot sign in yet. **Done** (owner signed off, 2026-10-04). | Master data can be created, edited and deactivated from the phone. |
 | A3 | v0.4.0 | **Admin monitoring.** Home, Collections, Distributions, discrepancies, corrections, notifications, audit log, settings, shown with realistic **test data** in the staging database. | Owner can answer the core question from the screen using the test data. |
 | A4 | v0.5.0 | **Admin reports.** Filters, PDF export (CSV later). | Filtered PDF matches the screen. |
 | D1… | — | **Distributor**, planned when Admin is complete. | — |
