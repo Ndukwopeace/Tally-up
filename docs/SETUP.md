@@ -72,6 +72,12 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261002150300_a2c_save_user.sql` | A2c Users, part 4 (save function) |
 | `20261002150500_a2c_inactive_depot_no_manager.sql` | A2c: an inactive depot has no manager, part 1 (Q-58a, Q-58c) |
 | `20261002150600_a2c_deactivate_depot_manager.sql` | A2c: an inactive depot has no manager, part 2 (save function) |
+| `20261003160000_a3a_collections.sql` | A3a Operations, part 1 (collections) |
+| `20261003160100_a3a_distributions.sql` | A3a Operations, part 2 (hand-overs) |
+| `20261003160200_a3a_confirmations.sql` | A3a Operations, part 3 (depot counts) |
+| `20261003160300_a3a_corrections_notifications.sql` | A3a Operations, part 4 |
+| `20261003160400_a3a_views_effective.sql` | A3a Operations, part 5 (views with corrections) |
+| `20261003160500_a3a_views_balances.sql` | A3a Operations, part 6 (balances and statuses) |
 
 For each file:
 
@@ -129,6 +135,29 @@ Open the Vercel preview link from the pull request.
 | Type `/depot` in the address bar while signed in | You stay in the admin portal |
 
 To check that non-admins are refused: create a second login (step 5a) and a profile with role `'distributor'` (step 5b with `'distributor'` instead of `'admin'`). Signing in with it shows "Sign-in for your role is not open yet."
+
+## 7. Staging test data (A3)
+
+The A3 screens are tried with fictional data: the spec's depots and breads, 2 distributors, 3 depot managers and 14 days of collections, hand-overs and counts (Q-59b). It goes in the **staging** database only, **never production** (DB-5).
+
+Supabase (the **staging** project) → **SQL Editor**. For each file in [`supabase/seed/`](../supabase/seed/), in this order, use "Copy raw file", paste, and **Run** (choose "Run without RLS" if asked):
+
+| File | What it does |
+|---|---|
+| `00_reset_demo.sql` | Deletes the previous demo rows, and only those (ids starting with `de`) |
+| `01_demo_master_data.sql` | Depots, breads and the 5 demo people |
+| `02_demo_collections.sql` | 14 days of collections, 5 a day |
+| `03_demo_distributions.sql` | Hand-overs to the depots |
+| `04_demo_confirmations.sql` | What the depot managers counted |
+| `05_demo_notifications_corrections.sql` | Your discrepancy notifications and two corrections |
+
+To refresh the data around today's date (it ages by a day each day), run all six again, starting with 00.
+
+Things to know:
+- Demo names end in "(demo)" and demo emails end in `@demo.tallyup.test`. You will see them in More → Users and Depots. They have no password and cannot sign in.
+- Your real depots, products and users are never touched.
+- File 05 uses the first active admin (you). With no admin, it adds nothing.
+- Nothing is shown on screen until A3b; until then, check the data in Supabase → Table Editor, for example the views `v_collection_status` and `v_receipt_status`.
 
 ## Known limits in A1
 

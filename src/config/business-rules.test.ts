@@ -33,6 +33,10 @@ describe("BUSINESS_RULES match REQUIREMENTS §11", () => {
     expect(BUSINESS_RULES.staleCollectionHours).toBe(24);
   });
 
+  it("flags a receipt Awaiting Confirmation to Admin after 24 hours (Q-59f, RCP-15)", () => {
+    expect(BUSINESS_RULES.agedReceiptHours).toBe(24);
+  });
+
   it("cannot be changed at runtime", () => {
     expect(Object.isFrozen(BUSINESS_RULES)).toBe(true);
   });

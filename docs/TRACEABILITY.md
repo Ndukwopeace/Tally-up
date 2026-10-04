@@ -88,3 +88,20 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | NFR-07, NFR-06, Q-56 | Loading, empty, error; no saving offline; Back stays in the tab | `UserPages.test.tsx` | `UsersPage.tsx`, `UserFormPage.tsx` |
 | DEP-06, Q-58a | Inactive depots are not offered to a depot manager | `users.test.ts`, `UserPages.test.tsx`, `a2c_users.test.sql` | `assignableDepots()`, trigger `profiles_manager_depot_active` (`…150500`) |
 | DEP-03, Q-58c | An inactive depot has no manager: deactivating a depot deactivates its manager; none can be chosen for it | `a2b_depots.test.sql`, `depots.test.ts`, `MockDepotService.test.ts`, `DepotPages.test.tsx` | `admin_save_depot()` (`…150600`), `managerLosingDepot()`, `ManagerSection` in `DepotFormPage.tsx` |
+
+## A3a — Operational data
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| AUD-01, COR-02, §6.1 | Operational tables are append-only; nothing writes through the API | `supabase/tests/a3a_operations.test.sql` | `supabase/migrations/20261003160*_a3a_*.sql` (grants) |
+| REC-01, REC-04 | Collected = Distributed + Remaining, in loaves, per product | `a3a_operations.test.sql`, `src/domain/balances.test.ts` | `v_collection_product_balance`, `collectionBalances()` |
+| COL-04, COL-05, DIS-04 | Same product and unit once per collection or hand-over; quantity above zero; the unit may differ | `a3a_operations.test.sql` | `collection_items`, `distribution_items` |
+| COL-08 | Collection status computed | `a3a_operations.test.sql`, `balances.test.ts` | `v_collection_status`, `collectionStatus()` |
+| REC-02, RCP-06, RCP-07 | Difference = Counted - Recorded in loaves; mixed units; zero allowed | `a3a_operations.test.sql`, `balances.test.ts` | `v_receipt_line`, `receiptLine()` |
+| RCP-11, RCP-12, REC-05 | Receipt status computed; confirmed once; independent of collection status | `a3a_operations.test.sql`, `balances.test.ts` | `v_receipt_status`, `receiptStatus()`, `confirmations` |
+| COR-01, COR-02, COR-04, COR-05 | Corrections never overwrite; latest wins; statuses recompute | `a3a_operations.test.sql` | `corrections`, `v_*_effective` |
+| PRD-06, Q-20, DIS-02, DIS-06 | Snapshot loaves per unit; whole numbers; breakdown; how many fit | `src/domain/units.test.ts` | `src/domain/units.ts` |
+| §6.5, AUTH-10, SEC-12 | Each role reads only its own records; views follow the same rule | `a3a_operations.test.sql` | RLS policies, `security_invoker` views |
+| NOT-05 | Notifications are read only by their owner; read/unread | `a3a_operations.test.sql` | `notifications` |
+| Q-59b, DB-5 | Staging-only test data, consistent, reset rebuilds the same data | `supabase/tests/a3a_seed.test.sql` | `supabase/seed/*` |
+| RCP-15, Q-59f | A receipt awaiting confirmation is flagged after 24 hours | `src/config/business-rules.test.ts` | `agedReceiptHours` (shown in A3b) |

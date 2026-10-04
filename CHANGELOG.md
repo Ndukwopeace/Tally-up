@@ -4,6 +4,13 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A3a Operational data
+- Tables for collections, hand-overs (distributions), depot confirmations and counts, corrections and notifications, with Row Level Security per role and no write path through the API (AUD-01, COR-02). Record numbers COL-00001 and DIS-00001.
+- Views that apply corrections and compute Remaining, receipt differences and both statuses in loaves (REC-01, REC-02, COL-08, RCP-11, COR-05).
+- TypeScript rules for loaf conversion, breakdown, balances and statuses, tested with the same numbers as the database.
+- Staging-only test data in `supabase/seed/` with a reset (Q-59b), and a test that runs it.
+- New setting `agedReceiptHours` = 24 (Q-59f). Owner answers recorded as Q-59.
+
 ## [0.3.0] — A2 Admin data
 
 Products (A2a), Depots (A2b) and Users (A2c). Signed off by the owner on 2026-10-04.
