@@ -68,6 +68,10 @@ export class MockDepotService implements DepotService {
   async save(input: DepotSaveInput, id?: string): Promise<string> {
     await this.beforeCall();
     const { managerId, ...fields } = input;
+    // RULE Q-58c: an inactive depot has no manager, so none can be chosen for it.
+    if (fields.status === "inactive" && managerId !== null) {
+      throw new DepotError("invalid");
+    }
     let savedId: string;
     if (id === undefined) {
       this.counter += 1;
@@ -81,10 +85,24 @@ export class MockDepotService implements DepotService {
       this.depots[index] = { id, ...fields, phones: [...fields.phones] };
       savedId = id;
     }
+    // RULE Q-58c: switching a depot to inactive deactivates its manager and takes them off it.
+    if (fields.status === "inactive") {
+      this.release(savedId);
+    }
     if (managerId !== null) {
       this.assign(savedId, managerId);
     }
     return savedId;
+  }
+
+  // RULE Q-58c: the active manager of this depot is deactivated and has no depot.
+  private release(depotId: string): void {
+    for (const manager of this.managers) {
+      if (manager.depotId === depotId && manager.status === "active") {
+        manager.status = "inactive";
+        manager.depotId = null;
+      }
+    }
   }
 
   // RULE DEP-03 / Q-57c: the chosen manager runs the depot; the one replaced is deactivated.

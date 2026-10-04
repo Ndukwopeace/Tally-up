@@ -173,3 +173,8 @@ export function isLastActiveAdmin(users: readonly User[], id: string): boolean {
   const activeAdmins = users.filter((user) => user.role === "admin" && user.status === "active");
   return activeAdmins.length === 1 && activeAdmins[0]?.id === id;
 }
+
+/** RULE Q-58a / Q-58c: the depots an admin may give to a depot manager: active ones only (an inactive depot has no manager). */
+export function assignableDepots(depots: readonly Depot[]): Depot[] {
+  return depots.filter((depot) => depot.status === "active");
+}

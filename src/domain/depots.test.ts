@@ -7,7 +7,13 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { depotFormFrom, emptyDepotForm, replacedManager, validateDepotForm } from "./depots";
+import {
+  depotFormFrom,
+  emptyDepotForm,
+  managerLosingDepot,
+  replacedManager,
+  validateDepotForm,
+} from "./depots";
 
 import type { Depot } from "@/types/entities";
 
@@ -50,10 +56,10 @@ describe("validateDepotForm", () => {
     expect(result.input).toBeUndefined();
   });
 
-  it("saves Inactive and the chosen manager", () => {
+  it("saves Inactive with no manager, even if one was chosen before Active was switched off (Q-58c)", () => {
     expect(validateDepotForm({ ...valid, active: false, managerId: "m1" }).input).toMatchObject({
       status: "inactive",
-      managerId: "m1",
+      managerId: null,
     });
   });
 });
@@ -97,5 +103,27 @@ describe("replacedManager", () => {
     expect(replacedManager(depot, null)).toBeNull();
     expect(replacedManager({ ...depot, manager: null }, "m2")).toBeNull();
     expect(replacedManager(undefined, "m2")).toBeNull();
+  });
+});
+
+describe("managerLosingDepot (Q-58c: an inactive depot has no manager)", () => {
+  const withManager: Depot = {
+    id: "d1",
+    name: "Akwa",
+    location: "Douala",
+    address: "Market",
+    phones: [],
+    status: "active",
+    manager: { id: "m1", fullName: "Mia Manager" },
+  };
+
+  it("names the manager who will be deactivated when the depot is switched to inactive", () => {
+    expect(managerLosingDepot(withManager, false)).toEqual({ id: "m1", fullName: "Mia Manager" });
+  });
+
+  it("is null while the depot stays active, has no manager, or is new", () => {
+    expect(managerLosingDepot(withManager, true)).toBeNull();
+    expect(managerLosingDepot({ ...withManager, manager: null }, false)).toBeNull();
+    expect(managerLosingDepot(undefined, false)).toBeNull();
   });
 });

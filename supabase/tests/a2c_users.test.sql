@@ -15,7 +15,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(49);
+select plan(53);
 
 -- ---------------------------------------------------------------------------
 -- Helpers
@@ -31,6 +31,7 @@ create function pg_temp.first_manager() returns uuid language sql immutable as $
 create function pg_temp.second_manager() returns uuid language sql immutable as $$ select pg_temp.fixture_id(51) $$;
 create function pg_temp.akwa() returns uuid language sql immutable as $$ select pg_temp.fixture_id(60) $$;
 create function pg_temp.bonaberi() returns uuid language sql immutable as $$ select pg_temp.fixture_id(61) $$;
+create function pg_temp.closed_depot() returns uuid language sql immutable as $$ select pg_temp.fixture_id(62) $$;
 
 -- Saves a user the way the Vercel Function does: the admin who asked, the target, then the values.
 create function pg_temp.save_user(
@@ -76,6 +77,8 @@ from (values
 ) as fixture (id, role_position, status_position);
 insert into public.depots (id, name, location, address)
 values (pg_temp.akwa(), 'Akwa', 'Douala', 'Market'), (pg_temp.bonaberi(), 'Bonaberi', 'Douala', 'Port');
+insert into public.depots (id, name, location, address, status)
+values (pg_temp.closed_depot(), 'Closed', 'Douala', 'Old road', 'inactive');
 
 -- ---------------------------------------------------------------------------
 -- Structure and who may call the functions
@@ -224,6 +227,22 @@ select is(pg_temp.actions(pg_temp.second_manager()),
   'AUD-03: edits, deactivation and activation of an account are logged');
 select is((select count(*)::int from public.audit_log where action = 'user.created' and user_id = pg_temp.first_admin()), 2,
   'AUD-03: the log names the admin who acted, not the account');
+
+-- ---------------------------------------------------------------------------
+-- Inactive depots (Q-58)
+-- ---------------------------------------------------------------------------
+select pg_temp.rule_refused($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.auth_user(77), 'Closed Manager',
+  'closed@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.closed_depot(), true)$$,
+  'INVALID_USER', 'Q-58: an inactive depot cannot be given to a manager');
+select throws_ok($$update public.profiles set status = 'active', depot_id = pg_temp.closed_depot() where id = pg_temp.first_manager()$$,
+  'P0001', 'INVALID_USER', 'Q-58: the table itself refuses an active manager at an inactive depot');
+select lives_ok($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.auth_user(78), 'Port Manager',
+  'port@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.akwa(), true)$$,
+  'a manager is put in charge of an active depot');
+update public.depots set status = 'inactive' where id = pg_temp.akwa();
+select pg_temp.rule_refused($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.fixture_id(78), 'Port Manager Jr',
+  'port@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.akwa(), false)$$,
+  'INVALID_USER', 'Q-58: a manager cannot keep, or be given, a depot that is inactive');
 
 -- ---------------------------------------------------------------------------
 -- Reading (ARCHITECTURE §6.5): the new column follows the existing rules

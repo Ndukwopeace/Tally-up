@@ -286,7 +286,9 @@ export const en = {
     // RULE DEP-03: one depot per manager, so moving them leaves their old depot without one.
     moveWarning: (name: string, depot: string) => `${name} will move here. ${depot} will have no manager.`,
     activeLabel: "Active",
-    activeHint: "Inactive depots are not offered to distributors.",
+    activeHint: "Inactive depots are not offered to distributors and have no manager.",
+    // RULE Q-58c: an inactive depot has no manager.
+    inactiveNoManager: "An inactive depot has no manager.",
     save: "Save depot",
     phonesTitle: "Phone numbers",
     noPhones: "No phone number",

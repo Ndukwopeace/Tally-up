@@ -31,6 +31,7 @@ import { buttonVariants } from "@/components/ui/button";
 import {
   depotFormFrom,
   emptyDepotForm,
+  managerLosingDepot,
   replacedManager,
   validateDepotForm,
   type DepotFormErrors,
@@ -107,6 +108,75 @@ function managerWhere(
   return en.depots.managerRunsOther(depotNames.get(manager.depotId) ?? "");
 }
 
+/** The manager list with the warnings about whom a choice affects (DEP-03, Q-57c), or, for an inactive depot, why there is none (Q-58c). */
+function ManagerSection({
+  values,
+  depot,
+  onManagerChange,
+}: Readonly<{
+  values: DepotFormValues;
+  depot?: Depot;
+  onManagerChange: (managerId: string | null) => void;
+}>) {
+  const managers = useDepotManagers();
+  const depots = useDepots();
+
+  // RULE Q-58c: an inactive depot has no manager; say whose account this will deactivate.
+  if (!values.active) {
+    const closing = managerLosingDepot(depot, false);
+    return (
+      <div aria-live="polite" className="flex flex-col gap-2">
+        <p className="text-base text-ink-muted">{en.depots.inactiveNoManager}</p>
+        {closing ? <WarningNote>{en.depots.replaceWarning(closing.fullName)}</WarningNote> : null}
+      </div>
+    );
+  }
+  if (managers.isPending) {
+    return <PageSkeleton />;
+  }
+
+  const managerList = managers.data ?? [];
+  const depotNames = new Map((depots.data ?? []).map((saved) => [saved.id, saved.name]));
+  // RULE DEP-03: a depot that has a manager keeps one; "No manager" is offered only when it has none.
+  const options: SelectOption[] = [
+    ...(depot?.manager ? [] : [{ value: NO_MANAGER, label: en.depots.managerNone }]),
+    ...managerList.map((manager) => ({
+      value: manager.id,
+      label: en.depots.managerOption(manager.fullName, managerWhere(manager, depot, depotNames)),
+    })),
+  ];
+  const replaced = replacedManager(depot, values.managerId);
+  const chosen = managerList.find((manager) => manager.id === values.managerId);
+  // The chosen manager runs another depot: that depot will be left without a manager.
+  const leaves =
+    chosen?.status === "active" && chosen.depotId !== null && chosen.depotId !== depot?.id
+      ? depotNames.get(chosen.depotId)
+      : undefined;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SelectField
+        id="depot-manager"
+        label={en.depots.manager}
+        hint={managerList.length === 0 ? en.depots.noManagersYet : en.depots.managerHint}
+        value={values.managerId ?? NO_MANAGER}
+        options={options}
+        onValueChange={(managerId) => {
+          onManagerChange(managerId === NO_MANAGER ? null : managerId);
+        }}
+      />
+      {/* RULE Q-57c: say who loses access before the admin saves. The live
+          region stays mounted so a new warning is read out when it appears. */}
+      <div aria-live="polite" className="flex flex-col gap-2 empty:hidden">
+        {replaced ? <WarningNote>{en.depots.replaceWarning(replaced.fullName)}</WarningNote> : null}
+        {chosen && leaves !== undefined ? (
+          <WarningNote>{en.depots.moveWarning(chosen.fullName, leaves)}</WarningNote>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function DepotForm({
   title,
   initial,
@@ -115,8 +185,6 @@ function DepotForm({
   const [values, setValues] = useState(initial);
   const [errors, setErrors] = useState<DepotFormErrors>({});
   const save = useSaveDepot();
-  const managers = useDepotManagers();
-  const depots = useDepots();
   const navigate = useNavigate();
   const online = useOnlineStatus();
   const formRef = useRef<HTMLFormElement>(null);
@@ -163,24 +231,6 @@ function DepotForm({
     Object.entries(errors.phones ?? {}).map(([index, code]) => [index, en.depots.fieldErrors[code]]),
   );
 
-  const managerList = managers.data ?? [];
-  const depotNames = new Map((depots.data ?? []).map((saved) => [saved.id, saved.name]));
-  // RULE DEP-03: a depot that has a manager keeps one; "No manager" is offered only when it has none.
-  const options: SelectOption[] = [
-    ...(depot?.manager ? [] : [{ value: NO_MANAGER, label: en.depots.managerNone }]),
-    ...managerList.map((manager) => ({
-      value: manager.id,
-      label: en.depots.managerOption(manager.fullName, managerWhere(manager, depot, depotNames)),
-    })),
-  ];
-  const replaced = replacedManager(depot, values.managerId);
-  const chosen = managerList.find((manager) => manager.id === values.managerId);
-  // The chosen manager runs another depot: that depot will be left without a manager.
-  const leaves =
-    chosen?.status === "active" && chosen.depotId !== null && chosen.depotId !== depot?.id
-      ? depotNames.get(chosen.depotId)
-      : undefined;
-
   return (
     <>
       <PageTitle title={title} />
@@ -224,30 +274,13 @@ function DepotForm({
           errors={phoneErrors}
         />
 
-        {managers.isPending ? (
-          <PageSkeleton />
-        ) : (
-          <div className="flex flex-col gap-3">
-            <SelectField
-              id="depot-manager"
-              label={en.depots.manager}
-              hint={managerList.length === 0 ? en.depots.noManagersYet : en.depots.managerHint}
-              value={values.managerId ?? NO_MANAGER}
-              options={options}
-              onValueChange={(managerId) => {
-                update({ managerId: managerId === NO_MANAGER ? null : managerId });
-              }}
-            />
-            {/* RULE Q-57c: say who loses access before the admin saves. The live
-                region stays mounted so a new warning is read out when it appears. */}
-            <div aria-live="polite" className="flex flex-col gap-2 empty:hidden">
-              {replaced ? <WarningNote>{en.depots.replaceWarning(replaced.fullName)}</WarningNote> : null}
-              {chosen && leaves !== undefined ? (
-                <WarningNote>{en.depots.moveWarning(chosen.fullName, leaves)}</WarningNote>
-              ) : null}
-            </div>
-          </div>
-        )}
+        <ManagerSection
+          values={values}
+          depot={depot}
+          onManagerChange={(managerId) => {
+            update({ managerId });
+          }}
+        />
 
         <CheckboxField
           label={en.depots.activeLabel}
