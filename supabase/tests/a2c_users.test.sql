@@ -15,7 +15,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(52);
+select plan(53);
 
 -- ---------------------------------------------------------------------------
 -- Helpers
@@ -234,6 +234,8 @@ select is((select count(*)::int from public.audit_log where action = 'user.creat
 select pg_temp.rule_refused($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.auth_user(77), 'Closed Manager',
   'closed@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.closed_depot(), true)$$,
   'INVALID_USER', 'Q-58: an inactive depot cannot be given to a manager');
+select throws_ok($$update public.profiles set status = 'active', depot_id = pg_temp.closed_depot() where id = pg_temp.first_manager()$$,
+  'P0001', 'INVALID_USER', 'Q-58: the table itself refuses an active manager at an inactive depot');
 select lives_ok($$select pg_temp.save_user(pg_temp.second_admin(), pg_temp.auth_user(78), 'Port Manager',
   'port@example.test', array[]::text[], 'depot_manager', 'active', pg_temp.akwa(), true)$$,
   'a manager is put in charge of an active depot');
