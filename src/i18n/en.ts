@@ -429,8 +429,6 @@ export const en = {
       emptyTitle: "No collections yet",
       emptyBody: "Collections appear here once distributors record them.",
       noMatch: "No collection matches these filters.",
-      collected: "Collected",
-      handedOver: "Handed over",
       remaining: "Remaining",
       distributor: "Distributor",
       when: "Date and time",

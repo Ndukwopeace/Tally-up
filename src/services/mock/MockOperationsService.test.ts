@@ -31,31 +31,19 @@ describe("listCollections (ADM-03)", () => {
     expect(first).toMatchObject({
       distributorName: "Dan Distributor",
       status: "fully_distributed",
-      remainingLoaves: 0,
       collected: [
-        { unit: "Loaf", quantity: 500 },
-        { unit: "Caisse", quantity: 10 },
-      ],
-      distributed: [
-        { unit: "Loaf", quantity: 400 },
-        { unit: "Pack", quantity: 45 },
-        { unit: "Caisse", quantity: 3 },
+        { productId: "bb", unit: "Loaf", quantity: 500 },
+        { productId: "bb", unit: "Caisse", quantity: 10 },
       ],
     });
+    expect(first).not.toHaveProperty("remainingLoaves");
+    expect(first).not.toHaveProperty("distributed");
   });
 
-  it("REC-01: a collection partly handed over is In Progress with the rest remaining", async () => {
+  it("COL-08: a collection with loaves still to hand over is In Progress", async () => {
     const { rows } = await service().listCollections({}, 0);
-    expect(rows.find((row) => row.label === "COL-00003")).toMatchObject({
-      status: "in_progress",
-      remainingLoaves: 60,
-      distributed: [{ unit: "Loaf", quantity: 20 }],
-    });
-    expect(rows.find((row) => row.label === "COL-00002")).toMatchObject({
-      status: "in_progress",
-      remainingLoaves: 100,
-      distributed: [],
-    });
+    expect(rows.find((row) => row.label === "COL-00003")?.status).toBe("in_progress");
+    expect(rows.find((row) => row.label === "COL-00002")?.status).toBe("in_progress");
   });
 
   it("filters by status, distributor and Douala day (Q-59g)", async () => {
@@ -119,10 +107,9 @@ describe("listCollections (ADM-03)", () => {
     const row = (await mock.listCollections({}, 0)).rows.find((r) => r.label === "COL-00001");
     expect(row).toMatchObject({
       status: "in_progress",
-      remainingLoaves: 50,
       collected: [
-        { unit: "Loaf", quantity: 500 },
-        { unit: "Caisse", quantity: 11 },
+        { productId: "bb", unit: "Loaf", quantity: 500 },
+        { productId: "bb", unit: "Caisse", quantity: 11 },
       ],
     });
     const detail = await mock.getCollection("c1");
@@ -189,8 +176,8 @@ describe("listReceipts (ADM-04, RCP-11)", () => {
       collectionLabel: "COL-00001",
       status: "confirmed_with_discrepancy",
       recorded: [
-        { unit: "Loaf", quantity: 100 },
-        { unit: "Caisse", quantity: 3 },
+        { productId: "bb", unit: "Loaf", quantity: 100 },
+        { productId: "bb", unit: "Caisse", quantity: 3 },
       ],
     });
     expect(rows.find((row) => row.label === "DIS-00004")).toMatchObject({

@@ -41,9 +41,9 @@ import type {
   ReceiptDetail,
   ReceiptLineDetail,
   ReceiptListItem,
-  UnitQuantity,
+  ProductQuantity,
 } from "@/types/entities";
-import { UNITS, type Unit } from "@/types/enums";
+import type { Unit } from "@/types/enums";
 
 interface Line {
   id: string;
@@ -258,19 +258,39 @@ export class MockOperationsService implements OperationsService {
       }));
   }
 
-  // Quantities per unit as entered, in Loaf, Pack, Caisse order (ADM-02).
-  private perUnit(table: "collection_items" | "distribution_items", items: Line[]): UnitQuantity[] {
-    return UNITS.map((unit) => ({
-      unit,
-      quantity: items
-        .filter((item) => item.unit === unit)
-        .reduce((sum, item) => sum + this.effectiveQuantity(table, item.id, item.quantity), 0),
-    })).filter((entry) => entry.quantity > 0 || items.some((item) => item.unit === entry.unit));
+  // What was entered per product and unit, in Loaf, Pack, Caisse order (ADM-02).
+  private perProduct(table: "collection_items" | "distribution_items", items: Line[]): ProductQuantity[] {
+    const totals = new Map<string, ProductQuantity>();
+    for (const item of items) {
+      const key = `${item.productId}/${item.unit}`;
+      const quantity = this.effectiveQuantity(table, item.id, item.quantity);
+      const known = totals.get(key);
+      totals.set(key, {
+        productId: item.productId,
+        unit: item.unit,
+        quantity: (known?.quantity ?? 0) + quantity,
+      });
+    }
+    return [...totals.values()].sort(compareUnits);
   }
 
   private name(list: { id: string; fullName?: string; name?: string }[], id: string): string | null {
     const found = list.find((entry) => entry.id === id);
     return found ? (found.fullName ?? found.name ?? null) : null;
+  }
+
+  // COL-08: In Progress while any product has loaves left to hand over; computed, never stored.
+  private statusOf(collectionId: string): CollectionListItem["status"] {
+    const items = this.data.collectionItems.filter((item) => item.collectionId === collectionId);
+    const given = this.data.distributionItems.filter((item) =>
+      this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === collectionId),
+    );
+    return collectionStatus(
+      collectionBalances(
+        this.quantityLines("collection_items", items),
+        this.quantityLines("distribution_items", given),
+      ),
+    );
   }
 
   private collectionRow(id: string): CollectionListItem {
@@ -279,23 +299,14 @@ export class MockOperationsService implements OperationsService {
       throw new OperationsError("unavailable");
     }
     const items = this.data.collectionItems.filter((item) => item.collectionId === id);
-    const given = this.data.distributionItems.filter((item) =>
-      this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === id),
-    );
-    const balances = collectionBalances(
-      this.quantityLines("collection_items", items),
-      this.quantityLines("distribution_items", given),
-    );
     return {
       id,
       label: c.label,
       createdAt: c.createdAt,
       distributorId: c.distributorId,
       distributorName: this.name(this.data.people, c.distributorId),
-      status: collectionStatus(balances),
-      collected: this.perUnit("collection_items", items),
-      distributed: this.perUnit("distribution_items", given),
-      remainingLoaves: balances.reduce((sum, balance) => sum + balance.remainingLoaves, 0),
+      status: this.statusOf(id),
+      collected: this.perProduct("collection_items", items),
     };
   }
 
@@ -327,7 +338,7 @@ export class MockOperationsService implements OperationsService {
       distributorName: this.name(this.data.people, d.distributorId),
       status: receiptStatus(lines, confirmation !== undefined),
       confirmedAt: confirmation?.confirmedAt ?? null,
-      recorded: this.perUnit("distribution_items", items),
+      recorded: this.perProduct("distribution_items", items),
     };
   }
 

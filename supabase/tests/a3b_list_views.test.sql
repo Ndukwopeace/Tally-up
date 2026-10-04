@@ -14,7 +14,7 @@
 -- SECURITY: Fictional users only; everything is rolled back.
 -- -----------------------------------------------------------------------------
 begin;
-select plan(16);
+select plan(14);
 
 create function pg_temp.id(n int) returns uuid language sql immutable as $$
   select ('00000000-0000-0000-0000-' || lpad(to_hex(n), 12, '0'))::uuid
@@ -71,21 +71,22 @@ values (pg_temp.id(300), pg_temp.id(201), 'Caisse', 3, 50), (pg_temp.id(300), pg
 -- Record numbers come from sequences, which a rolled-back test does not reset: check their shape, not the value.
 select results_eq($$select label ~ '^COL-[0-9]{5}$', distributor_name, status from public.v_collection_list where id = pg_temp.id(100)$$,
   $$values (true, 'Dist One', 'fully_distributed')$$, 'ADM-03: number, distributor and status');
-select is((select collected_by_unit from public.v_collection_list where id = pg_temp.id(100)),
-  '[{"unit": "Loaf", "quantity": 500}, {"unit": "Caisse", "quantity": 10}]'::jsonb,
-  'ADM-02: collected, per unit as entered');
-select is((select distributed_by_unit from public.v_collection_list where id = pg_temp.id(100)),
-  '[{"unit": "Loaf", "quantity": 400}, {"unit": "Pack", "quantity": 45}, {"unit": "Caisse", "quantity": 3}]'::jsonb,
-  'ADM-02: distributed, per unit as entered (400 Loaves, 45 Packs, 3 Caisse)');
-select is((select remaining_loaves::int from public.v_collection_list where id = pg_temp.id(100)), 0, 'REC-01: nothing remains');
-select is((select remaining_loaves::int from public.v_collection_list where id = pg_temp.id(110)), 100,
-  'REC-01: a collection with nothing handed over has everything remaining');
-select is((select distributed_by_unit from public.v_collection_list where id = pg_temp.id(110)), '[]'::jsonb,
-  'a collection with nothing handed over has no distributed units');
+select is((select collected_lines from public.v_collection_list where id = pg_temp.id(100)),
+  jsonb_build_array(jsonb_build_object('product_id', pg_temp.id(20), 'unit', 'Loaf', 'quantity', 500),
+                    jsonb_build_object('product_id', pg_temp.id(20), 'unit', 'Caisse', 'quantity', 10)),
+  'ADM-02: collected, per product and unit as entered');
+insert into public.products (id, name, code, description) values (pg_temp.id(21), 'Small Bread', 'SB-01', 'Small loaf');
+insert into public.collection_items (id, collection_id, product_id, unit, quantity, loaves_per_unit_snapshot)
+values (pg_temp.id(112), pg_temp.id(110), pg_temp.id(21), 'Pack', 7, 10);
+select is((select jsonb_array_length(collected_lines) from public.v_collection_list where id = pg_temp.id(110)), 2,
+  'each product is its own line');
+select is((select count(*)::int from information_schema.columns
+  where table_name = 'v_collection_list' and column_name in ('remaining_loaves', 'distributed_by_unit')), 0,
+  'the list carries no remaining or handed-over figure');
 insert into public.corrections (target_table, target_id, field, original_value, corrected_value, admin_id)
 values ('collection_items', pg_temp.id(102), 'quantity', '10', '11', pg_temp.id(1));
-select is((select collected_by_unit from public.v_collection_list where id = pg_temp.id(100)),
-  '[{"unit": "Loaf", "quantity": 500}, {"unit": "Caisse", "quantity": 11}]'::jsonb, 'COR-05: the list uses the corrected quantity');
+select is((select collected_lines -> 1 ->> 'quantity' from public.v_collection_list where id = pg_temp.id(100)), '11',
+  'COR-05: the list uses the corrected quantity');
 select is((select status from public.v_collection_list where id = pg_temp.id(100)), 'in_progress',
   'COR-05: and the recomputed status (50 loaves remain)');
 
@@ -96,8 +97,10 @@ select results_eq($$select label ~ '^DIS-[0-9]{5}$', collection_label = (select 
   depot_name, distributor_name, status from public.v_receipt_list where id = pg_temp.id(200)$$,
   $$values (true, true, 'Akwa', 'Dist One', 'confirmed_with_discrepancy')$$,
   'a receipt shows its number, collection, depot, distributor and status');
-select is((select recorded_by_unit from public.v_receipt_list where id = pg_temp.id(200)),
-  '[{"unit": "Loaf", "quantity": 100}, {"unit": "Caisse", "quantity": 3}]'::jsonb, 'a receipt shows what was recorded, per unit');
+select is((select recorded_lines from public.v_receipt_list where id = pg_temp.id(200)),
+  jsonb_build_array(jsonb_build_object('product_id', pg_temp.id(20), 'unit', 'Loaf', 'quantity', 100),
+                    jsonb_build_object('product_id', pg_temp.id(20), 'unit', 'Caisse', 'quantity', 3)),
+  'a receipt shows what was recorded, per product and unit');
 select is((select status from public.v_receipt_list where id = pg_temp.id(220)), 'awaiting_confirmation',
   'a hand-over with no confirmation is Awaiting Confirmation');
 select ok((select confirmed_at is null from public.v_receipt_list where id = pg_temp.id(220)), 'and has no confirmation time');

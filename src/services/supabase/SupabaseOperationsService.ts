@@ -34,11 +34,14 @@ import type {
   CountEntry,
   ReceiptDetail,
   ReceiptLineDetail,
+  ProductQuantity,
   ReceiptListItem,
 } from "@/types/entities";
-import { COLLECTION_STATUSES, RECEIPT_STATUSES, UNITS } from "@/types/enums";
+import { COLLECTION_STATUSES, RECEIPT_STATUSES, UNITS, type Unit } from "@/types/enums";
 
-const unitQuantities = z.array(z.object({ unit: z.enum(UNITS), quantity: z.number() }));
+const productQuantities = z.array(
+  z.object({ product_id: z.string(), unit: z.enum(UNITS), quantity: z.number() }),
+);
 const nullableText = z.nullable(z.string());
 
 const collectionRow = z.object({
@@ -48,9 +51,7 @@ const collectionRow = z.object({
   distributor_id: z.string(),
   distributor_name: nullableText,
   status: z.enum(COLLECTION_STATUSES),
-  collected_by_unit: unitQuantities,
-  distributed_by_unit: unitQuantities,
-  remaining_loaves: z.number(),
+  collected_lines: productQuantities,
 });
 
 const receiptRow = z.object({
@@ -65,7 +66,7 @@ const receiptRow = z.object({
   distributor_name: nullableText,
   status: z.enum(RECEIPT_STATUSES),
   confirmed_at: nullableText,
-  recorded_by_unit: unitQuantities,
+  recorded_lines: productQuantities,
 });
 
 const collectionLineRow = z.object({
@@ -135,6 +136,10 @@ function parseOne<T>(schema: z.ZodMiniType<T>, row: unknown): T | null {
   return parsed.data;
 }
 
+function toProductQuantity(row: { product_id: string; unit: Unit; quantity: number }): ProductQuantity {
+  return { productId: row.product_id, unit: row.unit, quantity: row.quantity };
+}
+
 function toCollection(row: z.infer<typeof collectionRow>): CollectionListItem {
   return {
     id: row.id,
@@ -143,9 +148,7 @@ function toCollection(row: z.infer<typeof collectionRow>): CollectionListItem {
     distributorId: row.distributor_id,
     distributorName: row.distributor_name,
     status: row.status,
-    collected: row.collected_by_unit,
-    distributed: row.distributed_by_unit,
-    remainingLoaves: row.remaining_loaves,
+    collected: row.collected_lines.map(toProductQuantity),
   };
 }
 
@@ -162,7 +165,7 @@ function toReceipt(row: z.infer<typeof receiptRow>): ReceiptListItem {
     distributorName: row.distributor_name,
     status: row.status,
     confirmedAt: row.confirmed_at,
-    recorded: row.recorded_by_unit,
+    recorded: row.recorded_lines.map(toProductQuantity),
   };
 }
 

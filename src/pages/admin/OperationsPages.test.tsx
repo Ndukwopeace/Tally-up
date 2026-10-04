@@ -90,11 +90,15 @@ describe("Collections list", () => {
     expect(first).toHaveAttribute("href", "/admin/collections/c1");
     expect(first).toHaveTextContent("Fully Distributed");
     expect(first).toHaveTextContent("Dan Distributor · Yesterday, 7:00 AM");
-    expect(first).toHaveTextContent("Collected: 500 Loaves · 10 Caisses");
-    expect(first).toHaveTextContent("Handed over: 400 Loaves · 45 Packs · 3 Caisses");
-    expect(first).toHaveTextContent("Remaining: 0 Loaves");
+    // The card says what was collected, per product and unit, and nothing about hand-overs or what remains.
+    expect(
+      within(first)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Big Bread: 500 Loaves", "Big Bread: 10 Caisses"]);
+    expect(first).not.toHaveTextContent(/handed over|remaining|distributed:/i);
     expect(card("COL-00002")).toHaveTextContent("Dora Distributor · Today, 11:00 AM");
-    expect(card("COL-00002")).toHaveTextContent("Handed over: Nothing");
+    expect(card("COL-00002")).toHaveTextContent("Big Bread: 100 Loaves");
   });
 
   it("COL-11: flags a collection still In Progress after 24 hours, and only that one", async () => {
@@ -304,7 +308,13 @@ describe("Distributions list", () => {
     expect(discrepancy).toHaveTextContent("Confirmed with Discrepancy");
     expect(discrepancy).toHaveTextContent("Akwa");
     expect(discrepancy).toHaveTextContent("Dan Distributor · Yesterday, 9:00 AM");
-    expect(discrepancy).toHaveTextContent("Recorded: 100 Loaves · 3 Caisses");
+    // Exactly what was handed over, line by line, with no loaf total to open up.
+    expect(
+      within(discrepancy)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Big Bread: 100 Loaves", "Big Bread: 3 Caisses"]);
+    expect(discrepancy).not.toHaveTextContent(/remaining|of which/i);
   });
 
   it("RCP-15 / Q-59f: shows how long a receipt has waited, and flags it after 24 hours", async () => {

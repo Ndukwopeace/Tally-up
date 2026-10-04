@@ -96,7 +96,12 @@ export interface UnitQuantity {
   quantity: number;
 }
 
-/** One row of the admin Collections list (ADM-03): who, when, status, quantities per unit as entered. */
+/** A quantity of one product in one unit, as entered (ADM-02). */
+export interface ProductQuantity extends UnitQuantity {
+  productId: string;
+}
+
+/** One row of the admin Collections list (ADM-03): who, when, status, and what was collected per product. */
 export interface CollectionListItem {
   id: string;
   /** COL-00001 style (REQUIREMENTS §11). */
@@ -107,10 +112,8 @@ export interface CollectionListItem {
   /** Null when the caller cannot read the distributor's profile. */
   distributorName: string | null;
   status: CollectionStatus;
-  collected: UnitQuantity[];
-  distributed: UnitQuantity[];
-  /** Loaves not yet handed over, all products (REC-01). */
-  remainingLoaves: number;
+  /** Per product and unit as entered, corrections applied. No remaining or handed-over figure on the list. */
+  collected: ProductQuantity[];
 }
 
 /** One row of the admin Distributions list (ADM-04): a hand-over and its receipt status. */
@@ -128,7 +131,8 @@ export interface ReceiptListItem {
   status: ReceiptStatus;
   /** When the depot confirmed, or null while Awaiting Confirmation. */
   confirmedAt: string | null;
-  recorded: UnitQuantity[];
+  /** What the distributor handed over, per product and unit as entered. */
+  recorded: ProductQuantity[];
 }
 
 /** A collection line with the value in force after any admin correction (COR-04). */

@@ -8,8 +8,9 @@
  *       to, depot, receipt status, and a "with discrepancy only" shortcut for that
  *       status) sit in a collapsible box and live in the page address; Home links
  *       here with the discrepancy filter on. A card shows the number, status, depot,
- *       distributor, when, what was recorded per unit as entered, and for a waiting
- *       receipt how long it has waited, flagged after 24 hours (Q-59f).
+ *       distributor, when, exactly what was handed over (one line per product and
+ *       unit as entered), and for a waiting receipt how long it has waited,
+ *       flagged after 24 hours (Q-59f).
  * WHEN: /admin/distributions (the Distributions tab).
  * SECURITY: Read-only; RLS decides what an admin reads. Filter values from the
  *       address are checked before use.
@@ -20,7 +21,7 @@ import { Link } from "react-router";
 import { FlagChip } from "@/components/admin/FlagChip";
 import { FilterPanel } from "@/components/admin/FilterPanel";
 import { ListFrame } from "@/components/admin/ListFrame";
-import { UnitTotals } from "@/components/admin/UnitTotals";
+import { ProductLines } from "@/components/admin/ProductLines";
 import { CheckboxField } from "@/components/common/CheckboxField";
 import { SelectField } from "@/components/common/SelectField";
 import { StatusBadge } from "@/components/common/StatusBadge";
@@ -29,6 +30,7 @@ import { BUSINESS_RULES } from "@/config/business-rules";
 import { isAgedReceipt, receiptAge } from "@/domain/flags";
 import { useDepots } from "@/hooks/useDepots";
 import { useReceipts } from "@/hooks/useOperations";
+import { useProducts } from "@/hooks/useProducts";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { en } from "@/i18n/en";
 import { formatWhen } from "@/lib/format";
@@ -64,7 +66,11 @@ function WaitingNote({ item, now }: Readonly<{ item: ReceiptListItem; now: Date 
   );
 }
 
-function ReceiptCard({ item, now }: Readonly<{ item: ReceiptListItem; now: Date }>) {
+function ReceiptCard({
+  item,
+  now,
+  names,
+}: Readonly<{ item: ReceiptListItem; now: Date; names: ReadonlyMap<string, string> }>) {
   return (
     <li>
       <Link
@@ -82,9 +88,7 @@ function ReceiptCard({ item, now }: Readonly<{ item: ReceiptListItem; now: Date 
           <span className="text-sm text-ink-muted">
             {item.distributorName ?? en.ops.unknownPerson} · {formatWhen(item.createdAt, now)}
           </span>
-          <span className="text-sm text-ink">
-            {en.ops.receipts.recorded}: <UnitTotals totals={item.recorded} />
-          </span>
+          <ProductLines lines={item.recorded} names={names} />
           <WaitingNote item={item} now={now} />
         </span>
         <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-ink-muted" />
@@ -97,6 +101,8 @@ export function DistributionsPage() {
   const { values, activeCount, set, clear } = useUrlFilters(KEYS);
   const query = useReceipts(toFilters(values));
   const depots = useDepots();
+  const products = useProducts();
+  const names = new Map((products.data ?? []).map((product) => [product.id, product.name]));
   const rows = query.data?.pages.flatMap((page) => page.rows) ?? [];
   const now = new Date();
 
@@ -164,7 +170,7 @@ export function DistributionsPage() {
           noMatch={en.ops.receipts.noMatch}
         >
           {rows.map((item) => (
-            <ReceiptCard key={item.id} item={item} now={now} />
+            <ReceiptCard key={item.id} item={item} now={now} names={names} />
           ))}
         </ListFrame>
       </div>

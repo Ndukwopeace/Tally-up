@@ -1,9 +1,9 @@
 /**
  * Admin → Collections: every collection, newest first (ADM-03, Q-47, Q-59g).
  *
- * WHY:  The admin sees what each distributor collected, how much has been handed
- *       over, how much remains, and whether it is still In Progress, without
- *       phoning anyone (REQUIREMENTS §1).
+ * WHY:  The admin sees what each distributor collected, per product, and whether
+ *       it is still In Progress, without phoning anyone (REQUIREMENTS §1). Hand-overs
+ *       and what remains are on the collection's own page, not on the card.
  * HOW:  Cards (phone-first, NFR-08) from useCollections, 25 at a time with "Load
  *       more". Filters (date from and to, distributor, status) sit in a collapsible
  *       box and live in the page address, so a filtered list can be shared. Each
@@ -20,13 +20,14 @@ import { Link } from "react-router";
 import { FlagChip } from "@/components/admin/FlagChip";
 import { FilterPanel } from "@/components/admin/FilterPanel";
 import { ListFrame } from "@/components/admin/ListFrame";
-import { UnitTotals } from "@/components/admin/UnitTotals";
+import { ProductLines } from "@/components/admin/ProductLines";
 import { SelectField } from "@/components/common/SelectField";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { TextField } from "@/components/common/TextField";
 import { BUSINESS_RULES } from "@/config/business-rules";
 import { isStaleCollection } from "@/domain/flags";
 import { useCollections } from "@/hooks/useOperations";
+import { useProducts } from "@/hooks/useProducts";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { useUsers } from "@/hooks/useUsers";
 import { en } from "@/i18n/en";
@@ -49,7 +50,11 @@ function toFilters(values: Record<string, string>): CollectionFilters {
   };
 }
 
-function CollectionCard({ item, now }: Readonly<{ item: CollectionListItem; now: Date }>) {
+function CollectionCard({
+  item,
+  now,
+  names,
+}: Readonly<{ item: CollectionListItem; now: Date; names: ReadonlyMap<string, string> }>) {
   return (
     <li>
       <Link
@@ -64,15 +69,7 @@ function CollectionCard({ item, now }: Readonly<{ item: CollectionListItem; now:
           <span className="text-sm text-ink-muted">
             {item.distributorName ?? en.ops.unknownPerson} · {formatWhen(item.createdAt, now)}
           </span>
-          <span className="text-sm text-ink">
-            {en.ops.collections.collected}: <UnitTotals totals={item.collected} />
-          </span>
-          <span className="text-sm text-ink">
-            {en.ops.collections.handedOver}: <UnitTotals totals={item.distributed} />
-          </span>
-          <span className="text-sm text-ink">
-            {en.ops.collections.remaining}: {en.ops.loaves(item.remainingLoaves)}
-          </span>
+          <ProductLines lines={item.collected} names={names} />
           {isStaleCollection(item.createdAt, item.status, now) ? (
             <FlagChip>{en.ops.collections.stale(BUSINESS_RULES.staleCollectionHours)}</FlagChip>
           ) : null}
@@ -87,6 +84,8 @@ export function CollectionsPage() {
   const { values, activeCount, set, clear } = useUrlFilters(KEYS);
   const query = useCollections(toFilters(values));
   const people = useUsers();
+  const products = useProducts();
+  const names = new Map((products.data ?? []).map((product) => [product.id, product.name]));
   const rows = query.data?.pages.flatMap((page) => page.rows) ?? [];
   const now = new Date();
 
@@ -147,7 +146,7 @@ export function CollectionsPage() {
           noMatch={en.ops.collections.noMatch}
         >
           {rows.map((item) => (
-            <CollectionCard key={item.id} item={item} now={now} />
+            <CollectionCard key={item.id} item={item} now={now} names={names} />
           ))}
         </ListFrame>
       </div>

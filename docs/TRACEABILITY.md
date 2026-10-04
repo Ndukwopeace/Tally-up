@@ -110,8 +110,8 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 
 | Requirement | What it means | Tests | Code |
 |---|---|---|---|
-| ADM-03 | The Collections list: number, distributor, time, collected, handed over, remaining, status | `src/pages/admin/OperationsPages.test.tsx`, `supabase/tests/a3b_list_views.test.sql` | `CollectionsPage.tsx`, `v_collection_list` |
-| ADM-02, REC-04 | Quantities per unit as entered; no combined total across units | `OperationsPages.test.tsx`, `a3b_list_views.test.sql` | `UnitTotals.tsx` |
+| ADM-03 | The Collections list: number, distributor, time, status, and what was collected per product and unit (no handed-over or remaining figure on the card) | `src/pages/admin/OperationsPages.test.tsx`, `supabase/tests/a3b_list_views.test.sql` | `CollectionsPage.tsx`, `v_collection_list` |
+| ADM-02, REC-04 | Quantities per product and unit as entered; no combined total across units or products; a Distributions card lists exactly what was handed over | `OperationsPages.test.tsx`, `a3b_list_views.test.sql` | `ProductLines.tsx` |
 | ADM-04 | Collection page: lines, balance per product, depot allocations; receipts open | `OperationsPages.test.tsx` | `CollectionDetailPage.tsx`, `CollectionDetailParts.tsx` |
 | RCP-10, REC-02, RCP-06 | Receipt page: recorded against counted, difference in loaves, mixed units, comment | `OperationsPages.test.tsx`, `MockOperationsService.test.ts`, `SupabaseOperationsService.test.ts` | `ReceiptDetailPage.tsx` |
 | DIS-02 | Remaining in loaves with the breakdown in the product's units | `OperationsPages.test.tsx`, `src/domain/units.test.ts` | `LoafBreakdown.tsx`, `breakdown()` |

@@ -69,12 +69,10 @@ const COLLECTION_ROW = {
   distributor_id: "dist-1",
   distributor_name: "Dan Distributor",
   status: "in_progress",
-  collected_by_unit: [
-    { unit: "Loaf", quantity: 500 },
-    { unit: "Caisse", quantity: 10 },
+  collected_lines: [
+    { product_id: "bb", unit: "Loaf", quantity: 500 },
+    { product_id: "bb", unit: "Caisse", quantity: 10 },
   ],
-  distributed_by_unit: [{ unit: "Pack", quantity: 45 }],
-  remaining_loaves: 550,
 };
 const COLLECTION = {
   id: "c1",
@@ -84,11 +82,9 @@ const COLLECTION = {
   distributorName: "Dan Distributor",
   status: "in_progress",
   collected: [
-    { unit: "Loaf", quantity: 500 },
-    { unit: "Caisse", quantity: 10 },
+    { productId: "bb", unit: "Loaf", quantity: 500 },
+    { productId: "bb", unit: "Caisse", quantity: 10 },
   ],
-  distributed: [{ unit: "Pack", quantity: 45 }],
-  remainingLoaves: 550,
 };
 const RECEIPT_ROW = {
   id: "d1",
@@ -103,7 +99,7 @@ const RECEIPT_ROW = {
   distributor_name: "Dan Distributor",
   status: "confirmed_with_discrepancy",
   confirmed_at: "2026-10-03T10:00:00+00:00",
-  recorded_by_unit: [{ unit: "Loaf", quantity: 100 }],
+  recorded_lines: [{ product_id: "bb", unit: "Loaf", quantity: 100 }],
 };
 const RECEIPT = {
   id: "d1",
@@ -117,7 +113,7 @@ const RECEIPT = {
   distributorName: "Dan Distributor",
   status: "confirmed_with_discrepancy",
   confirmedAt: "2026-10-03T10:00:00+00:00",
-  recorded: [{ unit: "Loaf", quantity: 100 }],
+  recorded: [{ productId: "bb", unit: "Loaf", quantity: 100 }],
 };
 
 describe("listCollections", () => {
