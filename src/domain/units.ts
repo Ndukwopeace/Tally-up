@@ -15,8 +15,7 @@
  * SECURITY: No I/O. Rejects fractions and negatives so bad input cannot create
  *       fractional or negative stock.
  */
-import type { ProductUnitLoaves } from "@/types/entities";
-import type { Unit } from "@/types/enums";
+import type { ProductUnitLoaves, UnitQuantity } from "@/types/entities";
 
 /**
  * Converts a quantity in any unit into loaves.
@@ -32,12 +31,6 @@ export function toLoaves(quantity: number, loavesPerUnit: number): number {
     throw new RangeError("Quantity must be 0 or more and loaves per unit at least 1");
   }
   return quantity * loavesPerUnit;
-}
-
-/** One part of a breakdown, e.g. 8 Caisse. */
-export interface UnitQuantity {
-  unit: Unit;
-  quantity: number;
 }
 
 /**

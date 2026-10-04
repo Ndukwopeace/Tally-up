@@ -8,7 +8,7 @@
  * WHEN: Imported wherever a record is passed around. Grows milestone by milestone.
  * SECURITY: Types only. What a user may read is decided by RLS, not by these types.
  */
-import type { RecordStatus, Role, Unit } from "./enums";
+import type { CollectionStatus, ReceiptStatus, RecordStatus, Role, Unit } from "./enums";
 
 /** A Tally-Up account: one row of `profiles` (REQUIREMENTS §9 User, USR-02). */
 export interface Account {
@@ -88,4 +88,105 @@ export interface User {
   status: RecordStatus;
   /** The depot they run: set only for an active depot manager (USR-03, Q-57c). */
   depot: UserDepotRef | null;
+}
+
+/** A quantity in one unit, as the person entered it (e.g. 45 Packs). */
+export interface UnitQuantity {
+  unit: Unit;
+  quantity: number;
+}
+
+/** One row of the admin Collections list (ADM-03): who, when, status, quantities per unit as entered. */
+export interface CollectionListItem {
+  id: string;
+  /** COL-00001 style (REQUIREMENTS §11). */
+  label: string;
+  /** UTC instant; shown in Douala time (NFR-10). */
+  createdAt: string;
+  distributorId: string;
+  /** Null when the caller cannot read the distributor's profile. */
+  distributorName: string | null;
+  status: CollectionStatus;
+  collected: UnitQuantity[];
+  distributed: UnitQuantity[];
+  /** Loaves not yet handed over, all products (REC-01). */
+  remainingLoaves: number;
+}
+
+/** One row of the admin Distributions list (ADM-04): a hand-over and its receipt status. */
+export interface ReceiptListItem {
+  id: string;
+  /** DIS-00018 style (Q-39), the same for distributor, manager and admin. */
+  label: string;
+  createdAt: string;
+  collectionId: string;
+  collectionLabel: string | null;
+  depotId: string;
+  depotName: string | null;
+  distributorId: string;
+  distributorName: string | null;
+  status: ReceiptStatus;
+  /** When the depot confirmed, or null while Awaiting Confirmation. */
+  confirmedAt: string | null;
+  recorded: UnitQuantity[];
+}
+
+/** A collection line with the value in force after any admin correction (COR-04). */
+export interface CollectionLine {
+  id: string;
+  productId: string;
+  unit: Unit;
+  quantity: number;
+  originalQuantity: number;
+  isCorrected: boolean;
+  loaves: number;
+}
+
+/** A product's balance inside one collection, in loaves (REC-01). */
+export interface CollectionProductBalance {
+  productId: string;
+  collectedLoaves: number;
+  distributedLoaves: number;
+  remainingLoaves: number;
+}
+
+/** Everything the collection detail page shows (ADM-04). */
+export interface CollectionDetail {
+  collection: CollectionListItem;
+  lines: CollectionLine[];
+  balances: CollectionProductBalance[];
+  /** The hand-overs from this collection, newest first, with their receipt status. */
+  receipts: ReceiptListItem[];
+}
+
+/** One count entry by the depot manager, in the unit they counted (RCP-06). */
+export interface CountEntry {
+  unit: Unit;
+  quantity: number;
+  originalQuantity: number;
+  isCorrected: boolean;
+}
+
+/** One line of a receipt: recorded, counted, and the difference in loaves (REC-02). */
+export interface ReceiptLineDetail {
+  itemId: string;
+  productId: string;
+  unit: Unit;
+  recordedQuantity: number;
+  originalRecordedQuantity: number;
+  recordedIsCorrected: boolean;
+  recordedLoaves: number;
+  /** Null until the depot confirms. */
+  counts: CountEntry[] | null;
+  countedLoaves: number | null;
+  differenceLoaves: number | null;
+}
+
+/** Everything the receipt detail page shows (RCP-02, RCP-10, COR-04). */
+export interface ReceiptDetail {
+  receipt: ReceiptListItem;
+  lines: ReceiptLineDetail[];
+  /** The manager's comment in force; null when none or not confirmed. */
+  comment: string | null;
+  commentIsCorrected: boolean;
 }
