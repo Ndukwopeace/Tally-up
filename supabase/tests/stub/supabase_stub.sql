@@ -28,10 +28,24 @@ create schema auth;
 grant usage on schema auth to anon, authenticated, service_role;
 grant usage on schema public to anon, authenticated, service_role;
 
--- Minimal auth.users: Supabase's table has many more columns; ours only need these.
+-- auth.users with the columns the migrations and the staging test data (supabase/seed/) use.
+-- Supabase's table has a few more; all of these have the same names and types there.
 create table auth.users (
   id uuid primary key default gen_random_uuid(),
-  email text
+  instance_id uuid,
+  aud varchar(255),
+  role varchar(255),
+  email text,
+  encrypted_password varchar(255),
+  email_confirmed_at timestamptz,
+  confirmation_token varchar(255),
+  recovery_token varchar(255),
+  email_change_token_new varchar(255),
+  email_change varchar(255),
+  raw_app_meta_data jsonb,
+  raw_user_meta_data jsonb,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 
 -- Same contract as Supabase's auth.uid(): the `sub` claim of the caller's JWT, or null.
