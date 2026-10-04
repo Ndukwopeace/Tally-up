@@ -4,6 +4,13 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A3b Collections and Distributions
+- Admin → Collections and Distributions: each card lists what was collected, or exactly what was handed over to the depot, one line per product and unit ("Big Bread: 10 Caisses"); no remaining or handed-over figure on a card. Lists newest first with filters (date, distributor or depot, status; "with discrepancy only"), kept in the page address, 25 at a time with "Load more" (Q-59g).
+- Collection page: lines, and the depot allocations grouped by depot, each with what it received and its receipt status. No remaining figure.
+- Receipt page: what the distributor recorded against what the depot counted, line by line, the difference in loaves, mixed units, and the comment.
+- Flags after 24 hours for a collection still In Progress and a receipt still Awaiting Confirmation, and the age of a waiting receipt (COL-11, RCP-15, Q-59f). Corrected values are marked with what they were (COR-04).
+- Database: list views `v_collection_list` and `v_receipt_list` (14 new pgTAP checks). Dates are Douala days, shown as "Today, 9:42 AM".
+
 ### Added — A3a Operational data
 - Tables for collections, hand-overs (distributions), depot confirmations and counts, corrections and notifications, with Row Level Security per role and no write path through the API (AUD-01, COR-02). Record numbers COL-00001 and DIS-00001.
 - Views that apply corrections and compute Remaining, receipt differences and both statuses in loaves (REC-01, REC-02, COL-08, RCP-11, COR-05).

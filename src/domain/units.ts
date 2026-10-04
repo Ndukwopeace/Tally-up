@@ -15,8 +15,8 @@
  * SECURITY: No I/O. Rejects fractions and negatives so bad input cannot create
  *       fractional or negative stock.
  */
-import type { ProductUnitLoaves } from "@/types/entities";
-import type { Unit } from "@/types/enums";
+import type { ProductUnitLoaves, UnitQuantity } from "@/types/entities";
+import { UNITS, type Unit } from "@/types/enums";
 
 /**
  * Converts a quantity in any unit into loaves.
@@ -32,12 +32,6 @@ export function toLoaves(quantity: number, loavesPerUnit: number): number {
     throw new RangeError("Quantity must be 0 or more and loaves per unit at least 1");
   }
   return quantity * loavesPerUnit;
-}
-
-/** One part of a breakdown, e.g. 8 Caisse. */
-export interface UnitQuantity {
-  unit: Unit;
-  quantity: number;
 }
 
 /**
@@ -67,4 +61,9 @@ export function maxGiveable(remainingLoaves: number, loavesPerUnit: number): num
     throw new RangeError("Remaining must be 0 or more and loaves per unit at least 1");
   }
   return Math.floor(remainingLoaves / loavesPerUnit);
+}
+
+/** Orders anything with a `unit` the way people read units: Loaf, then Pack, then Caisse. */
+export function compareUnits(a: { unit: Unit }, b: { unit: Unit }): number {
+  return UNITS.indexOf(a.unit) - UNITS.indexOf(b.unit);
 }

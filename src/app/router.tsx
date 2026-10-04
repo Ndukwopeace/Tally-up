@@ -45,6 +45,11 @@ function tabRoute(path: string, element: ReactElement): RouteObject {
   return { path, element };
 }
 
+// A tab screen whose code downloads only when first opened (PERF-2); no Back (Q-56).
+function lazyTab(path: string, load: () => Promise<ComponentType>): RouteObject {
+  return { path, lazy: async () => ({ Component: await load() }) };
+}
+
 // A page inside a tab (More → Depots, …); "Coming soon" unless `element` is given.
 // Back always returns to `parent` in the same tab, never to another tab.
 function subPage(path: string, title: string, parent: string, element?: ReactElement): RouteObject {
@@ -87,8 +92,31 @@ export const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/layouts/AdminLayout")).default }),
             children: [
               homeRoute(en.nav.home),
-              tabRoute("collections", <PlaceholderPage title={en.nav.collections} />),
-              tabRoute("distributions", <PlaceholderPage title={en.nav.distributions} />),
+              // A3b: Collections and Distributions (ADM-03, ADM-04). Tabs have no Back (Q-56);
+              // their detail pages go back to their own tab only.
+              lazyTab(
+                "collections",
+                async () => (await import("@/pages/admin/CollectionsPage")).CollectionsPage,
+              ),
+              lazySubPage(
+                "collections/:collectionId",
+                "/admin/collections",
+                async () => (await import("@/pages/admin/CollectionDetailPage")).CollectionDetailPage,
+              ),
+              lazySubPage(
+                "collections/:collectionId/receipts/:receiptId",
+                "/admin/collections/:collectionId",
+                async () => (await import("@/pages/admin/ReceiptDetailPage")).ReceiptDetailPage,
+              ),
+              lazyTab(
+                "distributions",
+                async () => (await import("@/pages/admin/DistributionsPage")).DistributionsPage,
+              ),
+              lazySubPage(
+                "distributions/:receiptId",
+                "/admin/distributions",
+                async () => (await import("@/pages/admin/ReceiptDetailPage")).ReceiptDetailPage,
+              ),
               tabRoute("more", <AdminMorePage />),
               // A2b: depots (DEP-01 to DEP-03, DEP-05).
               lazySubPage(

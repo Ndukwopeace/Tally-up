@@ -105,3 +105,20 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | NOT-05 | Notifications are read only by their owner; read/unread | `a3a_operations.test.sql` | `notifications` |
 | Q-59b, DB-5 | Staging-only test data, consistent, reset rebuilds the same data | `supabase/tests/a3a_seed.test.sql` | `supabase/seed/*` |
 | RCP-15, Q-59f | A receipt awaiting confirmation is flagged after 24 hours | `src/config/business-rules.test.ts` | `agedReceiptHours` (shown in A3b) |
+
+## A3b — Collections and Distributions
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| ADM-03 | The Collections list: number, distributor, time, status, and what was collected per product and unit (no handed-over or remaining figure on the card) | `src/pages/admin/OperationsPages.test.tsx`, `supabase/tests/a3b_list_views.test.sql` | `CollectionsPage.tsx`, `v_collection_list` |
+| ADM-02, REC-04 | Quantities per product and unit as entered; no combined total across units or products; a Distributions card lists exactly what was handed over | `OperationsPages.test.tsx`, `a3b_list_views.test.sql` | `ProductLines.tsx` |
+| ADM-04 | Collection page: lines, depot allocations with what each depot received; no remaining figure (owner, 2026-10-04); receipts open | `OperationsPages.test.tsx` | `CollectionDetailPage.tsx`, `CollectionDetailParts.tsx` |
+| RCP-10, REC-02, RCP-06 | Receipt page: recorded against counted, difference in loaves, mixed units, comment | `OperationsPages.test.tsx`, `MockOperationsService.test.ts`, `SupabaseOperationsService.test.ts` | `ReceiptDetailPage.tsx` |
+| DIS-02 | Remaining in loaves with the breakdown in the product's units | `OperationsPages.test.tsx`, `src/domain/units.test.ts` | `LoafBreakdown.tsx`, `breakdown()` |
+| COL-11, RCP-15, Q-59f | Flag after 24 hours; the age of a waiting receipt is shown | `src/domain/flags.test.ts`, `OperationsPages.test.tsx` | `flags.ts`, `FlagChip.tsx` |
+| COR-04, COR-05 | Corrected values are used and marked with the original | `OperationsPages.test.tsx`, `MockOperationsService.test.ts` | `CorrectedMark.tsx` |
+| Q-59e, Q-59g | Filters in the address, discrepancy shortcut, 25 per page with Load more | `OperationsPages.test.tsx`, `SupabaseOperationsService.test.ts` | `useUrlFilters.ts`, `FilterPanel.tsx`, `ListFrame.tsx` |
+| NFR-10, Q-6 | Times in Douala ("Today, 9:42 AM"); date filters are Douala days | `src/lib/format.test.ts` | `formatWhen()`, `dayRange()` |
+| Q-56 | Tabs have no Back; a receipt goes Back inside its own tab | `OperationsPages.test.tsx` | `router.tsx` (two receipt routes) |
+| NFR-07 | Loading, empty, error states | `OperationsPages.test.tsx` | `ListFrame.tsx` |
+| §6.5, SEC-12 | A depot manager sees their depot's receipts; a distributor their own | `a3b_list_views.test.sql` | list views (left joins, security invoker) |

@@ -21,7 +21,7 @@ export interface TextFieldProps {
   label: string;
   value: string;
   onValueChange: (value: string) => void;
-  type?: "text" | "email" | "password";
+  type?: "text" | "email" | "password" | "date";
   autoComplete?: string;
   inputMode?: HTMLAttributes<HTMLInputElement>["inputMode"];
   hint?: string;
