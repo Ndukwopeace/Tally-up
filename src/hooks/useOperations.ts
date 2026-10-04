@@ -8,7 +8,7 @@
  *       OperationsService: the filters are part of the query key, so changing a
  *       filter starts a fresh list; the next page starts where the rows already
  *       loaded end. `useCollection` and `useReceipt` read one detail page.
- * WHEN: Collections, Distributions, and their detail pages (A3b).
+ * WHEN: Home, Collections, Distributions, and their detail pages (A3b).
  * SECURITY: Data comes only from the service, which RLS filters. Read-only.
  */
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ export const operationsKeys = {
   collection: (id: string) => ["operations", "collection", id] as const,
   receipts: (filters: ReceiptFilters) => ["operations", "receipts", filters] as const,
   receipt: (id: string) => ["operations", "receipt", id] as const,
+  home: ["operations", "home"] as const,
 };
 
 export function useCollections(filters: CollectionFilters) {
@@ -57,4 +58,10 @@ export function useCollection(id: string) {
 export function useReceipt(id: string) {
   const { operations } = useServices();
   return useQuery({ queryKey: operationsKeys.receipt(id), queryFn: () => operations.getReceipt(id) });
+}
+
+/** The admin Home numbers (ADM-01 to ADM-03, ADM-06). "Today" is decided when the page loads, in Douala time. */
+export function useHome() {
+  const { operations } = useServices();
+  return useQuery({ queryKey: operationsKeys.home, queryFn: () => operations.getHome(new Date()) });
 }

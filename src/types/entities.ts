@@ -185,3 +185,37 @@ export interface ReceiptDetail {
   comment: string | null;
   commentIsCorrected: boolean;
 }
+
+/** Remaining loaves of one product across every collection, for Home (REC-01, Q-59d). */
+export interface ProductRemaining {
+  productId: string;
+  remainingLoaves: number;
+}
+
+/** A flagged group on Home: how many there are, and the oldest few to show (ADM-06, Q-59f). */
+export interface Flagged<T> {
+  count: number;
+  rows: T[];
+}
+
+/** Everything the admin Home shows (ADM-01, ADM-02, ADM-03, ADM-06, Q-59c to Q-59f). */
+export interface HomeData {
+  /** Collected and distributed today (Douala day), per unit as entered, never one grand total (ADM-02). */
+  collectedToday: UnitQuantity[];
+  distributedToday: UnitQuantity[];
+  /** Per product, products with something left only. */
+  remaining: ProductRemaining[];
+  /** All open items, not only today's (Q-59c). */
+  awaitingCount: number;
+  discrepancyCount: number;
+  /** Receipts confirmed today with no difference. */
+  confirmedTodayCount: number;
+  /** Today's collections, newest first (ADM-03). */
+  todayCollections: CollectionListItem[];
+  /** The latest few receipts Confirmed with Discrepancy (Q-59e). */
+  latestDiscrepancies: ReceiptListItem[];
+  /** In Progress for over `staleCollectionHours` (COL-11), oldest first. */
+  staleCollections: Flagged<CollectionListItem>;
+  /** Awaiting Confirmation for over `agedReceiptHours` (RCP-15), oldest first. */
+  agedReceipts: Flagged<ReceiptListItem>;
+}

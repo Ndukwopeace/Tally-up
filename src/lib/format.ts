@@ -46,8 +46,8 @@ const DATE_PARTS = new Intl.DateTimeFormat("en-US", {
 });
 const OFFSET_PARTS = new Intl.DateTimeFormat("en-US", { timeZone: ZONE, timeZoneName: "longOffset" });
 
-// "2026-10-04": the calendar day of an instant in Douala time.
-function businessDay(date: Date): string {
+/** "2026-10-04": the calendar day of an instant in Douala time (Q-6): what "today" means. */
+export function businessDay(date: Date): string {
   return DAY_PARTS.format(date);
 }
 

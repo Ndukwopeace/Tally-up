@@ -14,65 +14,11 @@
  */
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { FIXTURE_NOW, specOperations } from "../../../tests/fixtures/operations";
-import { renderRoutes } from "../../../tests/helpers/renderRoutes";
+import { clearRecords, fixClock, openAdmin as open } from "../../../tests/helpers/adminOperations";
 
-import { MockDepotService } from "@/services/mock/MockDepotService";
-import { MOCK_USERS } from "@/services/mock/MockAuthService";
-import { MockOperationsService, type MockOperationsData } from "@/services/mock/MockOperationsService";
-import { MockProductService } from "@/services/mock/MockProductService";
-import { MockUserService } from "@/services/mock/MockUserService";
-import { SPEC_PRODUCT } from "@/services/mock/specOperations";
-import type { Depot, User } from "@/types/entities";
-
-const admin = MOCK_USERS.admin.id;
-
-const BIG = SPEC_PRODUCT;
-const DEPOT = (id: string, name: string): Omit<Depot, "manager"> => ({
-  id,
-  name,
-  location: "Douala",
-  address: "Market",
-  phones: [],
-  status: "active",
-});
-const DISTRIBUTOR = (id: string, fullName: string): User => ({
-  id,
-  fullName,
-  email: `${id}@x.test`,
-  phones: [],
-  role: "distributor",
-  status: "active",
-  depot: null,
-});
-
-// Only the clock is faked, so time-based flags are stable while the rest of the test runs normally.
-beforeEach(() => {
-  vi.useFakeTimers({ toFake: ["Date"] });
-  vi.setSystemTime(FIXTURE_NOW);
-});
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-function open(path: string, change?: (data: MockOperationsData) => void) {
-  const data = specOperations();
-  change?.(data);
-  const operations = new MockOperationsService(data);
-  const view = renderRoutes(path, {
-    signedInAs: admin,
-    operations,
-    products: new MockProductService([BIG]),
-    depots: new MockDepotService([DEPOT("akwa", "Akwa"), DEPOT("bonaberi", "Bonaberi")]),
-    users: new MockUserService([
-      DISTRIBUTOR("dist-1", "Dan Distributor"),
-      DISTRIBUTOR("dist-2", "Dora Distributor"),
-    ]),
-  });
-  return { ...view, operations };
-}
+fixClock();
 
 // A card in a list, found by its number.
 const card = (label: string) => screen.getByRole("link", { name: new RegExp(label) });
@@ -151,7 +97,7 @@ describe("Collections list", () => {
   });
 
   it("shows an empty state with no records", async () => {
-    renderRoutes("/admin/collections", { signedInAs: admin });
+    open("/admin/collections", clearRecords);
     expect(await screen.findByRole("heading", { name: "No collections yet" })).toBeInTheDocument();
   });
 
@@ -359,7 +305,7 @@ describe("Distributions list", () => {
   });
 
   it("shows an empty state with no records, and a no-match line with filters", async () => {
-    renderRoutes("/admin/distributions", { signedInAs: admin });
+    open("/admin/distributions", clearRecords);
     expect(await screen.findByRole("heading", { name: "No distributions yet" })).toBeInTheDocument();
     open("/admin/distributions?to=2026-09-01");
     expect(await screen.findByText("No distribution matches these filters.")).toBeInTheDocument();

@@ -14,7 +14,22 @@
  *       views (security invoker). Raw database messages never reach the screen.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { z } from "zod/mini";
+import type { z } from "zod/mini";
+
+import { loadHome } from "./SupabaseHomeQueries";
+import {
+  collectionLineRow,
+  collectionRow,
+  confirmationRow,
+  countRow,
+  itemRow,
+  lineResultRow,
+  parseOne,
+  parseRows,
+  receiptRow,
+  toCollection,
+  toReceipt,
+} from "./operationsRows";
 
 import { compareUnits } from "@/domain/units";
 import { dayRange } from "@/lib/format";
@@ -31,135 +46,11 @@ import type {
   CollectionLine,
   CollectionListItem,
   CountEntry,
+  HomeData,
   ReceiptDetail,
   ReceiptLineDetail,
-  ProductQuantity,
   ReceiptListItem,
 } from "@/types/entities";
-import { COLLECTION_STATUSES, RECEIPT_STATUSES, UNITS, type Unit } from "@/types/enums";
-
-const productQuantities = z.array(
-  z.object({ product_id: z.string(), unit: z.enum(UNITS), quantity: z.number() }),
-);
-const nullableText = z.nullable(z.string());
-
-const collectionRow = z.object({
-  id: z.string(),
-  label: z.string(),
-  created_at: z.string(),
-  distributor_id: z.string(),
-  distributor_name: nullableText,
-  status: z.enum(COLLECTION_STATUSES),
-  collected_lines: productQuantities,
-});
-
-const receiptRow = z.object({
-  id: z.string(),
-  label: z.string(),
-  created_at: z.string(),
-  collection_id: z.string(),
-  collection_label: nullableText,
-  depot_id: z.string(),
-  depot_name: nullableText,
-  distributor_id: z.string(),
-  distributor_name: nullableText,
-  status: z.enum(RECEIPT_STATUSES),
-  confirmed_at: nullableText,
-  recorded_lines: productQuantities,
-});
-
-const collectionLineRow = z.object({
-  id: z.string(),
-  product_id: z.string(),
-  unit: z.enum(UNITS),
-  quantity_original: z.number(),
-  quantity_effective: z.number(),
-  is_corrected: z.boolean(),
-  loaves: z.number(),
-});
-
-const itemRow = z.object({
-  id: z.string(),
-  product_id: z.string(),
-  unit: z.enum(UNITS),
-  quantity_original: z.number(),
-  quantity_effective: z.number(),
-  is_corrected: z.boolean(),
-  loaves: z.number(),
-});
-
-const lineResultRow = z.object({
-  distribution_item_id: z.string(),
-  counted_loaves: z.nullable(z.number()),
-  difference_loaves: z.nullable(z.number()),
-});
-
-const confirmationRow = z.object({
-  id: z.string(),
-  comment_effective: nullableText,
-  is_corrected: z.boolean(),
-});
-
-const countRow = z.object({
-  distribution_item_id: z.string(),
-  unit: z.enum(UNITS),
-  quantity_original: z.number(),
-  quantity_effective: z.number(),
-  is_corrected: z.boolean(),
-});
-
-// Parses every row of a list, or fails as "unavailable" (a row the app does not understand is never shown).
-function parseRows<T>(schema: z.ZodMiniType<T>, rows: unknown): T[] {
-  const parsed = z.array(schema).safeParse(rows);
-  if (!parsed.success) {
-    throw new OperationsError("unavailable");
-  }
-  return parsed.data;
-}
-
-function parseOne<T>(schema: z.ZodMiniType<T>, row: unknown): T | null {
-  if (row === null) {
-    return null;
-  }
-  const parsed = schema.safeParse(row);
-  if (!parsed.success) {
-    throw new OperationsError("unavailable");
-  }
-  return parsed.data;
-}
-
-function toProductQuantity(row: { product_id: string; unit: Unit; quantity: number }): ProductQuantity {
-  return { productId: row.product_id, unit: row.unit, quantity: row.quantity };
-}
-
-function toCollection(row: z.infer<typeof collectionRow>): CollectionListItem {
-  return {
-    id: row.id,
-    label: row.label,
-    createdAt: row.created_at,
-    distributorId: row.distributor_id,
-    distributorName: row.distributor_name,
-    status: row.status,
-    collected: row.collected_lines.map(toProductQuantity),
-  };
-}
-
-function toReceipt(row: z.infer<typeof receiptRow>): ReceiptListItem {
-  return {
-    id: row.id,
-    label: row.label,
-    createdAt: row.created_at,
-    collectionId: row.collection_id,
-    collectionLabel: row.collection_label,
-    depotId: row.depot_id,
-    depotName: row.depot_name,
-    distributorId: row.distributor_id,
-    distributorName: row.distributor_name,
-    status: row.status,
-    confirmedAt: row.confirmed_at,
-    recorded: row.recorded_lines.map(toProductQuantity),
-  };
-}
 
 export class SupabaseOperationsService implements OperationsService {
   constructor(private readonly client: SupabaseClient) {}
@@ -206,6 +97,10 @@ export class SupabaseOperationsService implements OperationsService {
       .order("id", { ascending: false })
       .range(offset, offset + PAGE_SIZE);
     return pageOf(result, receiptRow, toReceipt);
+  }
+
+  getHome(now: Date): Promise<HomeData> {
+    return loadHome(this.client, now);
   }
 
   async getCollection(id: string): Promise<CollectionDetail | null> {

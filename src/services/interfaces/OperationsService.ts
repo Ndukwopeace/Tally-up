@@ -6,16 +6,25 @@
  * HOW:  Read-only. `listCollections` and `listReceipts` return one page of rows,
  *       newest first, filtered (Q-59g); `getCollection` and `getReceipt` return
  *       everything one detail page shows, or null when the record does not exist
- *       or is not visible. Dates in filters are Douala calendar days
+ *       or is not visible; `getHome` returns the dashboard numbers. Dates in filters are Douala calendar days
  *       ("YYYY-MM-DD", inclusive). Failures throw `OperationsError`.
  * WHEN: Created at start-up (services/index.ts), used by hooks/useOperations.ts.
  * SECURITY: Row Level Security decides which rows come back; nothing here writes.
  */
-import type { CollectionDetail, CollectionListItem, ReceiptDetail, ReceiptListItem } from "@/types/entities";
+import type {
+  CollectionDetail,
+  CollectionListItem,
+  HomeData,
+  ReceiptDetail,
+  ReceiptListItem,
+} from "@/types/entities";
 import type { CollectionStatus, ReceiptStatus } from "@/types/enums";
 
 /** RULE AD-2 / Q-59g: lists load 25 rows at a time. */
 export const PAGE_SIZE = 25;
+
+/** RULE Q-59e: Home shows the 5 latest discrepancies; the same size is used for each flagged group. */
+export const HOME_LIST_SIZE = 5;
 
 export const OPERATIONS_ERROR_CODES = [
   // Network down or an unexpected answer.
@@ -62,4 +71,6 @@ export interface OperationsService {
   getCollection(id: string): Promise<CollectionDetail | null>;
   listReceipts(filters: ReceiptFilters, offset: number): Promise<Page<ReceiptListItem>>;
   getReceipt(id: string): Promise<ReceiptDetail | null>;
+  /** Everything Home shows. `now` decides "today" (Douala day) and the 24-hour flags. */
+  getHome(now: Date): Promise<HomeData>;
 }

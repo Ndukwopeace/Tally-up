@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { breakdown, compareUnits, maxGiveable, toLoaves } from "./units";
+import { breakdown, compareUnits, maxGiveable, sumUnits, toLoaves } from "./units";
 
 import type { ProductUnitLoaves } from "@/types/entities";
 
@@ -98,6 +98,27 @@ describe("maxGiveable (DIS-06)", () => {
   it("refuses a negative remaining or a loaves-per-unit below one", () => {
     expect(() => maxGiveable(-1, 10)).toThrow(RangeError);
     expect(() => maxGiveable(10, 0)).toThrow(RangeError);
+  });
+});
+
+describe("sumUnits (ADM-02)", () => {
+  it("adds per unit across products and keeps Loaf, Pack, Caisse order", () => {
+    expect(
+      sumUnits([
+        { unit: "Caisse", quantity: 10 },
+        { unit: "Loaf", quantity: 500 },
+        { unit: "Caisse", quantity: 5 },
+        { unit: "Loaf", quantity: 100 },
+      ]),
+    ).toEqual([
+      { unit: "Loaf", quantity: 600 },
+      { unit: "Caisse", quantity: 15 },
+    ]);
+  });
+
+  it("never mixes units into one total, and leaves out a unit nobody used", () => {
+    expect(sumUnits([{ unit: "Pack", quantity: 3 }])).toEqual([{ unit: "Pack", quantity: 3 }]);
+    expect(sumUnits([])).toEqual([]);
   });
 });
 
