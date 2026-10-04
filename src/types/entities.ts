@@ -146,19 +146,10 @@ export interface CollectionLine {
   loaves: number;
 }
 
-/** A product's balance inside one collection, in loaves (REC-01). */
-export interface CollectionProductBalance {
-  productId: string;
-  collectedLoaves: number;
-  distributedLoaves: number;
-  remainingLoaves: number;
-}
-
 /** Everything the collection detail page shows (ADM-04). */
 export interface CollectionDetail {
   collection: CollectionListItem;
   lines: CollectionLine[];
-  balances: CollectionProductBalance[];
   /** The hand-overs from this collection, newest first, with their receipt status. */
   receipts: ReceiptListItem[];
 }

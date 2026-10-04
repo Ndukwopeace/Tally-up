@@ -5,7 +5,7 @@
  *       how the bread was split across depots, and how each depot's count came out.
  * HOW:  Loads the collection (skeleton, error, not found). Shows its number, status,
  *       distributor and when, flags it if it has been In Progress for over 24 hours
- *       (COL-11), then the lines, the balance per product, and the depot allocations
+ *       (COL-11), then the lines and the depot allocations
  *       (CollectionDetailParts). Product names come from the product list.
  * WHEN: /admin/collections/:collectionId, from the Collections list.
  * SECURITY: Read-only; RLS decides what an admin reads. A record that does not exist
@@ -24,7 +24,7 @@ import { useCollection } from "@/hooks/useOperations";
 import { useProducts } from "@/hooks/useProducts";
 import { en } from "@/i18n/en";
 import { formatWhen } from "@/lib/format";
-import { AllocationsSection, BalanceSection, LinesSection } from "@/pages/admin/CollectionDetailParts";
+import { AllocationsSection, LinesSection } from "@/pages/admin/CollectionDetailParts";
 import { PageTitle } from "@/pages/PageTitle";
 
 export function CollectionDetailPage() {
@@ -57,7 +57,6 @@ export function CollectionDetailPage() {
 
   const now = new Date();
   const { collection } = detail;
-  const byId = new Map((products.data ?? []).map((product) => [product.id, product]));
   const names = new Map((products.data ?? []).map((product) => [product.id, product.name]));
   const rows: [string, string][] = [
     [en.ops.collections.distributor, collection.distributorName ?? en.ops.unknownPerson],
@@ -81,8 +80,7 @@ export function CollectionDetailPage() {
         </div>
       ) : null}
       <LinesSection detail={detail} names={names} />
-      <BalanceSection detail={detail} products={byId} />
-      <AllocationsSection detail={detail} now={now} />
+      <AllocationsSection detail={detail} names={names} now={now} />
     </>
   );
 }

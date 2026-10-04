@@ -8,8 +8,7 @@
  * HOW:  Holds the raw records (collections, hand-overs, confirmations, counts,
  *       corrections, and the names of people and depots). Every read recomputes
  *       from them: the quantity in force is the newest correction, else the
- *       original (COR-05); balances use `collectionBalances`; receipt lines use
- *       `receiptLine`; statuses use `collectionStatus` and `receiptStatus`.
+ *       original (COR-05); receipt lines use `receiptLine`; statuses use `collectionStatus` and `receiptStatus`.
  *       Lists are newest first, filtered, 25 at a time. Helpers let tests fail or
  *       hold the next call.
  * WHEN: Tests, and `npm run dev` with VITE_DATA_SOURCE=mock.
@@ -123,9 +122,6 @@ export class MockOperationsService implements OperationsService {
       return null;
     }
     const items = this.data.collectionItems.filter((item) => item.collectionId === id);
-    const given = this.data.distributionItems.filter((item) =>
-      this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === id),
-    );
     const lines: CollectionLine[] = items
       .map((item) => {
         const quantity = this.effectiveQuantity("collection_items", item.id, item.quantity);
@@ -147,10 +143,6 @@ export class MockOperationsService implements OperationsService {
     return {
       collection: this.collectionRow(id),
       lines,
-      balances: collectionBalances(
-        this.quantityLines("collection_items", items),
-        this.quantityLines("distribution_items", given),
-      ),
       receipts,
     };
   }

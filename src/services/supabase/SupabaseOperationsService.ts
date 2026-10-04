@@ -6,7 +6,7 @@
  *       Remaining and both statuses in loaves (REC-01, COL-08, RCP-11, COR-05).
  * HOW:  Lists read `v_collection_list` and `v_receipt_list`, newest first, with the
  *       filters as query conditions and one extra row to know whether "Load more"
- *       has anything left. Details read the row plus the views for lines, balances,
+ *       has anything left. Details read the row plus the views for lines,
  *       counts and comments. Every row is Zod-checked (SEC-5). Date filters are
  *       Douala calendar days, turned into UTC instants by `dayRange`.
  * WHEN: Created by services/index.ts in Supabase mode.
@@ -30,7 +30,6 @@ import type {
   CollectionDetail,
   CollectionLine,
   CollectionListItem,
-  CollectionProductBalance,
   CountEntry,
   ReceiptDetail,
   ReceiptLineDetail,
@@ -77,13 +76,6 @@ const collectionLineRow = z.object({
   quantity_effective: z.number(),
   is_corrected: z.boolean(),
   loaves: z.number(),
-});
-
-const balanceRow = z.object({
-  product_id: z.string(),
-  collected_loaves: z.number(),
-  distributed_loaves: z.number(),
-  remaining_loaves: z.number(),
 });
 
 const itemRow = z.object({
@@ -217,10 +209,9 @@ export class SupabaseOperationsService implements OperationsService {
   }
 
   async getCollection(id: string): Promise<CollectionDetail | null> {
-    const [head, lines, balances, receipts] = await Promise.all([
+    const [head, lines, receipts] = await Promise.all([
       this.client.from("v_collection_list").select("*").eq("id", id).maybeSingle(),
       this.client.from("v_collection_items_effective").select("*").eq("collection_id", id),
-      this.client.from("v_collection_product_balance").select("*").eq("collection_id", id),
       this.client
         .from("v_receipt_list")
         .select("*")
@@ -228,7 +219,7 @@ export class SupabaseOperationsService implements OperationsService {
         .order("created_at", { ascending: false })
         .order("id", { ascending: false }),
     ]);
-    if (head.error || lines.error || balances.error || receipts.error) {
+    if (head.error || lines.error || receipts.error) {
       throw new OperationsError("unavailable");
     }
     const collection = parseOne(collectionRow, head.data);
@@ -248,12 +239,6 @@ export class SupabaseOperationsService implements OperationsService {
           loaves: row.loaves,
         }))
         .sort(compareUnits),
-      balances: parseRows(balanceRow, balances.data).map((row): CollectionProductBalance => ({
-        productId: row.product_id,
-        collectedLoaves: row.collected_loaves,
-        distributedLoaves: row.distributed_loaves,
-        remainingLoaves: row.remaining_loaves,
-      })),
       receipts: parseRows(receiptRow, receipts.data).map(toReceipt),
     };
   }

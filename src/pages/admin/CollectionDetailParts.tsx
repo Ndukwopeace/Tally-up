@@ -1,14 +1,15 @@
 /**
- * The three sections of the collection detail page: lines, balance per product, depot allocations (ADM-04).
+ * The two sections of the collection detail page: lines and depot allocations (ADM-04).
  *
  * WHY:  The page answers "what did the distributor collect, where did it go, and did
- *       each depot confirm?" (REQUIREMENTS §1) in three short blocks that read top to bottom.
+ *       each depot confirm?" (REQUIREMENTS §1) in two short blocks that read top to bottom.
  * HOW:  - Lines: product, unit and quantity as entered, with the loaves, and a
  *         "Corrected" marker (with the original) where an admin changed it (COR-04).
- *       - Balance: per product, Collected, Handed over and Remaining in loaves, with
- *         the breakdown in the product's own units (REC-01, REC-04, DIS-02).
- *       - Depot allocations: the hand-overs grouped by depot, each with its receipt
- *         status, how long it has waited if it still is, and a link to its receipt.
+ *       - Depot allocations: the hand-overs grouped by depot, each with exactly what
+ *         was handed over (product, unit, quantity), its receipt status, how long it
+ *         has waited if it still is, and a link to its receipt.
+ *       No remaining figure is shown here (owner, 2026-10-04): a collection records
+ *       what was collected, a distribution records what was handed over.
  * WHEN: Rendered by CollectionDetailPage.
  * SECURITY: Display only.
  */
@@ -17,14 +18,13 @@ import { Link } from "react-router";
 
 import { CorrectedMark } from "@/components/admin/CorrectedMark";
 import { FlagChip } from "@/components/admin/FlagChip";
-import { LoafBreakdown } from "@/components/admin/LoafBreakdown";
+import { ProductLines } from "@/components/admin/ProductLines";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { BUSINESS_RULES } from "@/config/business-rules";
 import { isAgedReceipt, receiptAge } from "@/domain/flags";
-import { productUnits } from "@/domain/products";
 import { en } from "@/i18n/en";
 import { formatWhen } from "@/lib/format";
-import type { CollectionDetail, Product } from "@/types/entities";
+import type { CollectionDetail } from "@/types/entities";
 
 const CARD = "flex flex-col gap-1 rounded-card border border-line bg-surface px-4 py-3";
 
@@ -68,40 +68,11 @@ export function LinesSection({
   );
 }
 
-export function BalanceSection({
+export function AllocationsSection({
   detail,
-  products,
-}: Readonly<{ detail: CollectionDetail; products: Map<string, Product> }>) {
-  return (
-    <Section id="collection-balance" title={en.ops.collections.balanceTitle}>
-      <ul className="flex flex-col gap-3">
-        {detail.balances.map((balance) => {
-          const product = products.get(balance.productId);
-          const units = product ? productUnits(product) : [{ unit: "Loaf" as const, loaves: 1 }];
-          return (
-            <li key={balance.productId} className={CARD}>
-              <span className="text-base font-semibold break-words text-ink">
-                {product?.name ?? en.ops.unknownProduct}
-              </span>
-              <span className="text-sm text-ink">
-                {en.ops.collections.collectedLoaves}: {en.ops.loaves(balance.collectedLoaves)}
-              </span>
-              <span className="text-sm text-ink">
-                {en.ops.collections.handedOverLoaves}: {en.ops.loaves(balance.distributedLoaves)}
-              </span>
-              <span className="text-base font-semibold text-ink">
-                {en.ops.collections.remaining}:{" "}
-                <LoafBreakdown loaves={balance.remainingLoaves} units={units} />
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </Section>
-  );
-}
-
-export function AllocationsSection({ detail, now }: Readonly<{ detail: CollectionDetail; now: Date }>) {
+  names,
+  now,
+}: Readonly<{ detail: CollectionDetail; names: ReadonlyMap<string, string>; now: Date }>) {
   // ADM-04: grouped by depot, in the order the newest hand-over to each depot appears.
   const groups = new Map<string, { name: string; receipts: CollectionDetail["receipts"] }>();
   for (const receipt of detail.receipts) {
@@ -133,6 +104,7 @@ export function AllocationsSection({ detail, now }: Readonly<{ detail: Collectio
                       <StatusBadge status={receipt.status} />
                     </span>
                     <span className="text-sm text-ink-muted">{formatWhen(receipt.createdAt, now)}</span>
+                    <ProductLines lines={receipt.recorded} names={names} />
                     {isAgedReceipt(receipt.createdAt, receipt.status, now) ? (
                       <FlagChip>
                         {en.ops.receipts.aged(

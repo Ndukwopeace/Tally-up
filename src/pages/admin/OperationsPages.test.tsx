@@ -2,9 +2,9 @@
  * Tests for Admin → Collections, Distributions and their detail pages.
  *
  * Rules under test:
- *  - ADM-03: the list shows number, distributor, time, collected, handed over, remaining, status.
- *  - ADM-02 / REC-04: quantities per unit as entered, no combined total; remaining in loaves.
- *  - ADM-04: collection detail with lines, balance per product and depot allocations; receipts open.
+ *  - ADM-03: the list shows number, distributor, time, status and what was collected per product.
+ *  - ADM-02 / REC-04: quantities per product and unit as entered, no combined total, no remaining.
+ *  - ADM-04: collection detail with lines and depot allocations; receipts open.
  *  - RCP-10 / REC-02 / RCP-06: recorded against counted, difference in loaves, mixed units, comment.
  *  - COL-11 / RCP-15 / Q-59f: flagged after 24 hours; the age of a waiting receipt is shown.
  *  - COR-04: corrected values carry a marker with the original.
@@ -194,7 +194,7 @@ describe("Collections list", () => {
 });
 
 describe("Collection detail", () => {
-  it("ADM-04: shows the lines, the balance per product, and the allocations grouped by depot", async () => {
+  it("ADM-04: shows the lines, and the allocations grouped by depot with what each received", async () => {
     open("/admin/collections/c1");
     expect(await screen.findByRole("heading", { level: 1, name: "COL-00001" })).toBeInTheDocument();
     expect(screen.getByText("Fully Distributed")).toBeInTheDocument();
@@ -205,12 +205,9 @@ describe("Collection detail", () => {
     expect(lines.getByText("500 Loaves")).toBeInTheDocument();
     expect(lines.getByText("10 Caisses (500 Loaves)")).toBeInTheDocument();
 
-    const balance = within(screen.getByRole("region", { name: "Balance per product" }));
-    const product = balance.getByRole("listitem");
-    expect(product).toHaveTextContent("Big Bread");
-    expect(product).toHaveTextContent("Collected: 1,000 Loaves");
-    expect(product).toHaveTextContent("Handed over: 1,000 Loaves");
-    expect(product).toHaveTextContent("Remaining: 0 Loaves");
+    // The owner wants no remaining figure on the collection page.
+    expect(screen.queryByRole("region", { name: "Balance per product" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/remaining/i)).not.toBeInTheDocument();
 
     const allocations = within(screen.getByRole("region", { name: "Depot allocations" }));
     expect(allocations.getByRole("heading", { level: 3, name: "Akwa" })).toBeInTheDocument();
@@ -219,16 +216,16 @@ describe("Collection detail", () => {
       "Confirmed with Discrepancy",
     );
     expect(allocations.getByRole("link", { name: /DIS-00002/ })).toHaveTextContent("Confirmed");
+    expect(allocations.getByRole("link", { name: /DIS-00002/ })).toHaveTextContent("Big Bread: 45 Packs");
     expect(allocations.getByRole("link", { name: /DIS-00001/ })).toHaveAttribute(
       "href",
       "/admin/collections/c1/receipts/d1",
     );
   });
 
-  it("DIS-02: shows what remains with its breakdown in the product's own units", async () => {
+  it("COL-11: the collection page flags a collection still In Progress after 24 hours", async () => {
     open("/admin/collections/c3");
     expect(await screen.findByRole("heading", { level: 1, name: "COL-00003" })).toBeInTheDocument();
-    expect(screen.getByText("60 Loaves (1 Caisse + 1 Pack)")).toBeInTheDocument();
     expect(screen.getByText("Still in progress after 24 hours")).toBeInTheDocument();
   });
 

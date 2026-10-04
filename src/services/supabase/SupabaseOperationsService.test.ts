@@ -222,13 +222,10 @@ describe("getCollection", () => {
         },
       ],
     },
-    v_collection_product_balance: {
-      data: [{ product_id: "bb", collected_loaves: 1050, distributed_loaves: 450, remaining_loaves: 600 }],
-    },
     v_receipt_list: { data: [RECEIPT_ROW] },
   };
 
-  it("assembles the collection, its lines (Loaf first, corrected marked), balances and receipts", async () => {
+  it("assembles the collection, its lines (Loaf first, corrected marked) and receipts", async () => {
     const detail = await clientWith(tables).service.getCollection("c1");
     expect(detail?.collection).toEqual(COLLECTION);
     expect(detail?.lines).toEqual([
@@ -250,9 +247,6 @@ describe("getCollection", () => {
         isCorrected: true,
         loaves: 550,
       },
-    ]);
-    expect(detail?.balances).toEqual([
-      { productId: "bb", collectedLoaves: 1050, distributedLoaves: 450, remainingLoaves: 600 },
     ]);
     expect(detail?.receipts).toEqual([RECEIPT]);
   });

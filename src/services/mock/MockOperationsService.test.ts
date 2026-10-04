@@ -152,9 +152,7 @@ describe("getCollection (ADM-04)", () => {
       ["Loaf", 500, 500],
       ["Caisse", 10, 500],
     ]);
-    expect(detail?.balances).toEqual([
-      { productId: "bb", collectedLoaves: 1000, distributedLoaves: 1000, remainingLoaves: 0 },
-    ]);
+    expect(detail).not.toHaveProperty("balances");
     expect(detail?.receipts.map((receipt) => [receipt.label, receipt.depotName, receipt.status])).toEqual([
       ["DIS-00003", "Akwa", "awaiting_confirmation"],
       ["DIS-00002", "Bonaberi", "confirmed"],
