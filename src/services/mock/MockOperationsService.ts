@@ -22,7 +22,7 @@ import {
   receiptStatus,
   type QuantityLine,
 } from "@/domain/balances";
-import { toLoaves } from "@/domain/units";
+import { compareUnits, toLoaves } from "@/domain/units";
 import { dayRange } from "@/lib/format";
 import {
   OperationsError,
@@ -126,18 +126,20 @@ export class MockOperationsService implements OperationsService {
     const given = this.data.distributionItems.filter((item) =>
       this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === id),
     );
-    const lines: CollectionLine[] = items.map((item) => {
-      const quantity = this.effectiveQuantity("collection_items", item.id, item.quantity);
-      return {
-        id: item.id,
-        productId: item.productId,
-        unit: item.unit,
-        quantity,
-        originalQuantity: item.quantity,
-        isCorrected: this.latestCorrection("collection_items", item.id, "quantity") !== undefined,
-        loaves: toLoaves(quantity, item.loavesPerUnitSnapshot),
-      };
-    });
+    const lines: CollectionLine[] = items
+      .map((item) => {
+        const quantity = this.effectiveQuantity("collection_items", item.id, item.quantity);
+        return {
+          id: item.id,
+          productId: item.productId,
+          unit: item.unit,
+          quantity,
+          originalQuantity: item.quantity,
+          isCorrected: this.latestCorrection("collection_items", item.id, "quantity") !== undefined,
+          loaves: toLoaves(quantity, item.loavesPerUnitSnapshot),
+        };
+      })
+      .sort(compareUnits);
     const receipts = this.data.distributions
       .filter((d) => d.collectionId === id)
       .map((d) => this.receiptRow(d.id))
@@ -187,6 +189,7 @@ export class MockOperationsService implements OperationsService {
                     this.latestCorrection("confirmation_counts", count.id, "quantity") !== undefined,
                 };
               })
+              .sort(compareUnits)
           : null;
         const result = confirmation
           ? receiptLine(recordedLoaves, this.countLines(confirmation.id, item.id))
@@ -203,7 +206,8 @@ export class MockOperationsService implements OperationsService {
           countedLoaves: result?.countedLoaves ?? null,
           differenceLoaves: result?.differenceLoaves ?? null,
         };
-      });
+      })
+      .sort(compareUnits);
     const commentCorrection = confirmation
       ? this.latestCorrection("confirmations", confirmation.id, "comment")
       : undefined;

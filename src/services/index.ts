@@ -26,6 +26,7 @@ import { MockDepotService } from "@/services/mock/MockDepotService";
 import { MockOperationsService } from "@/services/mock/MockOperationsService";
 import { MockProductService } from "@/services/mock/MockProductService";
 import { MockUserService } from "@/services/mock/MockUserService";
+import { SPEC_PRODUCT, specOperations } from "@/services/mock/specOperations";
 import { SupabaseAuthService } from "@/services/supabase/SupabaseAuthService";
 import { SupabaseDepotService } from "@/services/supabase/SupabaseDepotService";
 import { SupabaseOperationsService } from "@/services/supabase/SupabaseOperationsService";
@@ -47,10 +48,10 @@ export function createServices(config: Extract<AppConfig, { ok: true }>): Servic
   if (import.meta.env.DEV && config.dataSource === "mock") {
     return {
       auth: new MockAuthService({ password: config.mockPassword, storage: window.localStorage }),
-      products: new MockProductService(),
+      products: new MockProductService([SPEC_PRODUCT]),
       depots: new MockDepotService(),
       users: new MockUserService(),
-      operations: new MockOperationsService(),
+      operations: new MockOperationsService(specOperations()),
     };
   }
   if (config.dataSource !== "supabase") {

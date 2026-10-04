@@ -241,9 +241,10 @@ describe("getReceipt (RCP-10, REC-02, RCP-06)", () => {
     expect(detail?.comment).toBe("Five crushed");
     const caisse = detail?.lines.find((line) => line.itemId === "di1");
     expect(caisse).toMatchObject({ recordedLoaves: 150, countedLoaves: 150, differenceLoaves: 0 });
+    // Counts are listed Loaf, Pack, Caisse, the way the database service lists them.
     expect(caisse?.counts?.map((count) => [count.unit, count.quantity])).toEqual([
-      ["Caisse", 2],
       ["Pack", 5],
+      ["Caisse", 2],
     ]);
     expect(detail?.lines.find((line) => line.itemId === "di2")).toMatchObject({
       recordedLoaves: 100,

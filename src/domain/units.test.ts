@@ -8,7 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { breakdown, maxGiveable, toLoaves } from "./units";
+import { breakdown, compareUnits, maxGiveable, toLoaves } from "./units";
 
 import type { ProductUnitLoaves } from "@/types/entities";
 
@@ -98,5 +98,14 @@ describe("maxGiveable (DIS-06)", () => {
   it("refuses a negative remaining or a loaves-per-unit below one", () => {
     expect(() => maxGiveable(-1, 10)).toThrow(RangeError);
     expect(() => maxGiveable(10, 0)).toThrow(RangeError);
+  });
+});
+
+describe("compareUnits", () => {
+  it("sorts Loaf, then Pack, then Caisse", () => {
+    const sorted = [{ unit: "Caisse" as const }, { unit: "Loaf" as const }, { unit: "Pack" as const }].sort(
+      compareUnits,
+    );
+    expect(sorted.map((entry) => entry.unit)).toEqual(["Loaf", "Pack", "Caisse"]);
   });
 });

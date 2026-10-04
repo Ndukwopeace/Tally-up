@@ -189,8 +189,8 @@ describe("Admin portal (Q-47)", () => {
   });
 
   it("shows plain 'Coming soon' wording, not developer notes, on unbuilt screens", async () => {
-    renderAt("/admin/collections");
-    await screen.findByRole("heading", { level: 1, name: "Collections" });
+    renderAt("/admin/reports");
+    await screen.findByRole("heading", { level: 1, name: "Reports" });
     expect(screen.getByText("Coming soon")).toBeInTheDocument();
     expect(screen.queryByText(/Milestone|NAV-1/)).not.toBeInTheDocument();
   });

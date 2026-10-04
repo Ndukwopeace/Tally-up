@@ -16,6 +16,7 @@
  *       fractional or negative stock.
  */
 import type { ProductUnitLoaves, UnitQuantity } from "@/types/entities";
+import { UNITS, type Unit } from "@/types/enums";
 
 /**
  * Converts a quantity in any unit into loaves.
@@ -60,4 +61,9 @@ export function maxGiveable(remainingLoaves: number, loavesPerUnit: number): num
     throw new RangeError("Remaining must be 0 or more and loaves per unit at least 1");
   }
   return Math.floor(remainingLoaves / loavesPerUnit);
+}
+
+/** Orders anything with a `unit` the way people read units: Loaf, then Pack, then Caisse. */
+export function compareUnits(a: { unit: Unit }, b: { unit: Unit }): number {
+  return UNITS.indexOf(a.unit) - UNITS.indexOf(b.unit);
 }

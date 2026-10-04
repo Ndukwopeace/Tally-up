@@ -11,12 +11,20 @@
  * SECURITY: Static strings only. Never build HTML from these; React escapes them.
  */
 import type { DepotFieldError } from "@/domain/depots";
+import type { Age } from "@/domain/flags";
 import type { ProductFieldError } from "@/domain/products";
 import type { AuthErrorCode } from "@/services/interfaces/AuthService";
 import type { DepotErrorCode } from "@/services/interfaces/DepotService";
 import type { ProductErrorCode } from "@/services/interfaces/ProductService";
 import type { UserErrorCode } from "@/services/interfaces/UserService";
-import type { Role, Status } from "@/types/enums";
+import type { Role, Status, Unit } from "@/types/enums";
+
+// Singular and plural unit names (PRD-03), also used by the number formatters below.
+const unitNames = {
+  Loaf: { one: "Loaf", many: "Loaves" },
+  Pack: { one: "Pack", many: "Packs" },
+  Caisse: { one: "Caisse", many: "Caisses" },
+} as const;
 
 export const en = {
   app: {
@@ -191,11 +199,7 @@ export const en = {
   },
 
   // Unit names, singular and plural (PRD-03).
-  units: {
-    Loaf: { one: "Loaf", many: "Loaves" },
-    Pack: { one: "Pack", many: "Packs" },
-    Caisse: { one: "Caisse", many: "Caisses" },
-  },
+  units: unitNames,
 
   // Products list and form (A2a: PRD-01 to PRD-05, Q-57).
   products: {
@@ -376,6 +380,89 @@ export const en = {
       depot_required: "Choose the depot this manager runs.",
       unavailable: "Tally-Up could not be reached. Check your connection and try again.",
     } satisfies Record<UserErrorCode, string>,
+  },
+
+  // Admin Collections and Distributions lists and detail pages (A3b: ADM-02 to ADM-04, RCP-10, Q-59).
+  ops: {
+    // C-3: a number always carries its unit, e.g. "1 Caisse", "45 Packs", "1,000 Loaves".
+    amount: (quantity: number, unit: Unit) =>
+      `${quantity.toLocaleString("en")} ${quantity === 1 ? unitNames[unit].one : unitNames[unit].many}`,
+    loaves: (loaves: number) => `${loaves.toLocaleString("en")} ${loaves === 1 ? "Loaf" : "Loaves"}`,
+    // RULE REC-02: the difference in loaves, signed.
+    signedLoaves: (loaves: number) =>
+      `${loaves > 0 ? "+" : loaves < 0 ? "−" : ""}${Math.abs(loaves).toLocaleString("en")} ${Math.abs(loaves) === 1 ? "Loaf" : "Loaves"}`,
+    // "30 minutes", "5 hours", "2 days" (RCP-15).
+    age: (age: Age) => `${String(age.value)} ${age.value === 1 ? age.unit.slice(0, -1) : age.unit}`,
+    nothing: "Nothing",
+    unknownPerson: "Unknown",
+    unknownProduct: "Unknown product",
+    unknownDepot: "Unknown depot",
+    filters: {
+      title: "Filters",
+      titleOn: (count: number) => `Filters (${String(count)} on)`,
+      from: "From",
+      to: "To",
+      status: "Status",
+      allStatuses: "All statuses",
+      distributor: "Distributor",
+      allDistributors: "All distributors",
+      depot: "Depot",
+      allDepots: "All depots",
+      withDiscrepancy: "With discrepancy only",
+      clear: "Clear filters",
+    },
+    loadMore: "Load more",
+    loadingMore: "Loading…",
+    collections: {
+      emptyTitle: "No collections yet",
+      emptyBody: "Collections appear here once distributors record them.",
+      noMatch: "No collection matches these filters.",
+      collected: "Collected",
+      handedOver: "Handed over",
+      remaining: "Remaining",
+      distributor: "Distributor",
+      when: "Date and time",
+      linesTitle: "Collected products",
+      balanceTitle: "Balance per product",
+      allocationsTitle: "Depot allocations",
+      noAllocations: "Nothing has been handed over to a depot yet.",
+      collectedLoaves: "Collected",
+      handedOverLoaves: "Handed over",
+      // RULE COL-11: flagged after the configured hours.
+      stale: (hours: number) => `Still in progress after ${String(hours)} hours`,
+      notFoundTitle: "Collection not found",
+      notFoundBody: "This collection does not exist, or the link is out of date.",
+      backToList: "Go to collections",
+    },
+    receipts: {
+      emptyTitle: "No distributions yet",
+      emptyBody: "Distributions appear here once distributors hand bread over to depots.",
+      noMatch: "No distribution matches these filters.",
+      recorded: "Recorded",
+      depot: "Depot",
+      distributor: "Distributor",
+      collection: "Collection",
+      when: "Date and time",
+      receipt: "Receipt",
+      confirmedAt: "Confirmed",
+      recordedTitle: "Distributor recorded",
+      countTitle: "Depot count",
+      notCounted: "Not counted yet.",
+      match: "Match",
+      differs: "Difference",
+      commentTitle: "Comment",
+      noComment: "No comment.",
+      // RCP-15: how long a receipt has waited; flagged after the configured hours.
+      waiting: (age: string) => `Waiting ${age}`,
+      aged: (age: string, hours: number) => `Waiting ${age}, over ${String(hours)} hours`,
+      notFoundTitle: "Distribution not found",
+      notFoundBody: "This distribution does not exist, or the link is out of date.",
+      backToList: "Go to distributions",
+    },
+    // COR-04: a corrected value is marked, with what it was before.
+    corrected: "Corrected",
+    correctedWas: (was: string) => `Corrected, was ${was}`,
+    errors: { unavailable: "Tally-Up could not be reached. Check your connection and try again." },
   },
 
   // Shown when a build has no database settings (config/env.ts).

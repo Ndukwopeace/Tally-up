@@ -16,6 +16,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod/mini";
 
+import { compareUnits } from "@/domain/units";
 import { dayRange } from "@/lib/format";
 import {
   OperationsError,
@@ -134,10 +135,6 @@ function parseOne<T>(schema: z.ZodMiniType<T>, row: unknown): T | null {
   return parsed.data;
 }
 
-// Units in the order people read them: Loaf, Pack, Caisse.
-const byUnit = (a: { unit: (typeof UNITS)[number] }, b: { unit: (typeof UNITS)[number] }) =>
-  UNITS.indexOf(a.unit) - UNITS.indexOf(b.unit);
-
 function toCollection(row: z.infer<typeof collectionRow>): CollectionListItem {
   return {
     id: row.id,
@@ -247,7 +244,7 @@ export class SupabaseOperationsService implements OperationsService {
           isCorrected: row.is_corrected,
           loaves: row.loaves,
         }))
-        .sort(byUnit),
+        .sort(compareUnits),
       balances: parseRows(balanceRow, balances.data).map((row): CollectionProductBalance => ({
         productId: row.product_id,
         collectedLoaves: row.collected_loaves,
@@ -306,12 +303,12 @@ export class SupabaseOperationsService implements OperationsService {
                     originalQuantity: count.quantity_original,
                     isCorrected: count.is_corrected,
                   }))
-                  .sort(byUnit),
+                  .sort(compareUnits),
           countedLoaves: outcome?.counted_loaves ?? null,
           differenceLoaves: outcome?.difference_loaves ?? null,
         };
       })
-      .sort(byUnit);
+      .sort(compareUnits);
     return {
       receipt: toReceipt(receipt),
       lines,
