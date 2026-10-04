@@ -26,7 +26,7 @@ Technical details the A1 build needed that this document did not spell out. None
 | A-9 | Portals whose milestone has not arrived refuse sign-in with a plain message (`OPEN_PORTALS` in `src/auth/access.ts`, Q-55). | §4.5 |
 | A-10 | Database tests run on a plain Postgres 16 with pgTAP, using a small stand-in for Supabase's `auth` schema (`supabase/tests/stub/`). Migrations follow the Supabase CLI naming (`<timestamp>_<name>.sql`). | §6.7, §16 |
 
-### Proposed in A2c (accepted when the owner approves the A2c pull request)
+### Accepted in A2c (A2c merged and signed off by the owner, 2026-10-04)
 
 Technical details the Users build needed. None change business behaviour. Details and reasons: `docs/adr/0003-a2-admin-data.md` (#13 to #19).
 
