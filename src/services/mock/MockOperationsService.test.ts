@@ -324,3 +324,126 @@ describe("test helpers", () => {
     expect(await mock.getCollection("x")).toBeNull();
   });
 });
+
+describe("getHome (ADM-01 to ADM-03, ADM-06, Q-59c to Q-59f)", () => {
+  const NOW = new Date("2026-10-04T12:00:00Z");
+
+  it("Q-59c: Collected and Distributed Today are today's (Douala day), per unit as entered", async () => {
+    const home = await service().getHome(NOW);
+    expect(home.collectedToday).toEqual([{ unit: "Loaf", quantity: 100 }]);
+    expect(home.distributedToday).toEqual([{ unit: "Loaf", quantity: 20 }]);
+  });
+
+  it("Q-6: 'today' is the Douala day, not the UTC day", async () => {
+    // 23:30 UTC on 3 October is 00:30 on 4 October in Douala (UTC+1): COL-00001 (3 October, 06:00 UTC) is yesterday there.
+    const late = await service().getHome(new Date("2026-10-03T23:30:00Z"));
+    expect(late.todayCollections.map((row) => row.label)).toEqual(["COL-00002"]);
+    // 22:30 UTC on 3 October is 23:30 on 3 October in Douala: COL-00001 is today, COL-00002 (4 October) is not.
+    const early = await service().getHome(new Date("2026-10-03T22:30:00Z"));
+    expect(early.todayCollections.map((row) => row.label)).toEqual(["COL-00001"]);
+  });
+
+  it("Q-59d: Remaining to Distribute is per product, in loaves, across every collection", async () => {
+    const home = await service().getHome(NOW);
+    expect(home.remaining).toEqual([{ productId: "bb", remainingLoaves: 160 }]);
+  });
+
+  it("Q-59c: Awaiting Confirmation and Discrepancies count every open item, not just today's", async () => {
+    const home = await service().getHome(NOW);
+    expect(home.awaitingCount).toBe(2);
+    expect(home.discrepancyCount).toBe(1);
+  });
+
+  it("Q-59c: Confirmed Receipts counts receipts confirmed today with no difference", async () => {
+    expect((await service().getHome(NOW)).confirmedTodayCount).toBe(0);
+    const mock = service((data) => {
+      data.confirmations.push({
+        id: "cf3",
+        distributionId: "d4",
+        managerId: "mgr-1",
+        comment: null,
+        confirmedAt: "2026-10-04T11:30:00Z",
+      });
+      data.confirmationCounts.push({
+        id: "cc5",
+        confirmationId: "cf3",
+        itemId: "di5",
+        unit: "Loaf",
+        quantity: 20,
+        loavesPerUnitSnapshot: 1,
+      });
+    });
+    const home = await mock.getHome(NOW);
+    expect(home.confirmedTodayCount).toBe(1);
+    expect(home.awaitingCount).toBe(1);
+  });
+
+  it("ADM-03: today's collections come with their status, newest first", async () => {
+    const { todayCollections } = await service().getHome(NOW);
+    expect(todayCollections.map((row) => [row.label, row.status])).toEqual([["COL-00002", "in_progress"]]);
+  });
+
+  it("Q-59e: the latest discrepancies, newest first, at most 5", async () => {
+    const mock = service((data) => {
+      for (let i = 0; i < 6; i += 1) {
+        const id = `x${String(i)}`;
+        data.distributions.push({
+          id,
+          label: `DIS-1000${String(i)}`,
+          collectionId: "c2",
+          depotId: "akwa",
+          distributorId: "dist-2",
+          createdAt: `2026-10-02T0${String(i)}:00:00Z`,
+        });
+        data.distributionItems.push({
+          id: `${id}-i`,
+          distributionId: id,
+          productId: "bb",
+          unit: "Loaf",
+          quantity: 10,
+          loavesPerUnitSnapshot: 1,
+        });
+        data.confirmations.push({
+          id: `${id}-c`,
+          distributionId: id,
+          managerId: "mgr-1",
+          comment: null,
+          confirmedAt: "2026-10-02T12:00:00Z",
+        });
+      }
+    });
+    const home = await mock.getHome(NOW);
+    expect(home.discrepancyCount).toBe(7);
+    expect(home.latestDiscrepancies).toHaveLength(5);
+    expect(home.latestDiscrepancies[0]?.label).toBe("DIS-00001");
+  });
+
+  it("ADM-06 / Q-59f: stale collections and aged receipts after 24 hours, with how many there are", async () => {
+    const home = await service().getHome(NOW);
+    expect(home.staleCollections.count).toBe(1);
+    expect(home.staleCollections.rows.map((row) => row.label)).toEqual(["COL-00003"]);
+    expect(home.agedReceipts.count).toBe(1);
+    expect(home.agedReceipts.rows.map((row) => row.label)).toEqual(["DIS-00003"]);
+  });
+
+  it("COR-05: a correction changes today's totals and the remaining", async () => {
+    const mock = service((data) => {
+      data.corrections.push({
+        targetTable: "collection_items",
+        targetId: "ci3",
+        field: "quantity",
+        correctedValue: "120",
+        createdAt: "2026-10-04T11:00:00Z",
+      });
+    });
+    const home = await mock.getHome(NOW);
+    expect(home.collectedToday).toEqual([{ unit: "Loaf", quantity: 120 }]);
+    expect(home.remaining).toEqual([{ productId: "bb", remainingLoaves: 180 }]);
+  });
+
+  it("fails as unavailable when the backend does", async () => {
+    const mock = service();
+    mock.failNextCallWith("unavailable");
+    await expect(mock.getHome(NOW)).rejects.toBeInstanceOf(OperationsError);
+  });
+});

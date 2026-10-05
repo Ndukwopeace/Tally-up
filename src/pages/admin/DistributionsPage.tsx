@@ -15,28 +15,19 @@
  * SECURITY: Read-only; RLS decides what an admin reads. Filter values from the
  *       address are checked before use.
  */
-import { ChevronRight } from "lucide-react";
-import { Link } from "react-router";
-
-import { FlagChip } from "@/components/admin/FlagChip";
+import { ReceiptCard } from "@/components/admin/ReceiptCard";
 import { FilterPanel } from "@/components/admin/FilterPanel";
 import { ListFrame } from "@/components/admin/ListFrame";
-import { ProductLines } from "@/components/admin/ProductLines";
 import { CheckboxField } from "@/components/common/CheckboxField";
 import { SelectField } from "@/components/common/SelectField";
-import { StatusBadge } from "@/components/common/StatusBadge";
 import { TextField } from "@/components/common/TextField";
-import { BUSINESS_RULES } from "@/config/business-rules";
-import { isAgedReceipt, receiptAge } from "@/domain/flags";
 import { useDepots } from "@/hooks/useDepots";
 import { useReceipts } from "@/hooks/useOperations";
 import { useProducts } from "@/hooks/useProducts";
 import { useUrlFilters } from "@/hooks/useUrlFilters";
 import { en } from "@/i18n/en";
-import { formatWhen } from "@/lib/format";
 import { PageTitle } from "@/pages/PageTitle";
 import type { ReceiptFilters } from "@/services/interfaces/OperationsService";
-import type { ReceiptListItem } from "@/types/entities";
 import { RECEIPT_STATUSES } from "@/types/enums";
 
 const KEYS = ["from", "to", "depot", "status"] as const;
@@ -51,50 +42,6 @@ function toFilters(values: Record<string, string>): ReceiptFilters {
     depotId: values.depot || undefined,
     status: RECEIPT_STATUSES.find((status) => status === values.status),
   };
-}
-
-// RCP-15: how long a waiting receipt has waited, flagged once it is over the limit.
-function WaitingNote({ item, now }: Readonly<{ item: ReceiptListItem; now: Date }>) {
-  if (item.status !== "awaiting_confirmation") {
-    return null;
-  }
-  const age = en.ops.age(receiptAge(item.createdAt, now));
-  return isAgedReceipt(item.createdAt, item.status, now) ? (
-    <FlagChip>{en.ops.receipts.aged(age, BUSINESS_RULES.agedReceiptHours)}</FlagChip>
-  ) : (
-    <span className="text-sm text-ink-muted">{en.ops.receipts.waiting(age)}</span>
-  );
-}
-
-function ReceiptCard({
-  item,
-  now,
-  names,
-}: Readonly<{ item: ReceiptListItem; now: Date; names: ReadonlyMap<string, string> }>) {
-  return (
-    <li>
-      <Link
-        to={`/admin/distributions/${item.id}`}
-        className="flex items-center justify-between gap-4 rounded-card border border-line bg-surface px-4 py-3 shadow-sm hover:border-brand active:bg-canvas"
-      >
-        <span className="flex min-w-0 flex-col gap-1.5">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="text-lg font-semibold text-ink">{item.label}</span>
-            <StatusBadge status={item.status} />
-          </span>
-          <span className="text-base font-semibold break-words text-ink">
-            {item.depotName ?? en.ops.unknownDepot}
-          </span>
-          <span className="text-sm text-ink-muted">
-            {item.distributorName ?? en.ops.unknownPerson} · {formatWhen(item.createdAt, now)}
-          </span>
-          <ProductLines lines={item.recorded} names={names} />
-          <WaitingNote item={item} now={now} />
-        </span>
-        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-ink-muted" />
-      </Link>
-    </li>
-  );
 }
 
 export function DistributionsPage() {

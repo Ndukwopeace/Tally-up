@@ -121,4 +121,8 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | NFR-10, Q-6 | Times in Douala ("Today, 9:42 AM"); date filters are Douala days | `src/lib/format.test.ts` | `formatWhen()`, `dayRange()` |
 | Q-56 | Tabs have no Back; a receipt goes Back inside its own tab | `OperationsPages.test.tsx` | `router.tsx` (two receipt routes) |
 | NFR-07 | Loading, empty, error states | `OperationsPages.test.tsx` | `ListFrame.tsx` |
+| ADM-01, ADM-02, Q-59c | Home: six cards; Collected and Distributed Today per unit as entered, today (Douala) only; Awaiting and Discrepancies count all open items; Confirmed counts today's | `AdminHomePage.test.tsx`, `MockOperationsService.test.ts`, `SupabaseHomeQueries.test.ts`, `units.test.ts` | `AdminHomePage.tsx`, `KpiCard.tsx`, `SupabaseHomeQueries.ts`, `sumUnits()` |
+| Q-59d | Remaining to Distribute per product in loaves with the breakdown | `AdminHomePage.test.tsx`, `MockOperationsService.test.ts` | `AdminHomePage.tsx`, `LoafBreakdown.tsx` |
+| Q-59e, Q-58b | Home shows the count and the 5 latest discrepancies, each opening its receipt, and a link to the full list | `AdminHomePage.test.tsx` | `AdminHomePage.tsx`, `ReceiptCard.tsx` |
+| ADM-03, ADM-06 | Today's collections; items waiting over 24 hours are listed under Needs attention | `AdminHomePage.test.tsx` | `AdminHomePage.tsx`, `CollectionCard.tsx` |
 | §6.5, SEC-12 | A depot manager sees their depot's receipts; a distributor their own | `a3b_list_views.test.sql` | list views (left joins, security invoker) |

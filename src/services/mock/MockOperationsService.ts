@@ -21,9 +21,11 @@ import {
   receiptStatus,
   type QuantityLine,
 } from "@/domain/balances";
-import { compareUnits, toLoaves } from "@/domain/units";
-import { dayRange } from "@/lib/format";
+import { isAgedReceipt, isStaleCollection } from "@/domain/flags";
+import { compareUnits, sumUnits, toLoaves } from "@/domain/units";
+import { businessDay, dayRange } from "@/lib/format";
 import {
+  HOME_LIST_SIZE,
   OperationsError,
   PAGE_SIZE,
   type CollectionFilters,
@@ -37,6 +39,8 @@ import type {
   CollectionLine,
   CollectionListItem,
   CountEntry,
+  HomeData,
+  ProductRemaining,
   ReceiptDetail,
   ReceiptLineDetail,
   ReceiptListItem,
@@ -144,6 +148,32 @@ export class MockOperationsService implements OperationsService {
       collection: this.collectionRow(id),
       lines,
       receipts,
+    };
+  }
+
+  async getHome(now: Date): Promise<HomeData> {
+    await this.beforeCall();
+    const { from, to } = dayRange(businessDay(now));
+    const isToday = (instant: string) => instant >= from && instant < to;
+    const collections = this.data.collections.map((c) => this.collectionRow(c.id)).sort(newestFirst);
+    const receipts = this.data.distributions.map((d) => this.receiptRow(d.id)).sort(newestFirst);
+    const today = collections.filter((c) => isToday(c.createdAt));
+    const stale = collections.filter((c) => isStaleCollection(c.createdAt, c.status, now)).reverse();
+    const aged = receipts.filter((r) => isAgedReceipt(r.createdAt, r.status, now)).reverse();
+    const discrepancies = receipts.filter((r) => r.status === "confirmed_with_discrepancy");
+    return {
+      collectedToday: sumUnits(today.flatMap((c) => c.collected)),
+      distributedToday: sumUnits(receipts.filter((r) => isToday(r.createdAt)).flatMap((r) => r.recorded)),
+      remaining: this.remainingByProduct(),
+      awaitingCount: receipts.filter((r) => r.status === "awaiting_confirmation").length,
+      discrepancyCount: discrepancies.length,
+      confirmedTodayCount: receipts.filter(
+        (r) => r.status === "confirmed" && r.confirmedAt !== null && isToday(r.confirmedAt),
+      ).length,
+      todayCollections: today,
+      latestDiscrepancies: discrepancies.slice(0, HOME_LIST_SIZE),
+      staleCollections: { count: stale.length, rows: stale.slice(0, HOME_LIST_SIZE) },
+      agedReceipts: { count: aged.length, rows: aged.slice(0, HOME_LIST_SIZE) },
     };
   }
 
@@ -271,16 +301,37 @@ export class MockOperationsService implements OperationsService {
     return found ? (found.fullName ?? found.name ?? null) : null;
   }
 
+  // REC-01: loaves still to hand over, per product, across every collection; products with nothing left are left out.
+  private remainingByProduct(): ProductRemaining[] {
+    const totals = new Map<string, number>();
+    for (const c of this.data.collections) {
+      const items = this.data.collectionItems.filter((item) => item.collectionId === c.id);
+      for (const balance of collectionBalances(
+        this.quantityLines("collection_items", items),
+        this.quantityLines("distribution_items", this.givenFrom(c.id)),
+      )) {
+        totals.set(balance.productId, (totals.get(balance.productId) ?? 0) + balance.remainingLoaves);
+      }
+    }
+    return [...totals.entries()]
+      .filter(([, remainingLoaves]) => remainingLoaves > 0)
+      .map(([productId, remainingLoaves]) => ({ productId, remainingLoaves }));
+  }
+
+  // The hand-over lines taken from one collection.
+  private givenFrom(collectionId: string) {
+    return this.data.distributionItems.filter((item) =>
+      this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === collectionId),
+    );
+  }
+
   // COL-08: In Progress while any product has loaves left to hand over; computed, never stored.
   private statusOf(collectionId: string): CollectionListItem["status"] {
     const items = this.data.collectionItems.filter((item) => item.collectionId === collectionId);
-    const given = this.data.distributionItems.filter((item) =>
-      this.data.distributions.some((d) => d.id === item.distributionId && d.collectionId === collectionId),
-    );
     return collectionStatus(
       collectionBalances(
         this.quantityLines("collection_items", items),
-        this.quantityLines("distribution_items", given),
+        this.quantityLines("distribution_items", this.givenFrom(collectionId)),
       ),
     );
   }

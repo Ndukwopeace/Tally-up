@@ -67,3 +67,11 @@ export function maxGiveable(remainingLoaves: number, loavesPerUnit: number): num
 export function compareUnits(a: { unit: Unit }, b: { unit: Unit }): number {
   return UNITS.indexOf(a.unit) - UNITS.indexOf(b.unit);
 }
+
+/** RULE ADM-02: totals per unit as entered, across products, in Loaf, Pack, Caisse order. Never one grand total. */
+export function sumUnits(lines: readonly UnitQuantity[]): UnitQuantity[] {
+  return UNITS.map((unit) => ({
+    unit,
+    quantity: lines.filter((line) => line.unit === unit).reduce((sum, line) => sum + line.quantity, 0),
+  })).filter((total) => total.quantity > 0);
+}

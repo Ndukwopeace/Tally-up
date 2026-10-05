@@ -91,7 +91,13 @@ export const routes: RouteObject[] = [
           {
             lazy: async () => ({ Component: (await import("@/layouts/AdminLayout")).default }),
             children: [
-              homeRoute(en.nav.home),
+              // A3b-2: the admin Home (ADM-01 to ADM-03, ADM-06). The index route has no Back (Q-56).
+              {
+                index: true,
+                lazy: async () => ({
+                  Component: (await import("@/pages/admin/AdminHomePage")).AdminHomePage,
+                }),
+              },
               // A3b: Collections and Distributions (ADM-03, ADM-04). Tabs have no Back (Q-56);
               // their detail pages go back to their own tab only.
               lazyTab(

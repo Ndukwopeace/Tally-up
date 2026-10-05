@@ -29,6 +29,10 @@ A3 lets the admin answer the core question from the screen: what was collected, 
 | 11 | **The receipt page has two routes:** `/admin/distributions/:receiptId` (Distributions tab, Back to the list) and `/admin/collections/:collectionId/receipts/:receiptId` (Collections tab, Back to the collection). The same page serves both. ARCHITECTURE §4.2's `/admin/receipts/:id` is replaced by these. | Q-56: Back only moves inside the tab and never switches tabs; the active tab is chosen by the address. |
 | 12 | **The 24-hour flags are computed in the browser** from `staleCollectionHours` and `agedReceiptHours` (`src/domain/flags.ts`), not in SQL. The database still decides every status. | COL-11, RCP-15, Q-59f: the limit is configurable and nothing automatic happens at 24 hours. |
 | 13 | **"With discrepancy only" is a shortcut for the status filter** "Confirmed with Discrepancy", so there is one filter, not two that could disagree. | Q-59e, Q-59g. |
+| 14 | **Home reads the existing views; no new migration.** One round of parallel reads in `SupabaseHomeQueries.ts`: today's collections and hand-overs (summed per unit in TypeScript, `sumUnits`), the loaves left per product, exact counts for Awaiting, Confirmed today and Discrepancies, the 5 latest discrepancies, and the oldest few items past 24 hours with their count. Numbers cannot disagree with the lists, because both read the same views. | ADM-01, ADM-02, Q-59c to Q-59f. |
+| 15 | **"Confirmed Receipts" counts receipts with status Confirmed (no difference) whose confirmation time is today.** A receipt confirmed with a difference is counted under Discrepancies, not here. This is a reading of ADM-01 and Q-59c; the owner can change it in one line. | ADM-01, Q-59c. |
+| 16 | **Home lists today's collections as the same cards as the Collections tab** (what was collected per product, status, 24-hour flag), consistent with the owner's change on 2026-10-04. ADM-03 also names "distributed, remaining" per collection; the owner removed both from collection cards. Remaining to Distribute appears only as the Home card (Q-59d). | ADM-03, owner decision 2026-10-04. |
+| 17 | **Needs attention** lists the oldest receipts Awaiting Confirmation and collections In Progress past 24 hours (up to 5 each, with the total and a link to the filtered list). It shows only when there is something to show. | ADM-06, Q-59f. |
 
 ## Consequences
 
@@ -36,4 +40,4 @@ A3 lets the admin answer the core question from the screen: what was collected, 
 - Run the seed files only on **staging** (docs/SETUP.md §7). They have not been run on a real Supabase project from the build environment: the first run is yours.
 - A correction is readable by the distributor or manager who can read the corrected record, including the admin's optional note (ARCHITECTURE §6.5). No screen shows it to them before D1 and DM1.
 - Run `20261004170000_a3b_list_views.sql` the same way (staging first, then production).
-- A3b-2 (Home) and A3c (corrections, notifications, audit log, settings) add their own decisions to this record.
+- A3c (corrections, notifications, audit log, settings) add their own decisions to this record.

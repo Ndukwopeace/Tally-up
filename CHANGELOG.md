@@ -4,6 +4,11 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — A3b Home
+- Admin → Home: six cards (Collected Today and Distributed Today per unit as entered, Remaining to Distribute per product in loaves with the breakdown, Awaiting Confirmation, Confirmed Receipts, Discrepancies). Counts of open items are not limited to today; Collected, Distributed and Confirmed are today's, in Douala time (Q-59c, Q-59d).
+- Home also shows what needs attention (receipts and collections waiting over 24 hours), the 5 latest discrepancies with a link to all of them, and today's collections (ADM-03, ADM-06, Q-59e, Q-59f).
+- No new migration: Home reads the views from A3a and A3b.
+
 ### Added — A3b Collections and Distributions
 - Admin → Collections and Distributions: each card lists what was collected, or exactly what was handed over to the depot, one line per product and unit ("Big Bread: 10 Caisses"); no remaining or handed-over figure on a card. Lists newest first with filters (date, distributor or depot, status; "with discrepancy only"), kept in the page address, 25 at a time with "Load more" (Q-59g).
 - Collection page: lines, and the depot allocations grouped by depot, each with what it received and its receipt status. No remaining figure.
