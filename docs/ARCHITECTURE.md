@@ -422,6 +422,8 @@ Views use `security_invoker`, so RLS still applies to whoever reads them.
 
 The row lock in `submit_distribution` stops two phones distributing the same bread at the same moment.
 
+Built (MVP, Q-60): `submit_collection(p_items)`, `submit_distribution(p_collection, p_depot, p_items)` and `confirm_receipt(p_distribution, p_counts, p_comment)`. Lines are JSON (`[{"product_id", "unit", "quantity"}]`; counts use `item_id`). They are `SECURITY DEFINER` with an empty search path, take the caller from `auth.uid()`, return the new id and raise short codes (`OVER_DISTRIBUTION`, `COUNT_MISSING`, …) that the app turns into plain words. No API role can insert into the operational tables. `read_lines()` is the shared, internal check of a list of lines. `admin_correct` and `mark_notifications_read` are deferred (Q-60).
+
 ### 6.5 Row Level Security Summary
 
 | Table | Admin | Distributor | Depot Manager |

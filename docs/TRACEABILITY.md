@@ -126,3 +126,15 @@ Updated in every feature pull request (ENG-9). Only requirements with code are l
 | Q-59e, Q-58b | Home shows the count and the 5 latest discrepancies, each opening its receipt, and a link to the full list | `AdminHomePage.test.tsx` | `AdminHomePage.tsx`, `ReceiptCard.tsx` |
 | ADM-03, ADM-06 | Today's collections; items waiting over 24 hours are listed under Needs attention | `AdminHomePage.test.tsx` | `AdminHomePage.tsx`, `CollectionCard.tsx` |
 | §6.5, SEC-12 | A depot manager sees their depot's receipts; a distributor their own | `a3b_list_views.test.sql` | list views (left joins, security invoker) |
+
+## MVP write functions (Q-60)
+
+| Requirement | What it means | Tests | Code |
+|---|---|---|---|
+| COL-02 to COL-07 | A collection: supported units, whole quantities above zero, no same product and unit twice, server time and number | `supabase/tests/d1_submit_functions.test.sql` | `submit_collection()`, `read_lines()` |
+| PRD-06 | Loaves per unit frozen at submit time | `d1_submit_functions.test.sql`, `dm1_confirm_receipt.test.sql` | the three functions |
+| DIS-01, DIS-03, DIS-05 | Own collection only, active depot, no zero lines | `d1_submit_functions.test.sql` | `submit_distribution()` |
+| DIS-04, DIS-06 | Unit may differ; never more than remains per product, in loaves | `d1_submit_functions.test.sql` | `submit_distribution()` (row lock) |
+| RCP-01, RCP-04 to RCP-07, RCP-09, RCP-12 | Own depot only, every line counted, several units per line, zero allowed, optional comment, locked once confirmed | `dm1_confirm_receipt.test.sql` | `confirm_receipt()` |
+| RCP-11, DIS-12 | The system computes the status; a distributor or admin cannot confirm | `dm1_confirm_receipt.test.sql` | `v_receipt_status`, role checks |
+| SEC-2, AUD-03 | No direct writes; actions are logged | all three test files | grants, audit inserts |
