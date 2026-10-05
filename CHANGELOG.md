@@ -4,6 +4,10 @@ All notable changes to Tally-Up. Format: [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Added — MVP write functions (Q-60)
+- Database: `submit_collection()`, `submit_distribution()` and `confirm_receipt()`, the only way to record a collection, hand bread to a depot and confirm a receipt. They enforce whole quantities above zero, supported units, no same product and unit twice, the active-depot rule, no giving more than remains per product in loaves, every receipt line counted by hand, and the lock after confirm. They write audit entries. No notifications yet.
+- 67 new pgTAP checks.
+
 ### Added — A3b Home
 - Admin → Home: six cards (Collected Today and Distributed Today per unit as entered, Remaining to Distribute per product in loaves with the breakdown, Awaiting Confirmation, Confirmed Receipts, Discrepancies). Counts of open items are not limited to today; Collected, Distributed and Confirmed are today's, in Douala time (Q-59c, Q-59d).
 - Home also shows what needs attention (receipts and collections waiting over 24 hours), the 5 latest discrepancies with a link to all of them, and today's collections (ADM-03, ADM-06, Q-59e, Q-59f).
