@@ -27,6 +27,25 @@ end $$;
 create temp table ids (k text primary key, v uuid);
 grant all on pg_temp.ids to authenticated;
 
+-- Test helpers. They keep each check to one short line and add no rule of their own.
+-- One counted line: the distribution item number, unit, quantity.
+create function pg_temp.cnt(item int, u text, q numeric) returns jsonb language sql as $$
+  select jsonb_build_object('item_id', pg_temp.id(item), 'unit', u, 'quantity', q)
+$$;
+-- Confirm a receipt (distribution number) with the given counts and comment.
+create function pg_temp.confirm(dist int, counts jsonb, note text default null) returns uuid language sql as $$
+  select public.confirm_receipt(pg_temp.id(dist), counts, note)
+$$;
+-- Confirm a receipt with a single counted line.
+create function pg_temp.confirm1(dist int, item int, u text, q numeric, note text default null) returns uuid language sql as $$
+  select pg_temp.confirm(dist, jsonb_build_array(pg_temp.cnt(item, u, q)), note)
+$$;
+-- The call must be refused with this code (every refusal is P0001 plus a plain code).
+create function pg_temp.refuses(call text, code text, why text) returns text language sql as $$
+  select throws_ok(call, 'P0001', code, why)
+$$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 insert into auth.users (id, email) select pg_temp.id(n), n || '@example.test' from generate_series(1, 5) as n;
 insert into public.depots (id, name, location, address)
 values (pg_temp.id(10), 'Akwa', 'Douala', 'Market'), (pg_temp.id(11), 'Bonaberi', 'Douala', 'Port');
@@ -61,10 +80,8 @@ values (pg_temp.id(201), pg_temp.id(200), pg_temp.id(20), 'Caisse', 3, 50),
 -- A confirmation with a difference: 2 Caisses + 5 Packs against 3 Caisses, 95 Loaves against 100
 -- ---------------------------------------------------------------------------
 select pg_temp.sign_in_as(pg_temp.id(4));
-select lives_ok($$insert into pg_temp.ids values ('k1', public.confirm_receipt(pg_temp.id(200), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(201), 'unit', 'Caisse', 'quantity', 2),
-  jsonb_build_object('item_id', pg_temp.id(201), 'unit', 'Pack', 'quantity', 5),
-  jsonb_build_object('item_id', pg_temp.id(202), 'unit', 'Loaf', 'quantity', 95)), 'Five crushed'))$$,
+select lives_ok($$insert into pg_temp.ids values ('k1', pg_temp.confirm(200, jsonb_build_array(
+  pg_temp.cnt(201, 'Caisse', 2), pg_temp.cnt(201, 'Pack', 5), pg_temp.cnt(202, 'Loaf', 95)), 'Five crushed'))$$,
   'RCP-06: one line is counted in two units, and the receipt is confirmed');
 reset role;
 select is((select status from public.v_receipt_status where distribution_id = pg_temp.id(200)), 'confirmed_with_discrepancy',
@@ -85,11 +102,8 @@ select is((select string_agg(action, ',' order by action) from public.audit_log
 -- A match, a blank comment, and a zero count
 -- ---------------------------------------------------------------------------
 select pg_temp.sign_in_as(pg_temp.id(4));
-select lives_ok($$select public.confirm_receipt(pg_temp.id(220), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(221), 'unit', 'Loaf', 'quantity', 300)), '   ')$$, 'a matching count is confirmed');
-select lives_ok($$select public.confirm_receipt(pg_temp.id(230), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(231), 'unit', 'Loaf', 'quantity', 0),
-  jsonb_build_object('item_id', pg_temp.id(232), 'unit', 'Caisse', 'quantity', 3)), null)$$,
+select lives_ok($$select pg_temp.confirm1(220, 221, 'Loaf', 300, '   ')$$, 'a matching count is confirmed');
+select lives_ok($$select pg_temp.confirm(230, jsonb_build_array(pg_temp.cnt(231, 'Loaf', 0), pg_temp.cnt(232, 'Caisse', 3)))$$,
   'RCP-07: zero is a valid count, and a count may exceed what was recorded');
 reset role;
 select is((select status from public.v_receipt_status where distribution_id = pg_temp.id(220)), 'confirmed',
@@ -105,39 +119,24 @@ select is((select status from public.v_receipt_status where distribution_id = pg
 -- Refusals (nothing is saved when one happens)
 -- ---------------------------------------------------------------------------
 select pg_temp.sign_in_as(pg_temp.id(4));
-select throws_ok($$select public.confirm_receipt(pg_temp.id(200), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(201), 'unit', 'Caisse', 'quantity', 3),
-  jsonb_build_object('item_id', pg_temp.id(202), 'unit', 'Loaf', 'quantity', 100)), null)$$,
-  'P0001', 'ALREADY_CONFIRMED', 'RCP-12: a confirmed receipt cannot be confirmed again');
+select pg_temp.refuses($$select pg_temp.confirm(200, jsonb_build_array(pg_temp.cnt(201, 'Caisse', 3), pg_temp.cnt(202, 'Loaf', 100)))$$,
+  'ALREADY_CONFIRMED', 'RCP-12: a confirmed receipt cannot be confirmed again');
 select pg_temp.sign_in_as(pg_temp.id(5));
-select throws_ok($$select public.confirm_receipt(pg_temp.id(200), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(201), 'unit', 'Caisse', 'quantity', 3)), null)$$,
-  'P0001', 'RECEIPT_NOT_FOUND', 'RCP-01: another depot''s manager cannot reach the receipt');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(999), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(201), 'unit', 'Caisse', 'quantity', 3)), null)$$,
-  'P0001', 'RECEIPT_NOT_FOUND', 'an unknown receipt');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(202), 'unit', 'Loaf', 'quantity', 1)), null)$$,
-  'P0001', 'INVALID_ITEM', 'a count for a line of another receipt is refused');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(211), 'unit', 'Pack', 'quantity', 45)), repeat('x', 1001))$$,
-  'P0001', 'COMMENT_TOO_LONG', 'the comment is limited to 1,000 characters');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), '[]'::jsonb, null)$$,
-  'P0001', 'INVALID_ITEMS', 'RCP-04: no counts at all is refused, never read as a match');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(211), 'unit', 'Pack', 'quantity', -1)), null)$$,
-  'P0001', 'INVALID_QUANTITY', 'a negative count is refused');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(211), 'unit', 'Pack', 'quantity', 1),
-  jsonb_build_object('item_id', pg_temp.id(211), 'unit', 'Pack', 'quantity', 2)), null)$$,
-  'P0001', 'DUPLICATE_LINE', 'RCP-06: one entry per unit for each line');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(210), jsonb_build_array(
-  jsonb_build_object('item_id', 'nope', 'unit', 'Pack', 'quantity', 1)), null)$$,
-  'P0001', 'INVALID_ITEMS', 'an unreadable line gives a code, not a database message');
+select pg_temp.refuses($$select pg_temp.confirm1(200, 201, 'Caisse', 3)$$,
+  'RECEIPT_NOT_FOUND', 'RCP-01: another depot''s manager cannot reach the receipt');
+select pg_temp.refuses($$select pg_temp.confirm1(999, 201, 'Caisse', 3)$$, 'RECEIPT_NOT_FOUND', 'an unknown receipt');
+select pg_temp.refuses($$select pg_temp.confirm1(210, 202, 'Loaf', 1)$$, 'INVALID_ITEM', 'a count for a line of another receipt is refused');
+select pg_temp.refuses($$select pg_temp.confirm1(210, 211, 'Pack', 45, repeat('x', 1001))$$,
+  'COMMENT_TOO_LONG', 'the comment is limited to 1,000 characters');
+select pg_temp.refuses($$select pg_temp.confirm(210, '[]'::jsonb)$$, 'INVALID_ITEMS', 'RCP-04: no counts at all is refused, never read as a match');
+select pg_temp.refuses($$select pg_temp.confirm1(210, 211, 'Pack', -1)$$, 'INVALID_QUANTITY', 'a negative count is refused');
+select pg_temp.refuses($$select pg_temp.confirm(210, jsonb_build_array(pg_temp.cnt(211, 'Pack', 1), pg_temp.cnt(211, 'Pack', 2)))$$,
+  'DUPLICATE_LINE', 'RCP-06: one entry per unit for each line');
+select pg_temp.refuses($$select public.confirm_receipt(pg_temp.id(210),
+  '[{"item_id":"nope","unit":"Pack","quantity":1}]'::jsonb, null)$$, 'INVALID_ITEMS', 'an unreadable line gives a code, not a database message');
 select is((select count(*)::int from public.confirmations where distribution_id = pg_temp.id(210)), 0,
   'the refused calls left nothing behind');
 
-select pg_temp.sign_in_as(pg_temp.id(4));
 -- A new receipt for the two-line checks (Akwa, Big Bread Loaf + Small Bread Caisse).
 reset role;
 insert into public.distributions (id, collection_id, depot_id, distributor_id)
@@ -146,24 +145,18 @@ insert into public.distribution_items (id, distribution_id, product_id, unit, qu
 values (pg_temp.id(241), pg_temp.id(240), pg_temp.id(20), 'Loaf', 10, 1),
        (pg_temp.id(242), pg_temp.id(240), pg_temp.id(21), 'Caisse', 2, 30);
 select pg_temp.sign_in_as(pg_temp.id(4));
-select throws_ok($$select public.confirm_receipt(pg_temp.id(240), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(241), 'unit', 'Loaf', 'quantity', 10)), null)$$,
-  'P0001', 'COUNT_MISSING', 'RCP-04: every line must be counted; the Small Bread line has no count');
-select throws_ok($$select public.confirm_receipt(pg_temp.id(240), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(241), 'unit', 'Loaf', 'quantity', 10),
-  jsonb_build_object('item_id', pg_temp.id(242), 'unit', 'Pack', 'quantity', 2)), null)$$,
-  'P0001', 'UNIT_NOT_SUPPORTED', 'RCP-05: Small Bread has no Pack');
+select pg_temp.refuses($$select pg_temp.confirm1(240, 241, 'Loaf', 10)$$,
+  'COUNT_MISSING', 'RCP-04: every line must be counted; the Small Bread line has no count');
+select pg_temp.refuses($$select pg_temp.confirm(240, jsonb_build_array(pg_temp.cnt(241, 'Loaf', 10), pg_temp.cnt(242, 'Pack', 2)))$$,
+  'UNIT_NOT_SUPPORTED', 'RCP-05: Small Bread has no Pack');
 select throws_ok($$insert into public.confirmations (distribution_id, manager_id) values (pg_temp.id(240), pg_temp.id(4))$$,
   '42501', null, 'SEC-2: a manager cannot write the table directly');
 
 select pg_temp.sign_in_as(pg_temp.id(2));
-select throws_ok($$select public.confirm_receipt(pg_temp.id(240), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(241), 'unit', 'Loaf', 'quantity', 10)), null)$$,
-  'P0001', 'NOT_DEPOT_MANAGER', 'DIS-12: a distributor cannot confirm a receipt');
+select pg_temp.refuses($$select pg_temp.confirm1(240, 241, 'Loaf', 10)$$, 'NOT_DEPOT_MANAGER', 'DIS-12: a distributor cannot confirm a receipt');
 select pg_temp.sign_in_as(pg_temp.id(1));
-select throws_ok($$select public.confirm_receipt(pg_temp.id(240), jsonb_build_array(
-  jsonb_build_object('item_id', pg_temp.id(241), 'unit', 'Loaf', 'quantity', 10)), null)$$,
-  'P0001', 'NOT_DEPOT_MANAGER', 'an admin cannot confirm a receipt (corrections are the admin''s tool)');
+select pg_temp.refuses($$select pg_temp.confirm1(240, 241, 'Loaf', 10)$$,
+  'NOT_DEPOT_MANAGER', 'an admin cannot confirm a receipt (corrections are the admin''s tool)');
 reset role;
 select is((select count(*)::int from public.confirmations), 3, 'only the three good confirmations exist');
 
