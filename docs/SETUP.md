@@ -79,6 +79,10 @@ Run each file in [`supabase/migrations/`](../supabase/migrations/) **once, in na
 | `20261003160400_a3a_views_effective.sql` | A3a Operations, part 5 (views with corrections) |
 | `20261003160500_a3a_views_balances.sql` | A3a Operations, part 6 (balances and statuses) |
 | `20261004170000_a3b_list_views.sql` | A3b: list views for Collections and Distributions |
+| `20261005180000_d1_read_lines.sql` | MVP: shared check of submitted lines (internal) |
+| `20261005180100_d1_submit_collection.sql` | MVP: `submit_collection()` |
+| `20261005180200_d1_submit_distribution.sql` | MVP: `submit_distribution()` |
+| `20261005180300_dm1_confirm_receipt.sql` | MVP: `confirm_receipt()` |
 
 For each file:
 
